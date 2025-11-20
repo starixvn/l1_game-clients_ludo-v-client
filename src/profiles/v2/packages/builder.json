@@ -9,10 +9,10 @@
         "type": "build",
         "id": "1681353552761",
         "progress": 1,
-        "state": "success",
+        "state": "failure",
         "stage": "build",
-        "message": "6-2-2025 14:51:42 build success in 2 min 15 s!",
-        "detailMessage": "Asset DB is resume!\r",
+        "message": "11-19-2025 15:57:46 build task failed! Error: EPERM: operation not permitted, lstat 'D:\\Cocos\\ludo-v-client\\src\\build\\web-mobile\\customize\\fullscreen.css'\n    at lstatSync (node:fs:1640:25)\n    at t.lstatSync (node:electron/js2c/node_init:2:4536)\n    at rimrafSync (node:internal/fs/rimraf:180:13)\n    at node:internal/fs/rimraf:253:9\n    at Array.forEach (<anonymous>)\n    at _rmdirSync (node:internal/fs/rimraf:250:7)\n    at fixWinEPERMSync (node:internal/fs/rimraf:304:5)\n    at rimrafSync (node:internal/fs/rimraf:200:14)\n    at Object.rmSync (node:fs:1264:10)\n    at Object.removeSync (D:\\CocosEditor\\Creator\\3.8.6\\resources\\app.asar\\node_modules\\fs-extra\\lib\\remove\\index.js:15:28)\n    at D:\\CocosEditor\\Creator\\3.8.6\\resources\\app.asar\\node_modules\\fs-extra\\lib\\empty\\index.js:30:12\n    at Array.forEach (<anonymous>)\n    at emptyDirSync (D:\\CocosEditor\\Creator\\3.8.6\\resources\\app.asar\\node_modules\\fs-extra\\lib\\empty\\index.js:28:9)\n    at BuildTask.run (D:\\CocosEditor\\Creator\\3.8.6\\resources\\app.asar\\builtin\\builder\\dist\\worker\\builder\\index.ccc:1:3545)\n    at build (D:\\CocosEditor\\Creator\\3.8.6\\resources\\app.asar\\builtin\\builder\\dist\\worker\\index.ccc:1:4259)\n    at Ipc.<anonymous> (D:\\CocosEditor\\Creator\\3.8.6\\resources\\app.asar\\builtin\\builder\\dist\\worker\\msg-util.ccc:1:210)",
+        "detailMessage": "",
         "options": {
           "name": "cocos-3x",
           "platform": "web-mobile",
@@ -114,7 +114,7 @@
           },
           "wasmCompressionMode": false
         },
-        "time": "6-2-2025 14:49:27",
+        "time": "11-19-2025 15:57:45",
         "dirty": false
       }
     }

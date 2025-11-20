@@ -2,22 +2,12 @@ import gc from "@sg/game-client-base";
 import { _decorator, Color, Node, Sprite, tween, v3 } from "cc";
 import { WinningResult } from "../../../../extensions/shared-components/assets/shared/common-components/winning-result/scripts/winning-result";
 import { AnimationUtils } from "../../../../extensions/shared-components/assets/shared/utils/utils";
-import { ColorDice } from "../../color-game/scripts/dice";
 const { ccclass, property } = _decorator;
 
 @ccclass("ColorGameWinningResult")
 export class ColorGameWinningResult extends WinningResult {
     @property(Node)
     colors: Node[] = [];
-
-    private readonly colorHex = {
-        [ColorDice.Yellow]: "#ffcf00",
-        [ColorDice.Red]: "#cb2821",
-        [ColorDice.Pink]: "#fd477c",
-        [ColorDice.White]: "#ffffff",
-        [ColorDice.Blue]: "#168cc9",
-        [ColorDice.Green]: "#2dad2c",
-    };
 
     protected delayTimeShowWinning = 2;
     protected durationTimeShowWinning = 5;
@@ -60,7 +50,7 @@ export class ColorGameWinningResult extends WinningResult {
         this.colors.forEach((color, index) => {
             const result = results[index];
             const ctx = color.getComponent(Sprite);
-            ctx.color = new Color().fromHEX(this.colorHex[result]);
+            ctx.color = new Color().fromHEX("#168cc9");
         });
     }
 }

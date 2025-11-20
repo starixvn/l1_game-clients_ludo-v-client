@@ -6,14 +6,9 @@ import { startGame } from "db://shared-components/shared/scripts/startup";
 import { AnimationUtils } from "db://shared-components/shared/utils";
 import Observer from "observer";
 import { siteConfigs } from "../../../scripts/site-configs";
-import { ColorGame } from "../../color-game/scripts/color-game";
-import { ColorDice } from "../../color-game/scripts/dice";
 import { settings } from "../game-settings";
 import { containerOptions } from "../containerOptions";
-import { CameraHandler } from "../handlers/camera-handler";
-import { CameraStore } from "../stores/camera-store";
 import "./../../../resources/i18n";
-import { ColorGameDoubleTripleResult } from "./double-triple-result";
 import { ColorGameWinningResult } from "./winning-result";
 const { Rounds, Translator } = gc;
 
@@ -37,33 +32,15 @@ export default class Game extends GameComponent {
     lblMaxBet: Label = null;
 
     @property({ type: Node })
-    colorGameNode: Node = null;
-
-    @property({ type: Node })
     winningResultNode: Node = null;
 
-    @property({ type: Node })
-    doubleTripleResultNode: Node = null;
-
-    @property(Node)
-    camera3D: Node = null;
 
     private winningResult: ColorGameWinningResult = null;
-    private colorGame: ColorGame = null;
-    private doubleTripleResult: ColorGameDoubleTripleResult = null;
 
     override namespace = settings.name;
     override containerOptions = containerOptions;
     isLoading = true;
 
-    private readonly winningSounds = {
-        [ColorDice.Yellow]: "yellow",
-        [ColorDice.Red]: "red",
-        [ColorDice.Pink]: "pink",
-        [ColorDice.White]: "white",
-        [ColorDice.Blue]: "blue",
-        [ColorDice.Green]: "green",
-    };
 
     protected clientRoundId = -1;
     protected openAnimationIndex = 0;
@@ -82,8 +59,6 @@ export default class Game extends GameComponent {
 
     fetchComponents() {
         this.winningResult = this.winningResultNode.getComponent(ColorGameWinningResult);
-        this.colorGame = this.colorGameNode.getComponent(ColorGame);
-        this.doubleTripleResult = this.doubleTripleResultNode.getComponent(ColorGameDoubleTripleResult);
     }
 
     @render(Rounds.RoundStore, (store) => store.clientRoundId)
@@ -102,7 +77,6 @@ export default class Game extends GameComponent {
 
     calculateForDices(roundId: number) {
         const seedNumber = 123;
-        this.openAnimationIndex = roundId % this.colorGame.openAnimationCount;
         const temp = (roundId * seedNumber).toString().slice(-3);
         this.randomResults = [];
         for (let i = 0; i < 3; i++) {
@@ -114,57 +88,23 @@ export default class Game extends GameComponent {
         if (result) {
             const results = Object.values(result);
             const animationIndex = this.openAnimationIndex;
-            this.activeCameras(true);
-            this.disableCamerasWithDelay(hasAnimation ? 2 : 0.1);
             this.hasResetBox = false;
             this.winningResult.setResult(result);
             this.loadSoundResultBeforeRead(result);
             if (hasAnimation) {
-                this.colorGame.showResult(results, animationIndex);
                 this.handleDiceDropSound();
                 await AnimationUtils.delayTime(this.delayTimeShowWinningBox);
                 this.winningResult.show();
                 this.winningSound();
             } else {
-                this.colorGame.showResultStatic(results, animationIndex);
                 this.winningResult.showQuickly();
             }
-            this.doubleTripleResult.setResult(result);
         }
     }
 
     async handleDiceDropSound() {
         await AnimationUtils.delayTime(this.delayDiceDropSound);
         this.playSound(this.diceDropSound);
-    }
-
-    @handle(CameraHandler, (handler, active: boolean) => handler.activateMainCamera(active))
-    activate3DCamera(active: boolean) {
-        return active;
-    }
-
-    @handle(CameraHandler, (handler, active: boolean) => handler.activateMiniCamera(active))
-    activateMiniCamera(active: boolean) {
-        return active;
-    }
-
-    activeCameras(active: boolean) {
-        this.activate3DCamera(active);
-        this.activateMiniCamera(active);
-    }
-
-    @render(CameraStore, (store) => store.mainCameraActive)
-    update3DCameraVisibility(active: boolean) {
-        this.camera3D.active = active;
-    }
-
-    disableCamerasWithDelay(delay: number) {
-        this.unschedule(this.disableCameras);
-        this.scheduleOnce(this.disableCameras, delay);
-    }
-
-    disableCameras() {
-        this.activeCameras(false);
     }
 
     async winningSound() {
@@ -193,8 +133,7 @@ export default class Game extends GameComponent {
             if (isCancelLoadSounds) {
                 break;
             }
-            const winColorName = this.winningSounds[result];
-            const soundId = this.getAudioKeyForLanguage(winColorName);
+            const soundId = this.getAudioKeyForLanguage("blue_en");
             if (soundId) {
                 const duration = await AudioUtils.getDurationClip(soundId);
 
@@ -222,9 +161,6 @@ export default class Game extends GameComponent {
     }
 
     private resetColorBox() {
-        this.activeCameras(true);
-        this.colorGame.resetColorBox(this.randomResults);
-        this.disableCamerasWithDelay(1);
         this.hasResetBox = true;
     }
 
