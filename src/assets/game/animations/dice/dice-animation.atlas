@@ -1,0 +1,13 @@
+
+dice-animation.webp
+size: 256,128
+format: RGBA8888
+filter: Linear,Linear
+repeat: none
+box-inside
+  rotate: false
+  xy: 2, 2
+  size: 162, 91
+  orig: 162, 91
+  offset: 0, 0
+  index: -1

@@ -2,12 +2,12 @@
   "ver": "1.1.50",
   "importer": "prefab",
   "imported": true,
-  "uuid": "428b13b6-4356-4506-b87f-1b23982d91bb",
+  "uuid": "59bd1927-f2c1-43c5-bc41-0b7a6bb9d145",
   "files": [
     ".json"
   ],
   "subMetas": {},
   "userData": {
-    "syncNodeName": "winning-result"
+    "syncNodeName": "dice-cup"
   }
 }

@@ -1,5 +1,5 @@
 import gc from "@sg/game-client-base";
-import { Label, Node, _decorator } from "cc";
+import { Label, Node, _decorator, tween } from "cc";
 import { AudioUtils } from "db://shared-components/game/audios/utils";
 import GameComponent from "db://shared-components/game/scripts/components/game-component";
 import { startGame } from "db://shared-components/shared/scripts/startup";
@@ -9,7 +9,7 @@ import { siteConfigs } from "../../../scripts/site-configs";
 import { settings } from "../game-settings";
 import { containerOptions } from "../containerOptions";
 import "./../../../resources/i18n";
-import { ColorGameWinningResult } from "./winning-result";
+import { SevenUpDownResult } from "../seven-up-down-result";
 const { Rounds, Translator } = gc;
 
 startGame(settings.name, containerOptions, siteConfigs);
@@ -32,15 +32,30 @@ export default class Game extends GameComponent {
     lblMaxBet: Label = null;
 
     @property({ type: Node })
-    winningResultNode: Node = null;
+    resultNode: Node = null;
 
-
-    private winningResult: ColorGameWinningResult = null;
-
+    private resultComp: SevenUpDownResult = null;
+    protected lastRound: gc.RoundHistories.RoundHistory = {
+        "result": {
+          "dice1": 5,
+          "dice2": 6,
+          "multiplier": {
+            "value": 9,
+            "choice": "up"
+          }
+        },
+        "settlementResult": {
+          "up": true,
+          "down": false,
+          "seven": false
+        },
+        "roundId": 758757
+      };
+    protected roundId: number = null;
     override namespace = settings.name;
     override containerOptions = containerOptions;
     isLoading = true;
-
+    isFinishDiceAnim = false;
 
     protected clientRoundId = -1;
     protected openAnimationIndex = 0;
@@ -53,12 +68,12 @@ export default class Game extends GameComponent {
 
     onLoad() {
         super.onLoad();
+        console.log("Game onLoad");
         this.fetchComponents();
-        this.winningResult.hideQuickly();
     }
 
     fetchComponents() {
-        this.winningResult = this.winningResultNode.getComponent(ColorGameWinningResult);
+        this.resultComp = this.resultNode.getComponent(SevenUpDownResult);
     }
 
     @render(Rounds.RoundStore, (store) => store.clientRoundId)
@@ -71,7 +86,7 @@ export default class Game extends GameComponent {
     renderInRoundTime(isInRoundTime: boolean) {
         if (isInRoundTime && !this.hasResetBox && !this.isLoading) {
             this.resetColorBox();
-            this.winningResult.hideQuickly();
+            this.resultComp?.setResultTextVisibility(false);
         }
     }
 
@@ -84,22 +99,55 @@ export default class Game extends GameComponent {
         }
     }
 
-    async showResult(result: gc.GameServiceMessage.TResult, hasAnimation: boolean) {
+    async showResult(
+        result: gc.GameServiceMessage.TResult,
+        hasAnimation: boolean,
+        settlementResult: gc.GameServiceMessage.TSettlementResult
+    ) {
+        result = {
+            dice1: 2,
+            dice2: 1,
+            multiplier: {
+                value: 2,
+                choice: "up",
+            },
+        };
+
         if (result) {
             const results = Object.values(result);
-            const animationIndex = this.openAnimationIndex;
             this.hasResetBox = false;
-            this.winningResult.setResult(result);
+            this.resultComp?.setResultTextVisibility(false);
             this.loadSoundResultBeforeRead(result);
+
             if (hasAnimation) {
                 this.handleDiceDropSound();
                 await AnimationUtils.delayTime(this.delayTimeShowWinningBox);
-                this.winningResult.show();
+                await this.showResultAnim(results, this.roundId, settlementResult);
                 this.winningSound();
             } else {
-                this.winningResult.showQuickly();
+                this.resultComp?.setResultTextVisibility(true);
             }
         }
+    }
+
+    async showResultAnim(result: gc.GameServiceMessage.TResult, roundId: number, settlementResult): Promise<void> {
+        const prevResult = this.lastRound?.result;
+        this.resultComp.setResultTextVisibility(false);
+
+        await new Promise<void>((resolve) => {
+            tween(this.resultNode)
+                .call(() => {
+                    this.resultComp?.showResultAnim(prevResult, result, roundId); // Show the result animation
+                })
+                .delay(this.resultComp?.RESULT_DURATION || 0)
+                .call(() => {
+                    this.winningSound();
+                })
+                .call(() => resolve())
+                .start();
+        });
+
+        this.isFinishDiceAnim = true;
     }
 
     async handleDiceDropSound() {
@@ -146,6 +194,31 @@ export default class Game extends GameComponent {
         timeoutCancelWinningSound && clearTimeout(timeoutCancelWinningSound);
     }
 
+    @render(gc.RoundHistories.RoundHistoryStore, (store) => store.getLastRound())
+    public setLastRound(round: gc.RoundHistories.RoundHistory) {
+        this.lastRound =  {
+            "result": {
+              "dice1": 5,
+              "dice2": 6,
+              "multiplier": {
+                "value": 9,
+                "choice": "up"
+              }
+            },
+            "settlementResult": {
+              "up": true,
+              "down": false,
+              "seven": false
+            },
+            "roundId": 758757
+          };
+    }
+
+    @render(gc.Settlements.SettlementStore, (store) => store.roundId)
+    public updateLatestRoundId(roundId: number) {
+        this.roundId = roundId;
+    }
+
     getAudioKeyForLanguage(name: string): string {
         return `${name}_${Translator.getLanguageId() || "en"}`;
     }
@@ -155,7 +228,6 @@ export default class Game extends GameComponent {
             super.handleStartRound(isStartRound);
             this.calculateForDices(this.clientRoundId + 1);
             this.resetColorBox();
-            this.winningResult.hide();
             this.resultsSoundInfo = [];
         }
     }
