@@ -597,7 +597,7 @@
     "value": {
       "__type__": "cc.Vec3",
       "x": 0,
-      "y": -344.1,
+      "y": -28.5,
       "z": 0
     }
   },
@@ -1325,7 +1325,7 @@
       "__id__": 95
     },
     "prefab": {
-      "__uuid__": "16e1ca38-402a-4aaf-b60c-6b4200fe1cf1",
+      "__uuid__": "bfd81e4d-23fc-4d7c-884b-7bcd3dbfeb41",
       "__expectedType__": "cc.Prefab"
     },
     "headerPrefab": {
@@ -1477,7 +1477,7 @@
     "fileId": "c77YMVFmpDUboDbQ03aRQE"
   },
   {
-    "__type__": "889f197bZVLKqC+TblvSGWZ",
+    "__type__": "a343dITGSpKcq8AJG+HOcdg",
     "_name": "",
     "_objFlags": 0,
     "__editorExtras__": {},
@@ -1489,30 +1489,14 @@
       "__id__": 103
     },
     "prefab": {
-      "__uuid__": "e49e11c0-f54e-4eaf-9d6d-4d6a5b8d030d",
-      "__expectedType__": "cc.Prefab"
-    },
-    "betdetailSummaryTablePrefab": {
-      "__uuid__": "405bc27a-5d1f-4e13-a476-f6e50fd35ff2",
-      "__expectedType__": "cc.Prefab"
-    },
-    "resultContentPrefab": {
-      "__uuid__": "c7d0e2b4-f218-4540-9681-3b5effbbb251",
-      "__expectedType__": "cc.Prefab"
-    },
-    "betDetailLogTablePrefab": {
-      "__uuid__": "c34e01f8-9585-4b75-8b7e-f517b0e8a111",
-      "__expectedType__": "cc.Prefab"
-    },
-    "logDetailItemPrefab": {
-      "__uuid__": "8b537c38-0304-41e8-b82d-b13c9e365140",
+      "__uuid__": "cbf04eb6-0acc-4ee5-8fb2-8ec15219b7bb",
       "__expectedType__": "cc.Prefab"
     },
     "_id": ""
   },
   {
     "__type__": "cc.CompPrefabInfo",
-    "fileId": "08X587T5dBL7p2UX1vYFx0"
+    "fileId": "40pfN7Q9JPz4eL3nGKpnzA"
   },
   {
     "__type__": "cc.PrefabInfo",
