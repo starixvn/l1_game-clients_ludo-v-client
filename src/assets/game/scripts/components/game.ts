@@ -52,6 +52,7 @@ export default class Game extends GameComponent {
         "roundId": 758757
       };
     protected roundId: number = null;
+    protected histories: gc.RoundHistories.RoundHistory[];
     override namespace = settings.name;
     override containerOptions = containerOptions;
     isLoading = true;
@@ -79,7 +80,6 @@ export default class Game extends GameComponent {
     @render(Rounds.RoundStore, (store) => store.clientRoundId)
     storeClientRoundId(clientRoundId: number) {
         this.clientRoundId = clientRoundId;
-        this.calculateForDices(clientRoundId);
     }
 
     @render(Rounds.RoundTimeStore, (store) => store.isInRoundTime)
@@ -90,14 +90,35 @@ export default class Game extends GameComponent {
         }
     }
 
-    calculateForDices(roundId: number) {
-        const seedNumber = 123;
-        const temp = (roundId * seedNumber).toString().slice(-3);
-        this.randomResults = [];
-        for (let i = 0; i < 3; i++) {
-            this.randomResults.push(+temp[i] % 6);
+    @render(gc.RoundHistories.RoundHistoryStore, (store) => store.firstJoinGameHistory)
+    async renderStaticResult(firstJoinGameHistory: gc.RoundHistories.IFirstJoinGameHistory) {
+        if (!firstJoinGameHistory) return null;
+
+        this.resultComp?.showResultNoAnim(this.histories[1]?.result, this.histories[1]?.roundId);
+
+        const { animationHighlight, roundTime, roundHistory: lastRound } = firstJoinGameHistory;
+
+        if (!lastRound || roundTime < 0) return null;
+
+        const { result: rawResult, roundId, settlementResult } = lastRound;
+
+        const result = {
+            dice1: 2,
+            dice2: 1,
+            multiplier: {
+                value: 2,
+                choice: "up",
+            },
+        };
+
+        // Handle animations or static display
+        if (animationHighlight && roundTime > settings.durations.wholeRound - 8) {
+            await this.showResultAnim(result, roundId, result);
+        } else {
+            this.resultComp?.showResultNoAnim(result, roundId);
         }
     }
+
 
     async showResult(
         result: gc.GameServiceMessage.TResult,
@@ -114,7 +135,6 @@ export default class Game extends GameComponent {
         };
 
         if (result) {
-            const results = Object.values(result);
             this.hasResetBox = false;
             this.resultComp?.setResultTextVisibility(false);
             this.loadSoundResultBeforeRead(result);
@@ -122,7 +142,7 @@ export default class Game extends GameComponent {
             if (hasAnimation) {
                 this.handleDiceDropSound();
                 await AnimationUtils.delayTime(this.delayTimeShowWinningBox);
-                await this.showResultAnim(results, this.roundId, settlementResult);
+                await this.showResultAnim(result, this.roundId, settlementResult);
                 this.winningSound();
             } else {
                 this.resultComp?.setResultTextVisibility(true);
@@ -219,6 +239,41 @@ export default class Game extends GameComponent {
         this.roundId = roundId;
     }
 
+    @render(gc.RoundHistories.RoundHistoryStore, (store) => store.histories)
+    updateHistories(dataLogs: any[]) {
+        this.histories = [{
+            "result": {
+              "dice1": 5,
+              "dice2": 6,
+              "multiplier": {
+                "value": 9,
+                "choice": "up"
+              }
+            },
+            "settlementResult": {
+              "up": true,
+              "down": false,
+              "seven": false
+            },
+            "roundId": 758756
+          },{
+            "result": {
+              "dice1": 5,
+              "dice2": 6,
+              "multiplier": {
+                "value": 9,
+                "choice": "up"
+              }
+            },
+            "settlementResult": {
+              "up": true,
+              "down": false,
+              "seven": false
+            },
+            "roundId": 758757
+          }];
+    }
+
     getAudioKeyForLanguage(name: string): string {
         return `${name}_${Translator.getLanguageId() || "en"}`;
     }
@@ -226,7 +281,6 @@ export default class Game extends GameComponent {
     async handleStartRound(isStartRound: boolean) {
         if (isStartRound) {
             super.handleStartRound(isStartRound);
-            this.calculateForDices(this.clientRoundId + 1);
             this.resetColorBox();
             this.resultsSoundInfo = [];
         }
