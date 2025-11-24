@@ -180,7 +180,6 @@ export default class Game extends GameComponent {
     @render(gc.RoundHistories.RoundHistoryStore, (store) => store.getLastRound())
     public setLastRound(round: gc.RoundHistories.RoundHistory) {
         this.lastRound = round;
-        console.log("setLastRound", this.lastRound);
     }
 
     @render(gc.Settlements.SettlementStore, (store) => store.roundId)
