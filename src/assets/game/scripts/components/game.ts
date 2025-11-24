@@ -34,22 +34,7 @@ export default class Game extends GameComponent {
     resultNode: Node = null;
 
     private resultComp: SevenUpDownResult = null;
-    protected lastRound: gc.RoundHistories.RoundHistory = {
-        result: {
-            dice1: 5,
-            dice2: 6,
-            multiplier: {
-                value: 9,
-                choice: "up",
-            },
-        },
-        settlementResult: {
-            up: true,
-            down: false,
-            seven: false,
-        },
-        roundId: 758757,
-    };
+    protected lastRound: gc.RoundHistories.RoundHistory = null;
     protected roundId: number = null;
     protected histories: gc.RoundHistories.RoundHistory[];
     override namespace = settings.name;
@@ -84,7 +69,6 @@ export default class Game extends GameComponent {
     @render(Rounds.RoundTimeStore, (store) => store.isInRoundTime)
     renderInRoundTime(isInRoundTime: boolean) {
         if (isInRoundTime && !this.hasResetBox && !this.isLoading) {
-            this.resetColorBox();
             this.resultComp?.setResultTextVisibility(false);
         }
     }
@@ -127,23 +111,14 @@ export default class Game extends GameComponent {
         hasAnimation: boolean,
         settlementResult: gc.GameServiceMessage.TSettlementResult
     ) {
-        const tempResult = {
-            dice1: 2,
-            dice2: 1,
-            multiplier: {
-                value: 2,
-                choice: "up",
-            },
-        };
-
-        if (tempResult) {
+        if (result) {
             this.hasResetBox = false;
             this.resultComp?.setResultTextVisibility(false);
 
             if (hasAnimation) {
                 this.handleDiceDropSound();
                 await AnimationUtils.delayTime(this.delayTimeShowWinningBox);
-                await this.showResultAnim(tempResult, this.roundId, settlementResult);
+                await this.showResultAnim(result, this.roundId, settlementResult);
                 this.winningSound();
             } else {
                 this.resultComp?.setResultTextVisibility(true);
@@ -191,22 +166,7 @@ export default class Game extends GameComponent {
 
     @render(gc.RoundHistories.RoundHistoryStore, (store) => store.getLastRound())
     public setLastRound(round: gc.RoundHistories.RoundHistory) {
-        this.lastRound = {
-            result: {
-                dice1: 5,
-                dice2: 6,
-                multiplier: {
-                    value: 9,
-                    choice: "up",
-                },
-            },
-            settlementResult: {
-                up: true,
-                down: false,
-                seven: false,
-            },
-            roundId: 758757,
-        };
+        this.lastRound = round;
     }
 
     @render(gc.Settlements.SettlementStore, (store) => store.roundId)
@@ -216,40 +176,7 @@ export default class Game extends GameComponent {
 
     @render(gc.RoundHistories.RoundHistoryStore, (store) => store.histories)
     updateHistories(dataLogs: any[]) {
-        this.histories = [
-            {
-                result: {
-                    dice1: 5,
-                    dice2: 6,
-                    multiplier: {
-                        value: 9,
-                        choice: "up",
-                    },
-                },
-                settlementResult: {
-                    up: true,
-                    down: false,
-                    seven: false,
-                },
-                roundId: 758756,
-            },
-            {
-                result: {
-                    dice1: 5,
-                    dice2: 6,
-                    multiplier: {
-                        value: 9,
-                        choice: "up",
-                    },
-                },
-                settlementResult: {
-                    up: true,
-                    down: false,
-                    seven: false,
-                },
-                roundId: 758757,
-            },
-        ];
+        this.histories = dataLogs;
     }
 
     getAudioKeyForLanguage(name: string): string {
@@ -259,13 +186,9 @@ export default class Game extends GameComponent {
     async handleStartRound(isStartRound: boolean) {
         if (isStartRound) {
             super.handleStartRound(isStartRound);
-            this.resetColorBox();
+            this.resultComp?.setResultTextVisibility(false);
             this.resultsSoundInfo = [];
         }
-    }
-
-    private resetColorBox() {
-        this.hasResetBox = true;
     }
 
     @render(gc.App.AppStore, (store) => store.isLoading)

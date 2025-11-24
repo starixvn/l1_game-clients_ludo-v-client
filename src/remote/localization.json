@@ -1,19 +1,19 @@
 {
     "lobbyNames": {
-        "en": "COLOR GAME",
+        "en": "Ludo Game",
         "id": "Permainan Warna",
         "th": "เกมสี",
-        "vi": "XÍ NGẦU LỤC SẮC",
+        "vi": "Cờ Cá Ngựa",
         "zh_cn": "色彩游戏",
         "zh_tw": "色彩遊戲",
         "ja": "カラーゲーム",
         "es": "Juego\nde Colores"
     },
     "gameNames": {
-        "en": "Color Game",
+        "en": "Ludo Game",
         "id": "Permainan Warna",
         "th": "เกมสี",
-        "vi": "Xí Ngầu Lục Sắc",
+        "vi": "Cờ Cá Ngựa",
         "zh_cn": "色彩游戏",
         "zh_tw": "色彩遊戲",
         "ja": "カラーゲーム",
