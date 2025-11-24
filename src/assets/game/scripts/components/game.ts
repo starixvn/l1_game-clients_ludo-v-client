@@ -1,6 +1,5 @@
 import gc from "@sg/game-client-base";
 import { Label, Node, _decorator, tween } from "cc";
-import { AudioUtils } from "db://shared-components/game/audios/utils";
 import GameComponent from "db://shared-components/game/scripts/components/game-component";
 import { startGame } from "db://shared-components/shared/scripts/startup";
 import { AnimationUtils } from "db://shared-components/shared/utils";
@@ -36,21 +35,21 @@ export default class Game extends GameComponent {
 
     private resultComp: SevenUpDownResult = null;
     protected lastRound: gc.RoundHistories.RoundHistory = {
-        "result": {
-          "dice1": 5,
-          "dice2": 6,
-          "multiplier": {
-            "value": 9,
-            "choice": "up"
-          }
+        result: {
+            dice1: 5,
+            dice2: 6,
+            multiplier: {
+                value: 9,
+                choice: "up",
+            },
         },
-        "settlementResult": {
-          "up": true,
-          "down": false,
-          "seven": false
+        settlementResult: {
+            up: true,
+            down: false,
+            seven: false,
         },
-        "roundId": 758757
-      };
+        roundId: 758757,
+    };
     protected roundId: number = null;
     protected histories: gc.RoundHistories.RoundHistory[];
     override namespace = settings.name;
@@ -92,15 +91,19 @@ export default class Game extends GameComponent {
 
     @render(gc.RoundHistories.RoundHistoryStore, (store) => store.firstJoinGameHistory)
     async renderStaticResult(firstJoinGameHistory: gc.RoundHistories.IFirstJoinGameHistory) {
-        if (!firstJoinGameHistory) return null;
+        if (!firstJoinGameHistory) {
+            return;
+        }
 
         this.resultComp?.showResultNoAnim(this.histories[1]?.result, this.histories[1]?.roundId);
 
         const { animationHighlight, roundTime, roundHistory: lastRound } = firstJoinGameHistory;
 
-        if (!lastRound || roundTime < 0) return null;
+        if (!lastRound || roundTime < 0) {
+            return;
+        }
 
-        const { result: rawResult, roundId, settlementResult } = lastRound;
+        const { roundId } = lastRound;
 
         const result = {
             dice1: 2,
@@ -119,13 +122,12 @@ export default class Game extends GameComponent {
         }
     }
 
-
     async showResult(
         result: gc.GameServiceMessage.TResult,
         hasAnimation: boolean,
         settlementResult: gc.GameServiceMessage.TSettlementResult
     ) {
-        result = {
+        const tempResult = {
             dice1: 2,
             dice2: 1,
             multiplier: {
@@ -134,15 +136,14 @@ export default class Game extends GameComponent {
             },
         };
 
-        if (result) {
+        if (tempResult) {
             this.hasResetBox = false;
             this.resultComp?.setResultTextVisibility(false);
-            this.loadSoundResultBeforeRead(result);
 
             if (hasAnimation) {
                 this.handleDiceDropSound();
                 await AnimationUtils.delayTime(this.delayTimeShowWinningBox);
-                await this.showResultAnim(result, this.roundId, settlementResult);
+                await this.showResultAnim(tempResult, this.roundId, settlementResult);
                 this.winningSound();
             } else {
                 this.resultComp?.setResultTextVisibility(true);
@@ -188,50 +189,24 @@ export default class Game extends GameComponent {
         }
     }
 
-    async loadSoundResultBeforeRead(data: gc.GameServiceMessage.TResult) {
-        let isCancelLoadSounds = false;
-        const maxWaitTime = 5000;
-        const results = Object.values(data);
-
-        const timeoutCancelWinningSound = setTimeout(() => {
-            isCancelLoadSounds = true;
-        }, maxWaitTime);
-
-        for (const result of results) {
-            if (isCancelLoadSounds) {
-                break;
-            }
-            const soundId = this.getAudioKeyForLanguage("blue_en");
-            if (soundId) {
-                const duration = await AudioUtils.getDurationClip(soundId);
-
-                if (duration > 0) {
-                    this.resultsSoundInfo.push({ soundId, duration });
-                }
-            }
-        }
-
-        timeoutCancelWinningSound && clearTimeout(timeoutCancelWinningSound);
-    }
-
     @render(gc.RoundHistories.RoundHistoryStore, (store) => store.getLastRound())
     public setLastRound(round: gc.RoundHistories.RoundHistory) {
-        this.lastRound =  {
-            "result": {
-              "dice1": 5,
-              "dice2": 6,
-              "multiplier": {
-                "value": 9,
-                "choice": "up"
-              }
+        this.lastRound = {
+            result: {
+                dice1: 5,
+                dice2: 6,
+                multiplier: {
+                    value: 9,
+                    choice: "up",
+                },
             },
-            "settlementResult": {
-              "up": true,
-              "down": false,
-              "seven": false
+            settlementResult: {
+                up: true,
+                down: false,
+                seven: false,
             },
-            "roundId": 758757
-          };
+            roundId: 758757,
+        };
     }
 
     @render(gc.Settlements.SettlementStore, (store) => store.roundId)
@@ -241,37 +216,40 @@ export default class Game extends GameComponent {
 
     @render(gc.RoundHistories.RoundHistoryStore, (store) => store.histories)
     updateHistories(dataLogs: any[]) {
-        this.histories = [{
-            "result": {
-              "dice1": 5,
-              "dice2": 6,
-              "multiplier": {
-                "value": 9,
-                "choice": "up"
-              }
+        this.histories = [
+            {
+                result: {
+                    dice1: 5,
+                    dice2: 6,
+                    multiplier: {
+                        value: 9,
+                        choice: "up",
+                    },
+                },
+                settlementResult: {
+                    up: true,
+                    down: false,
+                    seven: false,
+                },
+                roundId: 758756,
             },
-            "settlementResult": {
-              "up": true,
-              "down": false,
-              "seven": false
+            {
+                result: {
+                    dice1: 5,
+                    dice2: 6,
+                    multiplier: {
+                        value: 9,
+                        choice: "up",
+                    },
+                },
+                settlementResult: {
+                    up: true,
+                    down: false,
+                    seven: false,
+                },
+                roundId: 758757,
             },
-            "roundId": 758756
-          },{
-            "result": {
-              "dice1": 5,
-              "dice2": 6,
-              "multiplier": {
-                "value": 9,
-                "choice": "up"
-              }
-            },
-            "settlementResult": {
-              "up": true,
-              "down": false,
-              "seven": false
-            },
-            "roundId": 758757
-          }];
+        ];
     }
 
     getAudioKeyForLanguage(name: string): string {
