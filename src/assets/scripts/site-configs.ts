@@ -21,12 +21,12 @@ const defaultConfig: gc.Configs.SiteConfigs = {
     enableMsgpackParserAllGames: false,
     enableMsgpackParserOnNotification: false,
     websocket: {
-        proxyPath: "colorgame",
-        route: "colorgame",
+        proxyPath: "ludo",
+        route: "ludo",
     },
     tolgeeUrl: "",
     boostedOddsDelayTimeByMinutes: 2,
-    storagePrefixKey: "ColorGame",
+    storagePrefixKey: "Ludo",
     sentry: {
         dsn: "https://9c999f9b51e3b4543cb160b946b5bcbe@sentry-k8s.lumigame.com/30",
         browserUrl: "https://browser.sentry-cdn.com/10.5.0/bundle.min.js",

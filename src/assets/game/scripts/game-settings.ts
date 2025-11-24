@@ -1,8 +1,8 @@
 
-const GAME_NAME = "ColorGame";
+const GAME_NAME = "Ludo";
 
 export const settings = {
-    id: 71,
+    id: 163,
     name: GAME_NAME,
     observerNamespace: GAME_NAME,
     durations: {
