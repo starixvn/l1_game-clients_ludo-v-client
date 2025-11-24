@@ -6,11 +6,11 @@ export const settings = {
     name: GAME_NAME,
     observerNamespace: GAME_NAME,
     durations: {
-        wholeRound: 41,
+        wholeRound: 32,
         lockingBet: 3,
-        placingBet: 30,
-        generatingResult: 3,
-        startRound: 2,
+        placingBet: 17,
+        generatingResult: 7,
+        startRound: 5,
     },
     numberOfRoundHistory: 100,
 };

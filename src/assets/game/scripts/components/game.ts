@@ -9,7 +9,8 @@ import { settings } from "../game-settings";
 import { containerOptions } from "../containerOptions";
 import "./../../../resources/i18n";
 import { SevenUpDownResult } from "../seven-up-down-result";
-const { Rounds, Translator } = gc;
+import { ISevenUpDownResult } from "../seven-up-down-choices";
+const { Rounds, Translator, DisabledGame } = gc;
 
 startGame(settings.name, containerOptions, siteConfigs);
 
@@ -41,6 +42,7 @@ export default class Game extends GameComponent {
     override containerOptions = containerOptions;
     isLoading = true;
     isFinishDiceAnim = false;
+    disabledGame: boolean = null;
 
     protected clientRoundId = -1;
     protected openAnimationIndex = 0;
@@ -59,6 +61,11 @@ export default class Game extends GameComponent {
 
     fetchComponents() {
         this.resultComp = this.resultNode.getComponent(SevenUpDownResult);
+    }
+
+    @render(DisabledGame.DisabledGameStore, (store) => store.disabled)
+    storeDisabled(disabled: boolean) {
+        this.disabledGame = disabled;
     }
 
     @render(Rounds.RoundStore, (store) => store.clientRoundId)
@@ -87,16 +94,14 @@ export default class Game extends GameComponent {
             return;
         }
 
-        const { roundId } = lastRound;
+        const { result: rawResult, roundId } = lastRound;
 
-        const result = {
-            dice1: 2,
-            dice2: 1,
-            multiplier: {
-                value: 2,
-                choice: "up",
-            },
-        };
+        const result = this.convertToSevenUpDownResult(rawResult);
+        if (this.disabledGame) {
+            this.resultComp?.showResultNoAnim(result, roundId);
+            this.resultComp?.showResultText(result);
+            return null;
+        }
 
         // Handle animations or static display
         if (animationHighlight && roundTime > settings.durations.wholeRound - 8) {
@@ -104,6 +109,14 @@ export default class Game extends GameComponent {
         } else {
             this.resultComp?.showResultNoAnim(result, roundId);
         }
+    }
+
+    private convertToSevenUpDownResult(rawResult: gc.GameServiceMessage.TResult): ISevenUpDownResult {
+        return {
+            dice1: rawResult["dice1"],
+            dice2: rawResult["dice2"],
+            multiplier: rawResult["multiplier"] ?? null,
+        } as ISevenUpDownResult;
     }
 
     async showResult(
@@ -167,6 +180,7 @@ export default class Game extends GameComponent {
     @render(gc.RoundHistories.RoundHistoryStore, (store) => store.getLastRound())
     public setLastRound(round: gc.RoundHistories.RoundHistory) {
         this.lastRound = round;
+        console.log("setLastRound", this.lastRound);
     }
 
     @render(gc.Settlements.SettlementStore, (store) => store.roundId)

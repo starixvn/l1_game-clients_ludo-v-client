@@ -13,16 +13,7 @@
     "gravity": {
       "y": -12
     },
-    "collisionGroups": [
-      {
-        "index": 1,
-        "name": "DICE"
-      },
-      {
-        "index": 2,
-        "name": "BOX"
-      }
-    ],
+    "collisionGroups": [],
     "collisionMatrix": {
       "0": 7,
       "1": 7,
