@@ -232,7 +232,7 @@ export const languages = {
         "double_dice": "Double",
         "game_icon_name": "COLOR GAME",
         "game_icon_name_ph": "COLOR GAME",
-        "game_name": "Color Game",
+        "game_name": "Ludo game",
         "glossary_blue": "Blue",
         "glossary_cold": "Cold",
         "glossary_green": "Green",
