@@ -254,7 +254,10 @@ export class CellComponent extends Component {
      * This method handles enabling/disabling nodes based on cell type
      */
     private updateNormalCellUI() {
-        if (this.isEnterHomeCell(this.cellData!.cellID)) {
+        if (!this.cellData) {
+            return;
+        }
+        if (this.isEnterHomeCell(this.cellData.cellID)) {
             // Show enter-home node instead of normal node
             if (this.nodeEnterHome) {
                 this.nodeEnterHome.active = true;

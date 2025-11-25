@@ -355,7 +355,14 @@ export class HorseComponent extends Component {
      * @param onComplete Optional callback when movement completes
      */
     private moveToBase(onComplete?: () => void) {
-        const horseData = gameDataService.getHorse(this.horseID!);
+        if (!this.horseID) {
+            Logger.warn("HorseComponent", "Cannot move to base: horseID is not set");
+            if (onComplete) {
+                onComplete();
+            }
+            return;
+        }
+        const horseData = gameDataService.getHorse(this.horseID);
         horseData.isSpawned = false;
         horseData.cellID = null;
         horseData.position = null;
@@ -386,7 +393,11 @@ export class HorseComponent extends Component {
     }
 
     private buildPathFromCurrentPosition(horseData: Horse, targetCell: Cell): Cell[] {
-        const pathFromCurrent = this.pathfindingService.findPath(horseData.cellID!, targetCell.cellID, horseData.baseID);
+        if (!horseData.cellID) {
+            return [];
+        }
+
+        const pathFromCurrent = this.pathfindingService.findPath(horseData.cellID, targetCell.cellID, horseData.baseID);
 
         if (pathFromCurrent.length > 0) {
             if (pathFromCurrent[0].cellID === horseData.cellID) {
@@ -395,7 +406,7 @@ export class HorseComponent extends Component {
             return pathFromCurrent;
         }
 
-        return this.buildPathStepByStep(horseData.cellID!, targetCell.cellID, horseData.baseID);
+        return this.buildPathStepByStep(horseData.cellID, targetCell.cellID, horseData.baseID);
     }
 
     private buildMovementPath(horseData: Horse, targetCell: Cell): Cell[] {
