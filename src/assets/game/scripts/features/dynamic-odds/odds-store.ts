@@ -34,6 +34,14 @@ export class OddsStore {
         return this._odds[this._odds.length - 1] || {};
     }
 
+    set odds(odds: Record<string, number>) {
+        this._odds.push(odds);
+
+        if (this._odds.length > 2) {
+            this._odds.shift();
+        }
+    }
+
     get oddsWithConfig(): OddsWithConfig {
         const deltaOdds = this._odds.length > 1 ? this.deltaForAllBetOptions(this._odds) : {};
         return {
@@ -63,13 +71,5 @@ export class OddsStore {
             deltaOdds[betOptionName] = odds[odds.length - 1][betOptionName] - (odds[odds.length - 2][betOptionName] || 0);
         }
         return deltaOdds;
-    }
-
-    set odds(odds: Record<string, number>) {
-        this._odds.push(odds);
-
-        if (this._odds.length > 2) {
-            this._odds.shift();
-        }
     }
 }

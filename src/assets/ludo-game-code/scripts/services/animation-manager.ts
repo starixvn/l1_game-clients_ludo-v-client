@@ -175,6 +175,30 @@ export class AnimationManager {
      * @param repeatCount Number of times to highlight (default: 3)
      * @param onComplete Optional callback when animation completes
      */
+    private findSpriteInNode(node: Node): Sprite | null {
+        let sprite = node.getComponent(Sprite);
+        if (sprite) {
+            return sprite;
+        }
+
+        for (const child of node.children) {
+            sprite = child.getComponent(Sprite);
+            if (sprite) {
+                return sprite;
+            }
+        }
+        return null;
+    }
+
+    private createHighlightColor(originalColor: Color): Color {
+        return new Color(
+            Math.min(255, originalColor.r + 100),
+            Math.min(255, originalColor.g + 100),
+            Math.min(255, originalColor.b + 100),
+            originalColor.a
+        );
+    }
+
     playCellHighlightAnimation(
         node: Node,
         sprite?: Sprite,
@@ -184,41 +208,14 @@ export class AnimationManager {
     ): void {
         this.stopAnimation(node);
 
-        // Find sprite if not provided
         if (!sprite) {
-            sprite = node.getComponent(Sprite);
-            if (!sprite) {
-                // Try to find sprite in child nodes
-                const children = node.children;
-                for (const child of children) {
-                    sprite = child.getComponent(Sprite);
-                    if (sprite) {
-                        break;
-                    }
-                }
-            }
+            sprite = this.findSpriteInNode(node);
         }
 
-        // Store original color if sprite exists
-        let originalColor: Color | null = null;
-        if (sprite) {
-            originalColor = new Color(sprite.color.r, sprite.color.g, sprite.color.b, sprite.color.a);
-        }
-
-        // Create particle effect node
+        const originalColor = sprite ? new Color(sprite.color.r, sprite.color.g, sprite.color.b, sprite.color.a) : null;
         const particleNode = this.createParticleEffect(node);
+        const highlightColor = originalColor ? this.createHighlightColor(originalColor) : null;
 
-        // Create highlight color (brighter)
-        const highlightColor = originalColor
-            ? new Color(
-                  Math.min(255, originalColor.r + 100),
-                  Math.min(255, originalColor.g + 100),
-                  Math.min(255, originalColor.b + 100),
-                  originalColor.a
-              )
-            : null;
-
-        // Create animation object that tracks both scale and color
         const animObj = {
             scale: 1.0,
             r: originalColor ? originalColor.r : 0,
@@ -290,8 +287,6 @@ export class AnimationManager {
                 }
             })
             .start();
-
-        this.activeTweens.set(node, animationTween);
 
         this.activeTweens.set(node, animationTween);
     }

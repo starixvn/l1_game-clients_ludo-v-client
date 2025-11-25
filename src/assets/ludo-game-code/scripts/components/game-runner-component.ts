@@ -111,25 +111,75 @@ export class GameRunnerComponent extends Component {
      * Apply initial game state immediately (without starting replay)
      * Positions horses instantly without animation
      */
+    private retryInitializationIfNeeded(): boolean {
+        if (this.horseComponentsMap.size === 0) {
+            Logger.warn("GameRunnerComponent", "No horse components found, retrying initialization...");
+            this.initializeHorseComponents();
+
+            if (this.horseComponentsMap.size === 0) {
+                Logger.warn("GameRunnerComponent", "Still no horse components found, will retry in 0.5s");
+                this.scheduleOnce(() => {
+                    this.applyInitialGameState();
+                }, 0.5);
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private applyHorsePositionsForPlayer(playerIDStr: string, horsePositions: number[]): { positioned: number; notFound: number } {
+        const playerID = parseInt(playerIDStr);
+        const baseID = this.playerToBaseMap[playerID];
+
+        if (!baseID) {
+            Logger.warn("GameRunnerComponent", `No base mapping found for player ${playerID}`);
+            return { positioned: 0, notFound: 0 };
+        }
+
+        const base = gameDataService.getBase(baseID);
+        if (!base) {
+            Logger.warn("GameRunnerComponent", `Base not found: ${baseID}`);
+            return { positioned: 0, notFound: 0 };
+        }
+
+        Logger.debug(
+            "GameRunnerComponent",
+            `Applying initial state - Player ${playerID} (${baseID}): positions [${horsePositions.join(", ")}]`
+        );
+
+        let positioned = 0;
+        let notFound = 0;
+
+        for (let horseIndex = 0; horseIndex < horsePositions.length; horseIndex++) {
+            const positionIndex = horsePositions[horseIndex];
+            const horseID = base.horseIDs[horseIndex];
+
+            if (!horseID) {
+                continue;
+            }
+
+            const horseComponent = this.horseComponentsMap.get(horseID);
+            if (horseComponent) {
+                Logger.debug("GameRunnerComponent", `Positioning horse ${horseID} to position ${positionIndex} instantly`);
+                horseComponent.setPositionIndexInstantly(positionIndex);
+                positioned++;
+            } else {
+                Logger.warn("GameRunnerComponent", `Horse component not found: ${horseID} (player ${playerID}, horse ${horseIndex})`);
+                notFound++;
+            }
+        }
+
+        return { positioned, notFound };
+    }
+
     public applyInitialGameState(): void {
         if (!this.initialGameState) {
             Logger.debug("GameRunnerComponent", "No initial game state set, skipping application");
             return;
         }
 
-        // Retry if horses aren't found yet
-        if (this.horseComponentsMap.size === 0) {
-            Logger.warn("GameRunnerComponent", "No horse components found, retrying initialization...");
-            this.initializeHorseComponents();
-
-            // If still no horses after retry, wait a bit more and try again
-            if (this.horseComponentsMap.size === 0) {
-                Logger.warn("GameRunnerComponent", "Still no horse components found, will retry in 0.5s");
-                this.scheduleOnce(() => {
-                    this.applyInitialGameState();
-                }, 0.5);
-                return;
-            }
+        if (!this.retryInitializationIfNeeded()) {
+            return;
         }
 
         Logger.debug(
@@ -140,48 +190,11 @@ export class GameRunnerComponent extends Component {
         let horsesPositioned = 0;
         let horsesNotFound = 0;
 
-        // Apply horse positions
         for (const playerIDStr in this.initialGameState.board) {
-            const playerID = parseInt(playerIDStr);
-            const baseID = this.playerToBaseMap[playerID];
-
-            if (!baseID) {
-                Logger.warn("GameRunnerComponent", `No base mapping found for player ${playerID}`);
-                continue;
-            }
-
-            const base = gameDataService.getBase(baseID);
-            if (!base) {
-                Logger.warn("GameRunnerComponent", `Base not found: ${baseID}`);
-                continue;
-            }
-
             const horsePositions = this.initialGameState.board[playerIDStr];
-            Logger.debug(
-                "GameRunnerComponent",
-                `Applying initial state - Player ${playerID} (${baseID}): positions [${horsePositions.join(", ")}]`
-            );
-
-            // Update each horse for this player
-            for (let horseIndex = 0; horseIndex < horsePositions.length; horseIndex++) {
-                const positionIndex = horsePositions[horseIndex];
-                const horseID = base.horseIDs[horseIndex];
-
-                if (!horseID) {
-                    continue;
-                }
-
-                const horseComponent = this.horseComponentsMap.get(horseID);
-                if (horseComponent) {
-                    Logger.debug("GameRunnerComponent", `Positioning horse ${horseID} to position ${positionIndex} instantly`);
-                    // Set horse position instantly without animation
-                    horseComponent.setPositionIndexInstantly(positionIndex);
-                    horsesPositioned++;
-                } else {
-                    Logger.warn("GameRunnerComponent", `Horse component not found: ${horseID} (player ${playerID}, horse ${horseIndex})`);
-                    horsesNotFound++;
-                }
-            }
+            const result = this.applyHorsePositionsForPlayer(playerIDStr, horsePositions);
+            horsesPositioned += result.positioned;
+            horsesNotFound += result.notFound;
         }
 
         Logger.debug(
@@ -189,7 +202,6 @@ export class GameRunnerComponent extends Component {
             `Initial game state applied: ${horsesPositioned} horses positioned, ${horsesNotFound} not found`
         );
 
-        // Mark initial state as applied
         this.initialGameStateApplied = true;
     }
 
@@ -240,58 +252,73 @@ export class GameRunnerComponent extends Component {
     /**
      * Apply a game state to update all horses and wait for animations to complete
      */
+    private createMovementPromise(horseID: string, positionIndex: number, horseComponent: HorseComponent): Promise<void> {
+        return new Promise<void>((resolve) => {
+            Logger.debug("GameRunnerComponent", `Moving horse ${horseID} to position ${positionIndex}`);
+            horseComponent.moveToPositionIndex(positionIndex, () => {
+                Logger.debug("GameRunnerComponent", `Horse ${horseID} completed movement to position ${positionIndex}`);
+                resolve();
+            });
+        });
+    }
+
+    private processPlayerHorses(
+        playerIDStr: string,
+        horsePositions: number[],
+        movementPromises: Array<Promise<void>>
+    ): { updated: number; notFound: number } {
+        const playerID = parseInt(playerIDStr);
+        const baseID = this.playerToBaseMap[playerID];
+
+        if (!baseID) {
+            Logger.warn("GameRunnerComponent", `No base mapping found for player ${playerID}`);
+            return { updated: 0, notFound: 0 };
+        }
+
+        const base = gameDataService.getBase(baseID);
+        if (!base) {
+            Logger.warn("GameRunnerComponent", `Base not found: ${baseID}`);
+            return { updated: 0, notFound: 0 };
+        }
+
+        Logger.debug("GameRunnerComponent", `Player ${playerID} (${baseID}): positions [${horsePositions.join(", ")}]`);
+
+        let updated = 0;
+        let notFound = 0;
+
+        for (let horseIndex = 0; horseIndex < horsePositions.length; horseIndex++) {
+            const positionIndex = horsePositions[horseIndex];
+            const horseID = base.horseIDs[horseIndex];
+
+            if (!horseID) {
+                continue;
+            }
+
+            const horseComponent = this.horseComponentsMap.get(horseID);
+            if (horseComponent) {
+                movementPromises.push(this.createMovementPromise(horseID, positionIndex, horseComponent));
+                updated++;
+            } else {
+                Logger.warn("GameRunnerComponent", `Horse component not found: ${horseID} (player ${playerID}, horse ${horseIndex})`);
+                notFound++;
+            }
+        }
+
+        return { updated, notFound };
+    }
+
     private applyGameStateAndWait(gameState: GameState): void {
         Logger.debug("GameRunnerComponent", `Applying state, currentPlayer: ${gameState.currentPlayer}`);
 
+        const movementPromises: Array<Promise<void>> = [];
         let horsesUpdated = 0;
         let horsesNotFound = 0;
-        const movementPromises: Array<Promise<void>> = [];
 
-        // Update each player's horses
         for (const playerIDStr in gameState.board) {
-            const playerID = parseInt(playerIDStr);
-            const baseID = this.playerToBaseMap[playerID];
-
-            if (!baseID) {
-                Logger.warn("GameRunnerComponent", `No base mapping found for player ${playerID}`);
-                continue;
-            }
-
-            const base = gameDataService.getBase(baseID);
-            if (!base) {
-                Logger.warn("GameRunnerComponent", `Base not found: ${baseID}`);
-                continue;
-            }
-
             const horsePositions = gameState.board[playerIDStr];
-            Logger.debug("GameRunnerComponent", `Player ${playerID} (${baseID}): positions [${horsePositions.join(", ")}]`);
-
-            // Update each horse for this player
-            for (let horseIndex = 0; horseIndex < horsePositions.length; horseIndex++) {
-                const positionIndex = horsePositions[horseIndex];
-                const horseID = base.horseIDs[horseIndex];
-
-                if (!horseID) {
-                    continue;
-                }
-
-                const horseComponent = this.horseComponentsMap.get(horseID);
-                if (horseComponent) {
-                    // Create a promise that resolves when horse movement completes
-                    const movementPromise = new Promise<void>((resolve) => {
-                        Logger.debug("GameRunnerComponent", `Moving horse ${horseID} to position ${positionIndex}`);
-                        horseComponent.moveToPositionIndex(positionIndex, () => {
-                            Logger.debug("GameRunnerComponent", `Horse ${horseID} completed movement to position ${positionIndex}`);
-                            resolve();
-                        });
-                    });
-                    movementPromises.push(movementPromise);
-                    horsesUpdated++;
-                } else {
-                    Logger.warn("GameRunnerComponent", `Horse component not found: ${horseID} (player ${playerID}, horse ${horseIndex})`);
-                    horsesNotFound++;
-                }
-            }
+            const result = this.processPlayerHorses(playerIDStr, horsePositions, movementPromises);
+            horsesUpdated += result.updated;
+            horsesNotFound += result.notFound;
         }
 
         Logger.debug("GameRunnerComponent", `State applied: ${horsesUpdated} horses updated, ${horsesNotFound} not found`);

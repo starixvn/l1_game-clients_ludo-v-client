@@ -8,8 +8,8 @@
  */
 
 import { _decorator, Component, Node, Sprite, Label, UITransform, Button, Graphics } from "cc";
-import { Cell, CellType, Position, BaseColor, GAME_CONSTANTS } from "../game-board-data";
-import { CELL_DIMENSION, CELL_DIMENSION_MULTIPLIER, WALKWAY_LENGTH } from "../global-constants";
+import { Cell, GAME_CONSTANTS } from "../game-board-data";
+import { CELL_DIMENSION, WALKWAY_LENGTH } from "../global-constants";
 import { gameDataService } from "../services/game-data-service";
 import { Logger } from "../utils/logger";
 import { AnimationManager } from "../services/animation-manager";
@@ -168,6 +168,10 @@ export class CellComponent extends Component {
      * Get the target node for horse positioning based on cell type
      * @returns The appropriate child node for the cell type, or the cell node itself as fallback
      */
+    private getActiveNodeOrFallback(targetNode: Node | null): Node {
+        return targetNode && targetNode.active ? targetNode : this.node;
+    }
+
     public getTargetNode(): Node {
         if (!this.cellData) {
             return this.node;
@@ -175,17 +179,17 @@ export class CellComponent extends Component {
 
         // Check for special enter-home cells first
         if (this.cellData.cellType === GAME_CONSTANTS.CELL_TYPE_NORMAL && this.isEnterHomeCell(this.cellData.cellID)) {
-            return this.nodeEnterHome && this.nodeEnterHome.active ? this.nodeEnterHome : this.node;
+            return this.getActiveNodeOrFallback(this.nodeEnterHome);
         }
 
         // Return the appropriate child node based on cell type
         switch (this.cellData.cellType) {
             case GAME_CONSTANTS.CELL_TYPE_NORMAL:
-                return this.nodeNormal && this.nodeNormal.active ? this.nodeNormal : this.node;
+                return this.getActiveNodeOrFallback(this.nodeNormal);
             case GAME_CONSTANTS.CELL_TYPE_HOMEPATH:
-                return this.nodeHomePath && this.nodeHomePath.active ? this.nodeHomePath : this.node;
+                return this.getActiveNodeOrFallback(this.nodeHomePath);
             case GAME_CONSTANTS.CELL_TYPE_SPAWN:
-                return this.nodeRelease && this.nodeRelease.active ? this.nodeRelease : this.node;
+                return this.getActiveNodeOrFallback(this.nodeRelease);
             default:
                 return this.node;
         }
@@ -249,6 +253,51 @@ export class CellComponent extends Component {
      * Update cell type specific UI (normal, home-path, release nodes)
      * This method handles enabling/disabling nodes based on cell type
      */
+    private updateNormalCellUI() {
+        if (this.isEnterHomeCell(this.cellData!.cellID)) {
+            // Show enter-home node instead of normal node
+            if (this.nodeEnterHome) {
+                this.nodeEnterHome.active = true;
+            }
+            if (this.nodeNormal) {
+                this.nodeNormal.active = false;
+            }
+            this.updateEnterHomeNodePosition();
+        } else {
+            // Regular normal cell - show normal node
+            if (this.nodeNormal) {
+                this.nodeNormal.active = true;
+            }
+            if (this.nodeEnterHome) {
+                this.nodeEnterHome.active = false;
+            }
+            this.updateNormalNodePosition();
+        }
+    }
+
+    private updateHomePathCellUI() {
+        if (this.nodeHomePath) {
+            this.nodeHomePath.active = true;
+        }
+        this.updateHomePathDimensions();
+    }
+
+    private updateSpawnCellUI() {
+        if (this.nodeRelease) {
+            this.nodeRelease.active = true;
+        }
+        this.updateReleaseNodePosition();
+    }
+
+    private disableNormalAndEnterHomeNodes() {
+        if (this.nodeNormal) {
+            this.nodeNormal.active = false;
+        }
+        if (this.nodeEnterHome) {
+            this.nodeEnterHome.active = false;
+        }
+    }
+
     private updateCellTypeUI() {
         if (!this.cellData) {
             return;
@@ -256,55 +305,120 @@ export class CellComponent extends Component {
 
         // Handle NORMAL cell type
         if (this.cellData.cellType === GAME_CONSTANTS.CELL_TYPE_NORMAL) {
-            // Check if this is a special enter-home cell
-            if (this.isEnterHomeCell(this.cellData.cellID)) {
-                // Show enter-home node instead of normal node
-                if (this.nodeEnterHome) {
-                    this.nodeEnterHome.active = true;
-                }
-                if (this.nodeNormal) {
-                    this.nodeNormal.active = false;
-                }
-                this.updateEnterHomeNodePosition();
-            } else {
-                // Regular normal cell - show normal node
-                if (this.nodeNormal) {
-                    this.nodeNormal.active = true;
-                }
-                if (this.nodeEnterHome) {
-                    this.nodeEnterHome.active = false;
-                }
-                this.updateNormalNodePosition();
-            }
+            this.updateNormalCellUI();
         } else {
-            // Not a NORMAL cell type - disable both normal and enter-home nodes
-            if (this.nodeNormal) {
-                this.nodeNormal.active = false;
-            }
-            if (this.nodeEnterHome) {
-                this.nodeEnterHome.active = false;
-            }
+            this.disableNormalAndEnterHomeNodes();
         }
 
         // Handle HOMEPATH cell type
         if (this.cellData.cellType === GAME_CONSTANTS.CELL_TYPE_HOMEPATH) {
-            if (this.nodeHomePath) {
-                this.nodeHomePath.active = true;
-            }
-            this.updateHomePathDimensions();
+            this.updateHomePathCellUI();
         } else if (this.nodeHomePath) {
             this.nodeHomePath.active = false;
         }
 
         // Handle SPAWN cell type
         if (this.cellData.cellType === GAME_CONSTANTS.CELL_TYPE_SPAWN) {
-            if (this.nodeRelease) {
-                this.nodeRelease.active = true;
-            }
-            this.updateReleaseNodePosition();
+            this.updateSpawnCellUI();
         } else if (this.nodeRelease) {
             this.nodeRelease.active = false;
         }
+    }
+
+    private checkRange1(cellID: string): { xAdjustment: number; yAdjustment: number } | null {
+        // Range 1: WEST_2_0 to WEST_2_6
+        if (cellID.startsWith("WEST_2_")) {
+            const match = cellID.match(/WEST_2_(\d+)/);
+            if (match) {
+                const number = parseInt(match[1], 10);
+                if (number >= 0 && number <= 6) {
+                    return { xAdjustment: 3, yAdjustment: 8 };
+                }
+            }
+        }
+        // Range 1: SOUTH_1_0 to SOUTH_6_0
+        if (cellID.startsWith("SOUTH_") && cellID.endsWith("_0")) {
+            const match = cellID.match(/SOUTH_(\d+)_0/);
+            if (match) {
+                const number = parseInt(match[1], 10);
+                if (number >= 1 && number <= 6) {
+                    return { xAdjustment: 3, yAdjustment: 8 };
+                }
+            }
+        }
+        return null;
+    }
+
+    private checkRange2(cellID: string): { xAdjustment: number; yAdjustment: number } | null {
+        // Range 2: SOUTH_1_2 to SOUTH_6_2
+        if (cellID.startsWith("SOUTH_") && cellID.endsWith("_2")) {
+            const match = cellID.match(/SOUTH_(\d+)_2/);
+            if (match) {
+                const number = parseInt(match[1], 10);
+                if (number >= 1 && number <= 6) {
+                    return { xAdjustment: -4, yAdjustment: 9 };
+                }
+            }
+        }
+        // Range 2: EAST_2_0 to EAST_2_6
+        if (cellID.startsWith("EAST_2_")) {
+            const match = cellID.match(/EAST_2_(\d+)/);
+            if (match) {
+                const number = parseInt(match[1], 10);
+                if (number >= 0 && number <= 6) {
+                    return { xAdjustment: -4, yAdjustment: 9 };
+                }
+            }
+        }
+        return null;
+    }
+
+    private checkRange3(cellID: string): { xAdjustment: number; yAdjustment: number } | null {
+        // Range 3: NORTH_0_0 to NORTH_5_0
+        if (cellID.startsWith("NORTH_") && cellID.endsWith("_0")) {
+            const match = cellID.match(/NORTH_(\d+)_0/);
+            if (match) {
+                const number = parseInt(match[1], 10);
+                if (number >= 0 && number <= 5) {
+                    return { xAdjustment: 4, yAdjustment: 1 };
+                }
+            }
+        }
+        // Range 3: WEST_0_0 to WEST_0_6
+        if (cellID.startsWith("WEST_0_")) {
+            const match = cellID.match(/WEST_0_(\d+)/);
+            if (match) {
+                const number = parseInt(match[1], 10);
+                if (number >= 0 && number <= 6) {
+                    return { xAdjustment: 4, yAdjustment: 1 };
+                }
+            }
+        }
+        return null;
+    }
+
+    private checkRange4(cellID: string): { xAdjustment: number; yAdjustment: number } | null {
+        // Range 4: NORTH_0_2 to NORTH_5_2
+        if (cellID.startsWith("NORTH_") && cellID.endsWith("_2")) {
+            const match = cellID.match(/NORTH_(\d+)_2/);
+            if (match) {
+                const number = parseInt(match[1], 10);
+                if (number >= 0 && number <= 5) {
+                    return { xAdjustment: -3, yAdjustment: 2 };
+                }
+            }
+        }
+        // Range 4: EAST_0_0 to EAST_0_6
+        if (cellID.startsWith("EAST_0_")) {
+            const match = cellID.match(/EAST_0_(\d+)/);
+            if (match) {
+                const number = parseInt(match[1], 10);
+                if (number >= 0 && number <= 6) {
+                    return { xAdjustment: -3, yAdjustment: 2 };
+                }
+            }
+        }
+        return null;
     }
 
     /**
@@ -317,99 +431,27 @@ export class CellComponent extends Component {
      * @returns Object with xAdjustment and yAdjustment values
      */
     private calculatePositionAdjustment(cellID: string): { xAdjustment: number; yAdjustment: number } {
-        let xAdjustment = 0;
-        let yAdjustment = 0;
-
-        // Range 1: WEST_2_0 to WEST_2_6
-        if (cellID.startsWith("WEST_2_")) {
-            const match = cellID.match(/WEST_2_(\d+)/);
-            if (match) {
-                const number = parseInt(match[1], 10);
-                if (number >= 0 && number <= 6) {
-                    xAdjustment = 3;
-                    yAdjustment = 8;
-                }
-            }
-        }
-        // Range 1: SOUTH_1_0 to SOUTH_6_0
-        else if (cellID.startsWith("SOUTH_") && cellID.endsWith("_0")) {
-            const match = cellID.match(/SOUTH_(\d+)_0/);
-            if (match) {
-                const number = parseInt(match[1], 10);
-                if (number >= 1 && number <= 6) {
-                    xAdjustment = 3;
-                    yAdjustment = 8;
-                }
-            }
-        }
-        // Range 2: SOUTH_1_2 to SOUTH_6_2
-        else if (cellID.startsWith("SOUTH_") && cellID.endsWith("_2")) {
-            const match = cellID.match(/SOUTH_(\d+)_2/);
-            if (match) {
-                const number = parseInt(match[1], 10);
-                if (number >= 1 && number <= 6) {
-                    xAdjustment = -4;
-                    yAdjustment = 9;
-                }
-            }
-        }
-        // Range 2: EAST_2_0 to EAST_2_6
-        else if (cellID.startsWith("EAST_2_")) {
-            const match = cellID.match(/EAST_2_(\d+)/);
-            if (match) {
-                const number = parseInt(match[1], 10);
-                if (number >= 0 && number <= 6) {
-                    xAdjustment = -4;
-                    yAdjustment = 9;
-                }
-            }
-        }
-        // Range 3: NORTH_0_0 to NORTH_5_0
-        else if (cellID.startsWith("NORTH_") && cellID.endsWith("_0")) {
-            const match = cellID.match(/NORTH_(\d+)_0/);
-            if (match) {
-                const number = parseInt(match[1], 10);
-                if (number >= 0 && number <= 5) {
-                    xAdjustment = 4;
-                    yAdjustment = 1;
-                }
-            }
-        }
-        // Range 3: WEST_0_0 to WEST_0_6
-        else if (cellID.startsWith("WEST_0_")) {
-            const match = cellID.match(/WEST_0_(\d+)/);
-            if (match) {
-                const number = parseInt(match[1], 10);
-                if (number >= 0 && number <= 6) {
-                    xAdjustment = 4;
-                    yAdjustment = 1;
-                }
-            }
-        }
-        // Range 4: NORTH_0_2 to NORTH_5_2
-        else if (cellID.startsWith("NORTH_") && cellID.endsWith("_2")) {
-            const match = cellID.match(/NORTH_(\d+)_2/);
-            if (match) {
-                const number = parseInt(match[1], 10);
-                if (number >= 0 && number <= 5) {
-                    xAdjustment = -3;
-                    yAdjustment = 2;
-                }
-            }
-        }
-        // Range 4: EAST_0_0 to EAST_0_6
-        else if (cellID.startsWith("EAST_0_")) {
-            const match = cellID.match(/EAST_0_(\d+)/);
-            if (match) {
-                const number = parseInt(match[1], 10);
-                if (number >= 0 && number <= 6) {
-                    xAdjustment = -3;
-                    yAdjustment = 2;
-                }
-            }
+        const range1 = this.checkRange1(cellID);
+        if (range1) {
+            return range1;
         }
 
-        return { xAdjustment, yAdjustment };
+        const range2 = this.checkRange2(cellID);
+        if (range2) {
+            return range2;
+        }
+
+        const range3 = this.checkRange3(cellID);
+        if (range3) {
+            return range3;
+        }
+
+        const range4 = this.checkRange4(cellID);
+        if (range4) {
+            return range4;
+        }
+
+        return { xAdjustment: 0, yAdjustment: 0 };
     }
 
     /**
@@ -554,9 +596,7 @@ export class CellComponent extends Component {
 
     onDestroy() {
         // Clean up animation
-        if (this.animationManager) {
-            this.animationManager.stopAnimation(this.node);
-        }
+        this.stopBlinkAnimation();
         // Clean up event listeners
     }
 }

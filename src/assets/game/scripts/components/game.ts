@@ -116,7 +116,7 @@ export default class Game extends GameComponent {
         if (this.disabledGame) {
             this.resultComp?.showResultNoAnim(result, roundId);
             this.resultComp?.showResultText(result);
-            return null;
+            return;
         }
 
         // Handle animations or static display

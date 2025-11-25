@@ -12,7 +12,7 @@
  */
 
 import { _decorator, Component, Node, Label, UITransform, Vec3, Sprite, Button, SpriteFrame } from "cc";
-import { BaseColor, Cell, GAME_CONSTANTS, gameBoardData } from "../game-board-data";
+import { BaseColor, Cell, GAME_CONSTANTS, gameBoardData, Horse } from "../game-board-data";
 import { WalkwayComponent } from "./walkway-component";
 import { CellComponent } from "./cell-component";
 import { CELL_DIMENSION } from "../global-constants";
@@ -108,8 +108,7 @@ export class HorseComponent extends Component {
     /**
      * Initialize the horse component
      */
-    private initializeHorse() {
-        // Set up node size - horse size equals CELL_DIMENSION
+    private setupHorseTransform() {
         const transform = this.node.getComponent(UITransform);
         if (!transform) {
             const newTransform = this.node.addComponent(UITransform);
@@ -119,50 +118,45 @@ export class HorseComponent extends Component {
             transform.setContentSize(this.horseSize, this.horseSize);
             transform.setAnchorPoint(0.5, 0.5);
         }
+    }
 
-        // Create or get horse icon label
+    private createHorseIconNode(): Node {
+        const iconNode = new Node("HorseIcon");
+        this.node.addChild(iconNode);
+        const iconTransform = iconNode.addComponent(UITransform);
+        iconTransform.setContentSize(this.horseSize * 0.8, this.horseSize * 0.8);
+        iconTransform.setAnchorPoint(0.5, 0.5);
+        iconNode.setPosition(0, 0, 0);
+        return iconNode;
+    }
+
+    private ensureHorseIconNode() {
         if (!this.nodeHorseIcon) {
-            // First try to find existing node by name (from prefab or previous initialization)
             this.nodeHorseIcon = this.node.getChildByName("HorseIcon");
             if (!this.nodeHorseIcon) {
-                // Only create if it doesn't exist to avoid duplicates
-                this.nodeHorseIcon = new Node("HorseIcon");
-                this.node.addChild(this.nodeHorseIcon);
-
-                const iconTransform = this.nodeHorseIcon.addComponent(UITransform);
-                iconTransform.setContentSize(this.horseSize * 0.8, this.horseSize * 0.8);
-                iconTransform.setAnchorPoint(0.5, 0.5);
-                this.nodeHorseIcon.setPosition(0, 0, 0);
+                this.nodeHorseIcon = this.createHorseIconNode();
             }
-        } else {
-            // If nodeHorseIcon is already assigned, verify it's still a child
-            // This prevents issues if node was removed or replaced
-            if (this.nodeHorseIcon.parent !== this.node) {
-                // Re-find or recreate if parent changed
-                const existingNode = this.node.getChildByName("HorseIcon");
-                if (existingNode) {
-                    this.nodeHorseIcon = existingNode;
-                } else {
-                    // Node was lost, need to recreate
-                    this.nodeHorseIcon = new Node("HorseIcon");
-                    this.node.addChild(this.nodeHorseIcon);
-                    const iconTransform = this.nodeHorseIcon.addComponent(UITransform);
-                    iconTransform.setContentSize(this.horseSize * 0.8, this.horseSize * 0.8);
-                    iconTransform.setAnchorPoint(0.5, 0.5);
-                    this.nodeHorseIcon.setPosition(0, 0, 0);
-                }
-            }
+        } else if (this.nodeHorseIcon.parent !== this.node) {
+            const existingNode = this.node.getChildByName("HorseIcon");
+            this.nodeHorseIcon = existingNode || this.createHorseIconNode();
         }
+    }
 
+    private setupHorseIconComponents() {
         this.horseIconLabel = this.nodeHorseIcon.getComponent(Label);
         if (!this.horseIconLabel) {
             this.horseIconLabel = this.nodeHorseIcon.addComponent(Label);
         }
 
-        // Ensure HorseIcon node has a Sprite component for background color
         if (!this.nodeHorseIcon.getComponent(Sprite)) {
             this.nodeHorseIcon.addComponent(Sprite);
         }
+    }
+
+    private initializeHorse() {
+        this.setupHorseTransform();
+        this.ensureHorseIconNode();
+        this.setupHorseIconComponents();
 
         // Add Button component to HorseIcon for click events
         let iconButton = this.nodeHorseIcon.getComponent(Button);
@@ -360,6 +354,63 @@ export class HorseComponent extends Component {
      * @param positionIndex Position index from game state (0 = base, >0 = cell index)
      * @param onComplete Optional callback when movement completes
      */
+    private moveToBase(onComplete?: () => void) {
+        const horseData = gameDataService.getHorse(this.horseID!);
+        horseData.isSpawned = false;
+        horseData.cellID = null;
+        horseData.position = null;
+        horseData.steps = 0;
+        horseData.isRetired = false;
+
+        this.node.active = true;
+        if (this.nodeHorseIcon) {
+            this.nodeHorseIcon.active = true;
+        }
+        this.stopAutoMovement();
+        this.updateVisualState();
+        this.updateBasePlaceholder();
+
+        Logger.debug("HorseComponent", `Horse ${this.horseID} moved to base (keeping visible)`);
+        if (onComplete) {
+            onComplete();
+        }
+    }
+
+    private buildPathFromBase(horseData: Horse, spawnCell: Cell, targetCell: Cell): Cell[] {
+        if (spawnCell.cellID === targetCell.cellID) {
+            return [spawnCell];
+        }
+
+        const pathFromSpawn = this.pathfindingService.findPath(spawnCell.cellID, targetCell.cellID, horseData.baseID);
+        return pathFromSpawn.length > 0 ? pathFromSpawn : [spawnCell, targetCell];
+    }
+
+    private buildPathFromCurrentPosition(horseData: Horse, targetCell: Cell): Cell[] {
+        const pathFromCurrent = this.pathfindingService.findPath(horseData.cellID!, targetCell.cellID, horseData.baseID);
+
+        if (pathFromCurrent.length > 0) {
+            if (pathFromCurrent[0].cellID === horseData.cellID) {
+                return pathFromCurrent.slice(1);
+            }
+            return pathFromCurrent;
+        }
+
+        return this.buildPathStepByStep(horseData.cellID!, targetCell.cellID, horseData.baseID);
+    }
+
+    private buildMovementPath(horseData: Horse, targetCell: Cell): Cell[] {
+        if (!horseData.cellID || !horseData.isSpawned) {
+            const spawnCell = gameDataService.findSpawnCellForBase(horseData.baseID);
+            if (!spawnCell) {
+                Logger.warn("HorseComponent", `Spawn cell not found for base ${horseData.baseID}`);
+                return [];
+            }
+            return this.buildPathFromBase(horseData, spawnCell, targetCell);
+        }
+
+        return this.buildPathFromCurrentPosition(horseData, targetCell);
+    }
+
     public moveToPositionIndex(positionIndex: number, onComplete?: () => void) {
         if (!this.horseID) {
             Logger.warn("HorseComponent", `Cannot move: horseID is not set`);
@@ -381,35 +432,10 @@ export class HorseComponent extends Component {
         Logger.debug("HorseComponent", `Moving ${this.horseID} to position index ${positionIndex}`);
 
         if (positionIndex === 0) {
-            // Horse should be in base (not spawned)
-            horseData.isSpawned = false;
-            horseData.cellID = null;
-            horseData.position = null;
-            horseData.steps = 0;
-            horseData.isRetired = false;
-
-            // Keep horse visible - BaseComponent will handle displaying it in the base via placeholders
-            // Don't hide the node, let the placeholder system manage visibility
-            this.node.active = true;
-            if (this.nodeHorseIcon) {
-                this.nodeHorseIcon.active = true;
-            }
-            this.stopAutoMovement();
-
-            // Update visual state to reflect base state
-            this.updateVisualState();
-
-            // Trigger base component to update placeholders if this horse is in a placeholder
-            this.updateBasePlaceholder();
-
-            Logger.debug("HorseComponent", `Horse ${this.horseID} moved to base (keeping visible)`);
-            if (onComplete) {
-                onComplete();
-            }
+            this.moveToBase(onComplete);
             return;
         }
 
-        // Find target cell by index
         const targetCell = this.findCellByIndex(positionIndex);
         if (!targetCell) {
             Logger.warn("HorseComponent", `Cell not found for index ${positionIndex} (horse: ${this.horseID})`);
@@ -421,7 +447,6 @@ export class HorseComponent extends Component {
 
         Logger.debug("HorseComponent", `Found cell ${targetCell.cellID} at ${targetCell.position} for index ${positionIndex}`);
 
-        // Check if horse is already at this position
         if (horseData.cellID === targetCell.cellID && horseData.position === targetCell.position) {
             Logger.debug("HorseComponent", `Horse ${this.horseID} already at position ${positionIndex} (${targetCell.cellID})`);
             if (onComplete) {
@@ -433,61 +458,12 @@ export class HorseComponent extends Component {
         this.node.active = true;
         this.stopAutoMovement();
 
-        // Store the target steps value
-        const targetSteps = positionIndex;
-
-        // Determine source cell and build path
-        let path: Cell[] = [];
-
-        if (!horseData.cellID || !horseData.isSpawned) {
-            // Horse is in base, need to spawn first
-            const spawnCell = gameDataService.findSpawnCellForBase(horseData.baseID);
-            if (!spawnCell) {
-                Logger.warn("HorseComponent", `Spawn cell not found for base ${horseData.baseID}`);
-                if (onComplete) {
-                    onComplete();
-                }
-                return;
-            }
-
-            // If target is spawn cell, just move there
-            if (spawnCell.cellID === targetCell.cellID) {
-                path = [spawnCell];
-            } else {
-                // Find path from spawn to target
-                const pathFromSpawn = this.pathfindingService.findPath(spawnCell.cellID, targetCell.cellID, horseData.baseID);
-                if (pathFromSpawn.length > 0) {
-                    // Pathfinding includes source (spawnCell), so use it directly
-                    path = pathFromSpawn;
-                } else {
-                    // Fallback: just move to spawn, then try direct
-                    path = [spawnCell, targetCell];
-                }
-            }
-        } else {
-            // Horse is already on board, find path from current position
-            const pathFromCurrent = this.pathfindingService.findPath(horseData.cellID, targetCell.cellID, horseData.baseID);
-
-            if (pathFromCurrent.length > 0) {
-                // Pathfinding includes source cell, remove it if it matches current position
-                if (pathFromCurrent[0].cellID === horseData.cellID) {
-                    // Remove source cell, keep the rest
-                    path = pathFromCurrent.slice(1);
-                } else {
-                    // Path doesn't start with current cell, use as is
-                    path = pathFromCurrent;
-                }
-            } else {
-                // Fallback: try to build path step by step using findNextCell
-                path = this.buildPathStepByStep(horseData.cellID, targetCell.cellID, horseData.baseID);
-            }
-        }
+        const path = this.buildMovementPath(horseData, targetCell);
 
         if (path.length === 0) {
             Logger.warn("HorseComponent", `No path found to ${targetCell.cellID}, moving directly`);
-            // Fallback: move directly
             this.executeMove(targetCell, () => {
-                horseData.steps = targetSteps;
+                horseData.steps = positionIndex;
                 if (onComplete) {
                     onComplete();
                 }
@@ -500,8 +476,7 @@ export class HorseComponent extends Component {
             `Found path with ${path.length} cells for ${this.horseID}: ${path.map((c) => c.cellID).join(" -> ")}`
         );
 
-        // Move through path cell by cell
-        this.moveThroughPath(path, 0, targetSteps, onComplete);
+        this.moveThroughPath(path, 0, positionIndex, onComplete);
     }
 
     /**
@@ -908,14 +883,16 @@ export class HorseComponent extends Component {
     /**
      * Find cell node position in the scene by searching WalkwayComponents
      */
-    private findCellNodePosition(cellID: string): Vec3 | null {
-        // Get the scene root
+    /**
+     * Find all WalkwayComponents in the scene
+     * @returns Array of WalkwayComponent instances
+     */
+    private findAllWalkwayComponents(): WalkwayComponent[] {
         const scene = this.node.scene;
         if (!scene) {
-            return null;
+            return [];
         }
 
-        // Search for WalkwayComponent in the scene
         const walkwayComponents: WalkwayComponent[] = [];
         const findWalkways = (node: Node) => {
             const walkway = node.getComponent(WalkwayComponent);
@@ -928,6 +905,11 @@ export class HorseComponent extends Component {
         };
 
         findWalkways(scene);
+        return walkwayComponents;
+    }
+
+    private findCellNodePosition(cellID: string): Vec3 | null {
+        const walkwayComponents = this.findAllWalkwayComponents();
 
         if (walkwayComponents.length === 0) {
             Logger.warn("HorseComponent", "No WalkwayComponents found in scene");
@@ -965,25 +947,7 @@ export class HorseComponent extends Component {
      * @param cellID Cell ID to trigger blink animation on
      */
     private triggerCellBlinkAnimation(cellID: string): void {
-        // Get the scene root
-        const scene = this.node.scene;
-        if (!scene) {
-            return;
-        }
-
-        // Search for WalkwayComponent in the scene
-        const walkwayComponents: WalkwayComponent[] = [];
-        const findWalkways = (node: Node) => {
-            const walkway = node.getComponent(WalkwayComponent);
-            if (walkway) {
-                walkwayComponents.push(walkway);
-            }
-            for (const child of node.children) {
-                findWalkways(child);
-            }
-        };
-
-        findWalkways(scene);
+        const walkwayComponents = this.findAllWalkwayComponents();
 
         // Find the cell component and trigger blink animation
         for (const walkway of walkwayComponents) {

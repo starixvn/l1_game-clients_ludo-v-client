@@ -8,20 +8,7 @@
  * Data is read from game-board-data.ts
  */
 
-import {
-    _decorator,
-    Component,
-    Node,
-    Sprite,
-    Color,
-    Label,
-    UITransform,
-    instantiate,
-    Prefab,
-    Layout,
-    Size,
-    resources,
-} from "cc";
+import { _decorator, Component, Node, Sprite, Color, Label, UITransform, instantiate, Prefab, Layout, Size, resources } from "cc";
 import { Walkway, Cell, Position, CellType, GAME_CONSTANTS } from "../game-board-data";
 import {
     WALKWAY_LENGTH,
@@ -579,56 +566,46 @@ export class WalkwayComponent extends Component {
     /**
      * Create an empty cell node (no color, just placeholder)
      */
+    private setupEmptyCellTransform(emptyNode: Node, width: number, height: number): void {
+        let transform = emptyNode.getComponent(UITransform);
+        if (transform) {
+            transform.setContentSize(width, height);
+            transform.setAnchorPoint(ANCHOR_POINT_CENTER, ANCHOR_POINT_CENTER);
+        } else {
+            transform = emptyNode.addComponent(UITransform);
+            transform.setContentSize(width, height);
+            transform.setAnchorPoint(ANCHOR_POINT_CENTER, ANCHOR_POINT_CENTER);
+        }
+    }
+
+    private disableChildNodes(emptyNode: Node): void {
+        const nodeNames = [
+            NODE_NAME_BACKGROUND,
+            NODE_NAME_NORMAL,
+            NODE_NAME_HOME_PATH,
+            NODE_NAME_RELEASE,
+            NODE_NAME_CIRCLE,
+            NODE_NAME_LABEL,
+        ];
+        for (const nodeName of nodeNames) {
+            const childNode = emptyNode.getChildByName(nodeName);
+            if (childNode) {
+                childNode.active = false;
+            }
+        }
+    }
+
     private createEmptyCellNode(): Node {
-        // Create the empty cell data to calculate size
         const emptyCell = this.createEmptyHomeCell();
         const { width, height } = this.calculateCellSize(emptyCell);
 
         let emptyNode: Node;
 
-        // Use prefab if available, otherwise create programmatically
         if (this.cellPrefab) {
             emptyNode = instantiate(this.cellPrefab);
-
-            // Ensure proper UITransform with calculated size
-            let transform = emptyNode.getComponent(UITransform);
-            if (transform) {
-                transform.setContentSize(width, height);
-                transform.setAnchorPoint(ANCHOR_POINT_CENTER, ANCHOR_POINT_CENTER);
-            } else {
-                transform = emptyNode.addComponent(UITransform);
-                transform.setContentSize(width, height);
-                transform.setAnchorPoint(ANCHOR_POINT_CENTER, ANCHOR_POINT_CENTER);
-            }
-
-            // Don't set color - leave it as default/transparent
-            // Disable all child nodes that might have colors
-            const backgroundNode = emptyNode.getChildByName(NODE_NAME_BACKGROUND);
-            if (backgroundNode) {
-                backgroundNode.active = false;
-            }
-            const normalNode = emptyNode.getChildByName(NODE_NAME_NORMAL);
-            if (normalNode) {
-                normalNode.active = false;
-            }
-            const homePathNode = emptyNode.getChildByName(NODE_NAME_HOME_PATH);
-            if (homePathNode) {
-                homePathNode.active = false;
-            }
-            const releaseNode = emptyNode.getChildByName(NODE_NAME_RELEASE);
-            if (releaseNode) {
-                releaseNode.active = false;
-            }
-            const circleNode = emptyNode.getChildByName(NODE_NAME_CIRCLE);
-            if (circleNode) {
-                circleNode.active = false;
-            }
-            const labelNode = emptyNode.getChildByName(NODE_NAME_LABEL);
-            if (labelNode) {
-                labelNode.active = false;
-            }
+            this.setupEmptyCellTransform(emptyNode, width, height);
+            this.disableChildNodes(emptyNode);
         } else {
-            // Create programmatically - just an empty node with UITransform
             emptyNode = new Node("EmptyCell");
             const transform = emptyNode.addComponent(UITransform);
             transform.setContentSize(width, height);
