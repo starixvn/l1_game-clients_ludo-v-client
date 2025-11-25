@@ -2,8 +2,7 @@ import gc from "@sg/game-client-base";
 import { LogStore } from "db://shared-components/game/scripts/stores/log-store";
 import { sharedContainer } from "../../scripts/shared-container";
 import { settings } from "./game-settings";
-import * as Ludo from "./features/feature";
-import * as GameBoardState from "./features/game-board-state";
+import * as Ludo from "./features";
 
 export const containerOptions: gc.IContainerOptions = {
     globalContainer: sharedContainer,
@@ -12,5 +11,5 @@ export const containerOptions: gc.IContainerOptions = {
         container.bind(LogStore).to(LogStore);
     },
     disabledFeatures: ["odds"],
-    features: [Ludo, GameBoardState, gc.BetDetailsNew, ...gc.defaultFeatures],
+    features: [Ludo, gc.BetDetailsNew, ...gc.defaultFeatures],
 };
