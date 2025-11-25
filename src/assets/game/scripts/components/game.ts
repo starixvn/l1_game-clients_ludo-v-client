@@ -8,8 +8,8 @@ import { siteConfigs } from "../../../scripts/site-configs";
 import { settings } from "../game-settings";
 import { containerOptions } from "../containerOptions";
 import "./../../../resources/i18n";
-import { SevenUpDownResult } from "../seven-up-down-result";
-import { ISevenUpDownResult } from "../seven-up-down-choices";
+import { LudoResult } from "../ludo-result";
+import { ILudoResult } from "../ludo-choices";
 const { Rounds, Translator, DisabledGame } = gc;
 
 startGame(settings.name, containerOptions, siteConfigs);
@@ -34,7 +34,7 @@ export default class Game extends GameComponent {
     @property({ type: Node })
     resultNode: Node = null;
 
-    private resultComp: SevenUpDownResult = null;
+    private resultComp: LudoResult = null;
     protected lastRound: gc.RoundHistories.RoundHistory = null;
     protected roundId: number = null;
     protected histories: gc.RoundHistories.RoundHistory[];
@@ -60,7 +60,7 @@ export default class Game extends GameComponent {
     }
 
     fetchComponents() {
-        this.resultComp = this.resultNode.getComponent(SevenUpDownResult);
+        this.resultComp = this.resultNode.getComponent(LudoResult);
     }
 
     @render(DisabledGame.DisabledGameStore, (store) => store.disabled)
@@ -96,7 +96,7 @@ export default class Game extends GameComponent {
 
         const { result: rawResult, roundId } = lastRound;
 
-        const result = this.convertToSevenUpDownResult(rawResult);
+        const result = this.convertToLudoResult(rawResult);
         if (this.disabledGame) {
             this.resultComp?.showResultNoAnim(result, roundId);
             this.resultComp?.showResultText(result);
@@ -111,12 +111,16 @@ export default class Game extends GameComponent {
         }
     }
 
-    private convertToSevenUpDownResult(rawResult: gc.GameServiceMessage.TResult): ISevenUpDownResult {
+    private convertToLudoResult(rawResult: gc.GameServiceMessage.TResult): ILudoResult {
         return {
             dice1: rawResult["dice1"],
             dice2: rawResult["dice2"],
-            multiplier: rawResult["multiplier"] ?? null,
-        } as ISevenUpDownResult;
+            action: rawResult["action"],
+            board: rawResult["board"],
+            currentPlayers: rawResult["currentPlayers"],
+            nextTurnIndex: rawResult["nextTurnIndex"],
+            winner: rawResult["winner"],
+        } as ILudoResult;
     }
 
     async showResult(

@@ -1,5 +1,5 @@
 import gc from "@sg/game-client-base";
-import { BetChoice } from "./seven-up-down-choices";
+import { BetChoice } from "./ludo-choices";
 
 import { sp } from "cc";
 
@@ -8,12 +8,8 @@ export const findWinningChoice = (settlementResult: any): string => {
 };
 
 export const determineWinningChoice = (totalPoints: number): string => {
-    if (totalPoints === 7) {
-        return gc.Translator.gameTranslate(`glossary_${BetChoice.SEVEN}`);
-    }
-    const winChoice = totalPoints > 6 ? `${BetChoice.UP}` : `${BetChoice.DOWN}`;
-    const choiceName = `glossary_${winChoice}`;
-    return `${totalPoints} - ${gc.Translator.gameTranslate(choiceName)}`;
+    const winChoice = totalPoints % 2 === 0 ? BetChoice.EVEN : BetChoice.ODD;
+    return gc.Translator.gameTranslate(`glossary_${winChoice}`);
 };
 
 export const calcTotalPoints = (result: gc.GameServiceMessage.TResult): number => {

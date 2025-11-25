@@ -1,7 +1,7 @@
 import { _decorator, sp, Component, UIOpacity, Vec3, SpriteFrame, Label, Node, Tween, SpriteAtlas } from "cc";
 import { AnimationUtils } from "../../../extensions/shared-components/assets/shared/utils";
-import { SevenUpDownDice } from "./seven-up-down-dice";
-import { calcTotalPoints, determineWinningChoice, pauseSpineAnimation } from "./seven-up-down-helper";
+import { LudoDice } from "./ludo-dice";
+import { calcTotalPoints, determineWinningChoice, pauseSpineAnimation } from "./ludo-helper";
 
 import gc from "@sg/game-client-base";
 
@@ -13,9 +13,9 @@ interface IResultDiceFrames {
 }
 
 @ccclass
-export class SevenUpDownResult extends Component {
-    @property({ type: [SevenUpDownDice] })
-    dicesComponent: SevenUpDownDice[] = [];
+export class LudoResult extends Component {
+    @property({ type: [LudoDice] })
+    dicesComponent: LudoDice[] = [];
 
     @property(sp.Skeleton)
     diceSkeleton: sp.Skeleton = null;

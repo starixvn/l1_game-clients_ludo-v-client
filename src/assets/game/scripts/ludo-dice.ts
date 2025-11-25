@@ -2,7 +2,7 @@ import { _decorator, Component, Sprite, SpriteFrame, Tween, Node, UIOpacity } fr
 const { ccclass, property } = _decorator;
 
 @ccclass
-export class SevenUpDownDice extends Component {
+export class LudoDice extends Component {
     @property(Sprite)
     diceSprite: Sprite | null = null;
 
