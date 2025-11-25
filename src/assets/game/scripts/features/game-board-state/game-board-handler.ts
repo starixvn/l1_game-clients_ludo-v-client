@@ -13,10 +13,18 @@ export class MatchConfigHandler implements IMultipleHandlers {
         this.gameBoardStore.boardState = boardState;
     }
 
+    handleFinishBoardState(finishBoardState: GameServiceMessage.FinishBoardState) {
+        this.gameBoardStore.finishBoardState = finishBoardState;
+    }
+
     eventHandleList = [
         {
             name: GameServiceMessage.BoardState.eventName,
             handle: this.handleBoardState,
+        },
+        {
+            name: GameServiceMessage.FinishBoardState.eventName,
+            handle: this.handleFinishBoardState,
         },
     ];
 }

@@ -1,5 +1,6 @@
 import gc from "@sg/game-client-base";
-import { Label, Node, _decorator, tween } from "cc";
+import { Label, Node, _decorator, tween, director } from "cc";
+import mobx from "mobx";
 import GameComponent from "db://shared-components/game/scripts/components/game-component";
 import { startGame } from "db://shared-components/shared/scripts/startup";
 import { AnimationUtils } from "db://shared-components/shared/utils";
@@ -12,6 +13,7 @@ import { LudoResult } from "../ludo-result";
 import { ILudoResult } from "../ludo-choices";
 import { GameBoardStore } from "../features/game-board-state/game-board-store";
 import { GameServiceMessage } from "../features/game-messages";
+import { GameRunnerComponent } from "../../../ludo-game-code/scripts/components/game-runner-component";
 const { Rounds, Translator, DisabledGame } = gc;
 
 startGame(settings.name, containerOptions, siteConfigs);
@@ -54,6 +56,7 @@ export default class Game extends GameComponent {
     protected delayDiceDropSound = 0.1;
     protected delayTimeShowWinningBox = 2;
     protected resultsSoundInfo: ResultSoundInfo[] = [];
+    private gameRunnerComponent: GameRunnerComponent = null;
 
     onLoad() {
         super.onLoad();
@@ -63,6 +66,17 @@ export default class Game extends GameComponent {
 
     fetchComponents() {
         this.resultComp = this.resultNode.getComponent(LudoResult);
+
+        // Find GameRunnerComponent in the scene
+        const scene = director.getScene();
+        if (scene) {
+            this.gameRunnerComponent = scene.getComponentInChildren(GameRunnerComponent);
+            if (this.gameRunnerComponent) {
+                console.log("GameRunnerComponent found");
+            } else {
+                console.warn("GameRunnerComponent not found in scene");
+            }
+        }
     }
 
     @render(DisabledGame.DisabledGameStore, (store) => store.disabled)
@@ -216,7 +230,39 @@ export default class Game extends GameComponent {
     }
 
     @render(GameBoardStore, (store) => store.boardState)
-    updateBoardState(boardState: GameServiceMessage.BoardState) {
-        console.log("updateBoardState", boardState);
+    renderInitBoardState(boardState: GameServiceMessage.BoardState) {
+        if (!boardState) {
+            return;
+        }
+
+        // Convert MobX observable to plain JS object
+        const boardStateJS = mobx.toJS(boardState) as GameServiceMessage.BoardState;
+        console.log("renderInitBoardState", boardStateJS);
+
+        // Apply state to GameRunnerComponent if available
+        if (this.gameRunnerComponent) {
+            // Set the initial game state
+            this.gameRunnerComponent.setInitialGameState(boardStateJS);
+
+            // Apply initial state instantly (horses positioned without animation)
+            this.gameRunnerComponent.applyInitialGameState();
+        }
+    }
+
+    @render(GameBoardStore, (store) => store.finishBoardState)
+    renderFinishBoardState(boardState: GameServiceMessage.FinishBoardState) {
+        if (!boardState?.result) {
+            return;
+        }
+
+        const boardStateJS = mobx.toJS(boardState) as GameServiceMessage.FinishBoardState;
+        console.log("renderFinishBoardState", boardStateJS);
+
+        if (this.gameRunnerComponent) {
+            // Wait 2 seconds before applying state
+            this.scheduleOnce(() => {
+                this.gameRunnerComponent.applyGameState(boardStateJS.result);
+            }, 4);
+        }
     }
 }

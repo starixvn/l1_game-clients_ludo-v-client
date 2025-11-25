@@ -9,6 +9,7 @@ const { makeAutoObservable } = mobx;
 @injectable()
 export class GameBoardStore {
     private _boardState: GameServiceMessage.BoardState | null = null;
+    private _finishBoardState: GameServiceMessage.FinishBoardState | null = null;
 
     get boardState(): GameServiceMessage.BoardState | null {
         return this._boardState;
@@ -16,6 +17,12 @@ export class GameBoardStore {
 
     set boardState(boardState: GameServiceMessage.BoardState | null) {
         this._boardState = boardState;
+    }
+    get finishBoardState(): GameServiceMessage.FinishBoardState | null {
+        return this._finishBoardState;
+    }
+    set finishBoardState(finishBoardState: GameServiceMessage.FinishBoardState | null) {
+        this._finishBoardState = finishBoardState;
     }
 
     constructor() {

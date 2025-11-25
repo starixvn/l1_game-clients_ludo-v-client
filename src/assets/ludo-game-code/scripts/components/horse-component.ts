@@ -96,6 +96,9 @@ export class HorseComponent extends Component {
     /** Animation manager instance */
     private animationManager: AnimationManager;
 
+    /** Cached top layer node (auto-scale-widget) for reparenting */
+    private cachedTopLayer: Node = null;
+
     onLoad() {
         this.pathfindingService = new PathfindingService(gameDataService);
         this.animationManager = new AnimationManager();
@@ -1024,15 +1027,68 @@ export class HorseComponent extends Component {
     }
 
     /**
+     * Recursively find a node by name in the scene tree
+     * @param parent Parent node to search from
+     * @param name Name of the node to find
+     * @returns Found node or null
+     */
+    private findNodeRecursive(parent: Node, name: string): Node | null {
+        if (!parent) return null;
+
+        // Check current node
+        if (parent.name === name) {
+            return parent;
+        }
+
+        // Search children recursively
+        for (let i = 0; i < parent.children.length; i++) {
+            const found = this.findNodeRecursive(parent.children[i], name);
+            if (found) {
+                return found;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Get or find the top layer node (auto-scale-widget)
+     * Caches the result for reuse
+     */
+    private getTopLayer(): Node | null {
+        // Return cached value if available
+        if (this.cachedTopLayer && this.cachedTopLayer.isValid) {
+            return this.cachedTopLayer;
+        }
+
+        // Find recursively if not cached
+        const scene = this.node.scene;
+        if (!scene) {
+            Logger.warn("HorseComponent", "Scene not available");
+            return null;
+        }
+
+        this.cachedTopLayer = this.findNodeRecursive(scene, "auto-scale-widget");
+
+        if (!this.cachedTopLayer) {
+            Logger.warn("HorseComponent", "auto-scale-widget not found in scene");
+            return null;
+        }
+
+        return this.cachedTopLayer;
+    }
+
+    /**
      * Reparent HorseIcon to top layer for rendering on top
      */
     private reparentToTopLayer(): void {
         if (!this.nodeHorseIcon) return;
 
-        const scene = this.node.scene;
-        if (!scene) return;
+        const topLayer = this.getTopLayer();
+        if (!topLayer) {
+            return;
+        }
 
-        const topLayer = scene.getChildByName("Canvas") || scene;
         if (topLayer === this.nodeHorseIcon.parent) return;
 
         const worldPos = new Vec3();
