@@ -10,6 +10,8 @@ import { containerOptions } from "../containerOptions";
 import "./../../../resources/i18n";
 import { LudoResult } from "../ludo-result";
 import { ILudoResult } from "../ludo-choices";
+import { GameBoardStore } from "../features/game-board-state/game-board-store";
+import { GameServiceMessage } from "../features/game-messages";
 const { Rounds, Translator, DisabledGame } = gc;
 
 startGame(settings.name, containerOptions, siteConfigs);
@@ -211,5 +213,10 @@ export default class Game extends GameComponent {
     @render(gc.App.AppStore, (store) => store.isLoading)
     updateLoading(isLoading: boolean) {
         this.isLoading = isLoading;
+    }
+
+    @render(GameBoardStore, (store) => store.boardState)
+    updateBoardState(boardState: GameServiceMessage.BoardState) {
+        console.log("updateBoardState", boardState);
     }
 }
