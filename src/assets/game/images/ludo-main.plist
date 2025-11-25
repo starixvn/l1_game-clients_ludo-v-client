@@ -15,7 +15,7 @@
                 <key>spriteSourceSize</key>
                 <string>{195,144}</string>
                 <key>textureRect</key>
-                <string>{{3,3},{195,144}}</string>
+                <string>{{791,3},{195,144}}</string>
                 <key>textureRotated</key>
                 <false/>
             </dict>
@@ -30,7 +30,7 @@
                 <key>spriteSourceSize</key>
                 <string>{9,7}</string>
                 <key>textureRect</key>
-                <string>{{200,3},{9,7}}</string>
+                <string>{{988,3},{9,7}}</string>
                 <key>textureRotated</key>
                 <false/>
             </dict>
@@ -45,7 +45,37 @@
                 <key>spriteSourceSize</key>
                 <string>{9,7}</string>
                 <key>textureRect</key>
-                <string>{{211,3},{9,7}}</string>
+                <string>{{999,3},{9,7}}</string>
+                <key>textureRotated</key>
+                <false/>
+            </dict>
+            <key>main-bg.png</key>
+            <dict>
+                <key>aliases</key>
+                <array/>
+                <key>spriteOffset</key>
+                <string>{0,0}</string>
+                <key>spriteSize</key>
+                <string>{786,1398}</string>
+                <key>spriteSourceSize</key>
+                <string>{786,1398}</string>
+                <key>textureRect</key>
+                <string>{{3,3},{786,1398}}</string>
+                <key>textureRotated</key>
+                <false/>
+            </dict>
+            <key>side-bet-option.png</key>
+            <dict>
+                <key>aliases</key>
+                <array/>
+                <key>spriteOffset</key>
+                <string>{0,0}</string>
+                <key>spriteSize</key>
+                <string>{191,110}</string>
+                <key>spriteSourceSize</key>
+                <string>{191,110}</string>
+                <key>textureRect</key>
+                <string>{{791,149},{191,110}}</string>
                 <key>textureRotated</key>
                 <false/>
             </dict>
@@ -61,9 +91,9 @@
             <key>realTextureFileName</key>
             <string>ludo-main.webp</string>
             <key>size</key>
-            <string>{256,256}</string>
+            <string>{1024,2048}</string>
             <key>smartupdate</key>
-            <string>$TexturePacker:SmartUpdate:b79264383da0fd3172e97465462de632:a0d904629a30b5a3913078ab4d570802:962c15ba16dc0bbb5cf4e464d8ec413c$</string>
+            <string>$TexturePacker:SmartUpdate:2ed57c205782c0a055e4e6e6dafcdaac:d1f763e43a55590c50182099ff8c9274:962c15ba16dc0bbb5cf4e464d8ec413c$</string>
             <key>textureFileName</key>
             <string>ludo-main.webp</string>
         </dict>
