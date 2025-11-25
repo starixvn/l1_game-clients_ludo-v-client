@@ -37,15 +37,15 @@ export class HorsePlaceholderComponent extends Component {
 
     /** Whether to hide the horse inside the placeholder */
     @property({ type: Boolean, tooltip: "Whether to hide the horse" })
-    isHorseHidden: boolean = false;
+    isHorseHidden = false;
 
     /** Whether the horse is being hovered (for action selection highlighting) */
     @property({ type: Boolean, tooltip: "Whether the horse is hovered" })
-    isHovered: boolean = false;
+    isHovered = false;
 
     /** Optional horse ID to pass to the Horse component */
     @property({ type: String, tooltip: "Horse ID (e.g., BASE_1_HORSE_1)" })
-    horseID: string = "";
+    horseID = "";
 
     /** Horse node (child containing HorseComponent) - assign in editor or will be found dynamically */
     @property({
@@ -58,10 +58,10 @@ export class HorsePlaceholderComponent extends Component {
     private horseComponent: HorseComponent = null;
 
     /** Placeholder size in pixels */
-    private placeholderSize: number = CELL_DIMENSION * HORSE_PLACEHOLDER_SIZE;
+    private readonly placeholderSize: number = CELL_DIMENSION * HORSE_PLACEHOLDER_SIZE;
 
     /** Horse size in pixels */
-    private horseSize: number = CELL_DIMENSION;
+    private readonly horseSize: number = CELL_DIMENSION;
 
     onLoad() {
         this.initializePlaceholder();

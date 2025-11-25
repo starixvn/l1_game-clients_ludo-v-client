@@ -4,7 +4,7 @@
  * Renders dice results with text, reacting to changes in DiceResultStore
  */
 
-import { _decorator, Component, Label, Color } from "cc";
+import { _decorator, Label, Color } from "cc";
 import Observer from "observer";
 import { ObserverComponent } from "db://shared-components/shared/common-components/observer-component/scripts/observer-component";
 import { DiceResultStore } from "../../../game/scripts/stores/dice-result-store";

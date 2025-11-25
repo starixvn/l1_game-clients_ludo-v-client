@@ -21,7 +21,7 @@ const { ccclass, property, menu } = _decorator;
 export class CellComponent extends Component {
     /** Cell ID (e.g., NORTH_0_0, EAST_1_5, etc.) */
     @property({ type: String, tooltip: "Cell ID (e.g., NORTH_0_0, EAST_1_5)" })
-    cellID: string = "";
+    cellID = "";
 
     /** Circle border node (for SPAWN and NORMAL cells) */
     @property({ type: Node, tooltip: "Circle border node" })
@@ -55,7 +55,7 @@ export class CellComponent extends Component {
     private button: Button = null;
 
     /** Circle graphics component */
-    private circleGraphics: Graphics = null;
+    private readonly circleGraphics: Graphics = null;
 
     /** Cell data from gameBoardData */
     private cellData: Cell | null = null;
@@ -196,7 +196,7 @@ export class CellComponent extends Component {
      * @param duration Duration of each highlight cycle in seconds (default: 0.2)
      * @param repeatCount Number of times to highlight (default: 3)
      */
-    public playBlinkAnimation(duration: number = 0.2, repeatCount: number = 3): void {
+    public playBlinkAnimation(duration = 0.2, repeatCount = 3): void {
         // Find the target sprite to highlight
         const targetNode = this.getTargetNode();
         let sprite = targetNode.getComponent(Sprite);
@@ -204,8 +204,8 @@ export class CellComponent extends Component {
         // If no sprite found, try to find sprite in child nodes
         if (!sprite) {
             const children = this.node.children;
-            for (let i = 0; i < children.length; i++) {
-                sprite = children[i].getComponent(Sprite);
+            for (const child of children) {
+                sprite = child.getComponent(Sprite);
                 if (sprite) {
                     break;
                 }
@@ -484,15 +484,12 @@ export class CellComponent extends Component {
         }
 
         const position = this.cellData.position;
-        const multiplier = CELL_DIMENSION * CELL_DIMENSION_MULTIPLIER;
 
         // Get or add UITransform component
         let transform = this.nodeHomePath.getComponent(UITransform);
         if (!transform) {
             transform = this.nodeHomePath.addComponent(UITransform);
         }
-
-        const currentSize = transform.contentSize;
 
         if (position === GAME_CONSTANTS.POSITION_NORTH || position === GAME_CONSTANTS.POSITION_SOUTH) {
             // For NORTH/SOUTH (vertical walkways), set width

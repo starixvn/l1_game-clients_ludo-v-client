@@ -1,4 +1,4 @@
-import { _decorator, CCBoolean, Widget } from "cc";
+import { _decorator, Widget } from "cc";
 import { BetItemsPolygon as BetItemsPolygonBase } from "db://shared-components/game/bets/scripts/components/bet-items-polygon";
 import observer from "observer";
 import gc from "@sg/game-client-base";

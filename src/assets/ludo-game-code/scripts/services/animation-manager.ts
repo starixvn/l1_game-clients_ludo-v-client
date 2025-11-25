@@ -32,7 +32,7 @@ export interface AnimationConfig {
  * Animation Manager for handling component animations
  */
 export class AnimationManager {
-    private activeTweens: Map<Node, any> = new Map();
+    private readonly activeTweens: Map<Node, any> = new Map();
 
     /**
      * Stop animation for a node
@@ -178,8 +178,8 @@ export class AnimationManager {
     playCellHighlightAnimation(
         node: Node,
         sprite?: Sprite,
-        duration: number = 0.2,
-        repeatCount: number = 3,
+        duration = 0.2,
+        repeatCount = 3,
         onComplete?: () => void
     ): void {
         this.stopAnimation(node);
@@ -190,8 +190,8 @@ export class AnimationManager {
             if (!sprite) {
                 // Try to find sprite in child nodes
                 const children = node.children;
-                for (let i = 0; i < children.length; i++) {
-                    sprite = children[i].getComponent(Sprite);
+                for (const child of children) {
+                    sprite = child.getComponent(Sprite);
                     if (sprite) {
                         break;
                     }

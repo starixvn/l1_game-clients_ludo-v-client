@@ -29,8 +29,7 @@ export class Logger {
     }
 
     static info(component: string, message: string, ...args: any[]): void {
-        if (this.isDebugEnabled()) {
-            console.log(`[${component}] ${message}`, ...args);
-        }
+        // Use debug method to avoid code duplication
+        this.debug(component, message, ...args);
     }
 }

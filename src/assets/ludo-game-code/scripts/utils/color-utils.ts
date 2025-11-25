@@ -44,7 +44,7 @@ export function getBaseColor(baseColor: BaseColor): Color | null {
  * @param increment Brightness increment (0-255)
  * @returns Brighter color
  */
-export function brightenColor(color: Color, increment: number = 50): Color {
+export function brightenColor(color: Color, increment = 50): Color {
     return new Color(
         Math.min(255, color.r + increment),
         Math.min(255, color.g + increment),

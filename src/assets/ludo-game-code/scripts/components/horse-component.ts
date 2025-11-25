@@ -12,7 +12,7 @@
  */
 
 import { _decorator, Component, Node, Label, UITransform, Vec3, Sprite, Button, SpriteFrame } from "cc";
-import { BaseColor, Horse, Cell, GAME_CONSTANTS, gameBoardData } from "../game-board-data";
+import { BaseColor, Cell, GAME_CONSTANTS, gameBoardData } from "../game-board-data";
 import { WalkwayComponent } from "./walkway-component";
 import { CellComponent } from "./cell-component";
 import { CELL_DIMENSION } from "../global-constants";
@@ -56,19 +56,19 @@ export class HorseComponent extends Component {
 
     /** Whether the horse is currently jumping (for animation) */
     @property({ type: Boolean, tooltip: "Whether the horse is jumping" })
-    isJumping: boolean = false;
+    isJumping = false;
 
     /** Whether the horse is currently flying to base (for kick animation) */
     @property({ type: Boolean, tooltip: "Whether the horse is flying to base" })
-    isFlyingToBase: boolean = false;
+    isFlyingToBase = false;
 
     /** Whether the horse is being hovered (for action selection highlighting) */
     @property({ type: Boolean, tooltip: "Whether the horse is hovered" })
-    isHovered: boolean = false;
+    isHovered = false;
 
     /** Optional horse ID */
     @property({ type: String, tooltip: "Horse ID (e.g., BASE_1_HORSE_1)" })
-    horseID: string = "";
+    horseID = "";
 
     /** Array of sprite frames for horses, indexed by base color: [YELLOW, GREEN, BLUE, RED] */
     @property({ type: [SpriteFrame], tooltip: "Horse sprite frames array: [YELLOW, GREEN, BLUE, RED]" })
@@ -82,7 +82,7 @@ export class HorseComponent extends Component {
     private horseIconLabel: Label = null;
 
     /** Whether auto-movement is enabled */
-    private isAutoMoving: boolean = false;
+    private isAutoMoving = false;
 
     /** Auto-movement interval in seconds */
     private readonly AUTO_MOVE_INTERVAL: number = 1.0;
@@ -160,9 +160,8 @@ export class HorseComponent extends Component {
         }
 
         // Ensure HorseIcon node has a Sprite component for background color
-        let iconSprite = this.nodeHorseIcon.getComponent(Sprite);
-        if (!iconSprite) {
-            iconSprite = this.nodeHorseIcon.addComponent(Sprite);
+        if (!this.nodeHorseIcon.getComponent(Sprite)) {
+            this.nodeHorseIcon.addComponent(Sprite);
         }
 
         // Add Button component to HorseIcon for click events
@@ -189,7 +188,9 @@ export class HorseComponent extends Component {
      * Example: "BASE_1_HORSE_1" -> "1"
      */
     private extractHorseNumber(horseID?: string): string | null {
-        if (!horseID) return null;
+        if (!horseID) {
+            return null;
+        }
         // Match the last number in the horse ID (e.g., "1" from "BASE_1_HORSE_1")
         const match = horseID.match(/_(\d+)$/);
         return match ? match[1] : null;
@@ -231,7 +232,8 @@ export class HorseComponent extends Component {
         // Get or add Sprite component to HorseIcon node
         let iconSprite = this.nodeHorseIcon.getComponent(Sprite);
         if (!iconSprite) {
-            iconSprite = this.nodeHorseIcon.addComponent(Sprite);
+            this.nodeHorseIcon.addComponent(Sprite);
+            iconSprite = this.nodeHorseIcon.getComponent(Sprite);
         }
 
         // Use HorseSpriteFrames array if available
@@ -720,8 +722,8 @@ export class HorseComponent extends Component {
             if (baseComponent && baseComponent.baseID === horseData.baseID) {
                 return baseComponent;
             }
-            for (let i = 0; i < node.children.length; i++) {
-                const found = findBaseComponent(node.children[i]);
+            for (const child of node.children) {
+                const found = findBaseComponent(child);
                 if (found) {
                     return found;
                 }
@@ -920,8 +922,8 @@ export class HorseComponent extends Component {
             if (walkway) {
                 walkwayComponents.push(walkway);
             }
-            for (let i = 0; i < node.children.length; i++) {
-                findWalkways(node.children[i]);
+            for (const child of node.children) {
+                findWalkways(child);
             }
         };
 
@@ -976,8 +978,8 @@ export class HorseComponent extends Component {
             if (walkway) {
                 walkwayComponents.push(walkway);
             }
-            for (let i = 0; i < node.children.length; i++) {
-                findWalkways(node.children[i]);
+            for (const child of node.children) {
+                findWalkways(child);
             }
         };
 
@@ -1033,7 +1035,9 @@ export class HorseComponent extends Component {
      * @returns Found node or null
      */
     private findNodeRecursive(parent: Node, name: string): Node | null {
-        if (!parent) return null;
+        if (!parent) {
+            return null;
+        }
 
         // Check current node
         if (parent.name === name) {
@@ -1041,8 +1045,8 @@ export class HorseComponent extends Component {
         }
 
         // Search children recursively
-        for (let i = 0; i < parent.children.length; i++) {
-            const found = this.findNodeRecursive(parent.children[i], name);
+        for (const child of parent.children) {
+            const found = this.findNodeRecursive(child, name);
             if (found) {
                 return found;
             }
@@ -1082,14 +1086,18 @@ export class HorseComponent extends Component {
      * Reparent HorseIcon to top layer for rendering on top
      */
     private reparentToTopLayer(): void {
-        if (!this.nodeHorseIcon) return;
+        if (!this.nodeHorseIcon) {
+            return;
+        }
 
         const topLayer = this.getTopLayer();
         if (!topLayer) {
             return;
         }
 
-        if (topLayer === this.nodeHorseIcon.parent) return;
+        if (topLayer === this.nodeHorseIcon.parent) {
+            return;
+        }
 
         const worldPos = new Vec3();
         this.nodeHorseIcon.getWorldPosition(worldPos);
@@ -1106,7 +1114,9 @@ export class HorseComponent extends Component {
      * Ensure HorseIcon renders on top by moving to end of parent's children
      */
     private ensureRenderOnTop(): void {
-        if (!this.nodeHorseIcon?.parent) return;
+        if (!this.nodeHorseIcon?.parent) {
+            return;
+        }
 
         const parent = this.nodeHorseIcon.parent;
         parent.removeChild(this.nodeHorseIcon);

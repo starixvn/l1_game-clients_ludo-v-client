@@ -6,7 +6,6 @@
  */
 
 import { _decorator, Component, Node } from "cc";
-import gc from "@sg/game-client-base";
 import { Logger } from "../utils/logger";
 import { GameState } from "../stubs/game-state-stub";
 import { HorseComponent } from "./horse-component";
@@ -27,13 +26,13 @@ export class GameRunnerComponent extends Component {
     };
 
     /** Map of horseID to HorseComponent for quick lookup */
-    private horseComponentsMap: Map<string, HorseComponent> = new Map();
+    private readonly horseComponentsMap: Map<string, HorseComponent> = new Map();
 
     /** Initial game state to start from (optional) */
     private initialGameState: GameState | null = null;
 
     /** Whether initial game state has been applied instantly */
-    private initialGameStateApplied: boolean = false;
+    private initialGameStateApplied = false;
 
     start() {
         // Initialize horse components in start() to ensure scene is fully loaded
@@ -75,8 +74,8 @@ export class GameRunnerComponent extends Component {
                     Logger.warn("GameRunnerComponent", `Found HorseComponent but no horseID (node: ${node.name})`);
                 }
             }
-            for (let i = 0; i < node.children.length; i++) {
-                findHorseComponents(node.children[i]);
+            for (const child of node.children) {
+                findHorseComponents(child);
             }
         };
 

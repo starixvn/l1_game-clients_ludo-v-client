@@ -18,13 +18,11 @@ import {
     UITransform,
     instantiate,
     Prefab,
-    Vec3,
-    Vec2,
     Layout,
     Size,
     resources,
 } from "cc";
-import { Walkway, Cell, Position, CellType, BaseColor, GAME_CONSTANTS } from "../game-board-data";
+import { Walkway, Cell, Position, CellType, GAME_CONSTANTS } from "../game-board-data";
 import {
     WALKWAY_LENGTH,
     WALKWAY_VERTICAL_WIDTH,
@@ -97,7 +95,7 @@ interface CellNodeData {
 export class WalkwayComponent extends Component {
     /** Walkway ID (e.g., WALKWAY_1, WALKWAY_2, etc.) */
     @property({ type: String, tooltip: "Walkway ID (e.g., WALKWAY_1, WALKWAY_2, WALKWAY_3, WALKWAY_4)" })
-    walkwayID: string = "";
+    walkwayID = "";
 
     /** Prefab for cell nodes (optional - if not provided, cells will be created programmatically) */
     @property({ type: Prefab, tooltip: "Cell prefab (optional)" })
@@ -111,13 +109,13 @@ export class WalkwayComponent extends Component {
     private walkwayData: Walkway | null = null;
 
     /** Map of cellID to cell node data */
-    private cellNodesMap: Map<string, CellNodeData> = new Map();
+    private readonly cellNodesMap: Map<string, CellNodeData> = new Map();
 
     /** All cells for this walkway position */
     private walkwayCells: Cell[] = [];
 
     /** Whether this walkway is horizontal (East/West) */
-    private isHorizontal: boolean = false;
+    private isHorizontal = false;
 
     onLoad() {
         if (!this.cellPrefab) {
@@ -136,7 +134,9 @@ export class WalkwayComponent extends Component {
         resources.load(CELL_PREFAB_PATH, Prefab, (err, prefab) => {
             if (err) {
                 Logger.warn("WalkwayComponent", `Failed to load cell prefab from ${CELL_PREFAB_PATH}: ${err.message}`);
-                if (callback) callback();
+                if (callback) {
+                    callback();
+                }
                 return;
             }
 
@@ -144,7 +144,9 @@ export class WalkwayComponent extends Component {
                 this.cellPrefab = prefab;
             }
 
-            if (callback) callback();
+            if (callback) {
+                callback();
+            }
         });
     }
 
@@ -504,7 +506,7 @@ export class WalkwayComponent extends Component {
             console.log(`[WalkwayComponent] createCellNode - Added UITransform: ${width}x${height}`);
 
             // Add Sprite for visual representation (basic fallback)
-            const sprite = cellNode.addComponent(Sprite);
+            cellNode.addComponent(Sprite);
             console.log(`[WalkwayComponent] createCellNode - Added Sprite component`);
         }
 

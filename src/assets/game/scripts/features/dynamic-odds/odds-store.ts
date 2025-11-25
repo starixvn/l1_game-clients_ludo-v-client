@@ -21,14 +21,14 @@ export class OddsStore {
         mobx.reaction(
             () => this.gameSetting?.odds,
             (odds) => {
-                if(odds && Object.values(odds).length > 0) {
+                if (odds && Object.values(odds).length > 0) {
                     this.odds = odds;
                 }
             }
         );
     }
 
-    private _odds: Array<Record<string, number>> = [];
+    private readonly _odds: Array<Record<string, number>> = [];
 
     get odds() {
         return this._odds[this._odds.length - 1] || {};
@@ -71,7 +71,5 @@ export class OddsStore {
         if (this._odds.length > 2) {
             this._odds.shift();
         }
-
-        //console.log("oddsStore", JSON.stringify(this._odds));
     }
 }

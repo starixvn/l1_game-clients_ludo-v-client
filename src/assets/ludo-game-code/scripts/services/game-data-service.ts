@@ -5,7 +5,7 @@
  * Implements Dependency Inversion Principle by abstracting data access.
  */
 
-import { gameBoardData, Base, Horse, Cell, Position, BaseColor, GAME_CONSTANTS, Walkway } from "../game-board-data";
+import { gameBoardData, Base, Horse, Cell, Position, GAME_CONSTANTS, Walkway } from "../game-board-data";
 
 /**
  * Interface for game data access

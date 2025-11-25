@@ -8,8 +8,8 @@
  * Data is read from game-board-data.ts
  */
 
-import { _decorator, Component, Node, Sprite, Color, Label, UITransform, instantiate, Prefab, resources } from "cc";
-import { Base, Horse, BaseColor } from "../game-board-data";
+import { _decorator, Component, Node, Sprite, UITransform, instantiate, Prefab, resources } from "cc";
+import { Base, Horse } from "../game-board-data";
 import { WALKWAY_ROW_COUNT, CELL_DIMENSION } from "../global-constants";
 import { HorsePlaceholderComponent } from "./horse-placeholder-component";
 import { gameDataService } from "../services/game-data-service";
@@ -36,19 +36,19 @@ export interface IBaseComponentProps {
 export class BaseComponent extends Component {
     /** Unique identifier for this base (BASE_1, BASE_2, etc.) */
     @property({ type: String, tooltip: "Base ID (e.g., BASE_1, BASE_2, BASE_3, BASE_4)" })
-    baseID: string = "";
+    baseID = "";
 
     /** Whether the player of this base has won the game */
     @property({ type: Boolean, tooltip: "Whether the player has won" })
-    hasWon: boolean = false;
+    hasWon = false;
 
     /** Whether the base is spawnable (player rolled a 6) */
     @property({ type: Boolean, tooltip: "Whether base is spawnable (rolled 6)" })
-    spawnable: boolean = false;
+    spawnable = false;
 
     /** Whether this base is enabled/active in the current game */
     @property({ type: Boolean, tooltip: "Whether this base is enabled/active" })
-    isBaseEnabled: boolean = true;
+    isBaseEnabled = true;
 
     /** Container node for the outer base border */
     @property({ type: Node, tooltip: "Outer container node (colored border)" })
@@ -73,10 +73,10 @@ export class BaseComponent extends Component {
     private baseData: Base | null = null;
 
     /** Map of horse IDs to their data */
-    private horsesMap: Map<string, Horse> = new Map();
+    private readonly horsesMap: Map<string, Horse> = new Map();
 
     /** Map of horse IDs to their placeholder component instances */
-    private horsePlaceholdersMap: Map<string, HorsePlaceholderComponent> = new Map();
+    private readonly horsePlaceholdersMap: Map<string, HorsePlaceholderComponent> = new Map();
 
     /** Path to horse placeholder prefab resource */
     private readonly HORSE_PLACEHOLDER_PREFAB_PATH = "ludo-game-code/prefabs/horse-placeholder-prefab";

@@ -6,7 +6,7 @@
  * the appropriate SpriteFrame from the spriteFrames array.
  */
 
-import { _decorator, Component, Node, Sprite, SpriteFrame } from "cc";
+import { _decorator, Component, Sprite, SpriteFrame } from "cc";
 import { CellComponent } from "./cell-component";
 import { Logger } from "../utils/logger";
 import { GAME_CONSTANTS } from "../game-board-data";

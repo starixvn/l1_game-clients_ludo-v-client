@@ -5,7 +5,7 @@
  * The sprite frame is selected from the cellSprites array using the baseID as an index.
  */
 
-import { _decorator, Component, Node, Sprite, SpriteFrame } from "cc";
+import { _decorator, Component, Sprite, SpriteFrame } from "cc";
 import { gameDataService } from "../services/game-data-service";
 import { CellComponent } from "./cell-component";
 import { Logger } from "../utils/logger";
@@ -21,7 +21,7 @@ export class CellSpriteComponent extends Component {
 
     /** Optional cell ID to look up baseID from game data (if not provided, will try to get from CellComponent) */
     @property({ type: String, tooltip: "Cell ID (optional, will try to get from CellComponent if not set)" })
-    cellID: string = "";
+    cellID = "";
 
     /** Sprite component reference */
     private sprite: Sprite = null;

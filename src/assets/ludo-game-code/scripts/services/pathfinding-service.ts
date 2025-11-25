@@ -5,14 +5,14 @@
  * Extracted from HorseComponent to follow Single Responsibility Principle.
  */
 
-import { Cell, BaseColor, GAME_CONSTANTS } from "../game-board-data";
+import { Cell, GAME_CONSTANTS } from "../game-board-data";
 import { IGameDataService } from "./game-data-service";
 
 /**
  * Pathfinding service for determining next cell in horse movement
  */
 export class PathfindingService {
-    constructor(private dataService: IGameDataService) {}
+    constructor(private readonly dataService: IGameDataService) {}
 
     /**
      * Find the next cell for a horse based on current cell and base
@@ -169,7 +169,11 @@ export class PathfindingService {
         visited.add(sourceCellID);
 
         while (queue.length > 0) {
-            const { cellID, path } = queue.shift()!;
+            const item = queue.shift();
+            if (!item) {
+                break;
+            }
+            const { cellID, path } = item;
             const currentCell = this.dataService.getCell(cellID);
             
             if (!currentCell) {
@@ -229,10 +233,6 @@ export class PathfindingService {
             }
 
             // Check if we're getting closer to target (by index)
-            const currentIndex = currentCell.index;
-            const nextIndex = nextCell.index;
-            const targetIndex = targetCell.index;
-
             // If we're moving away from target, might need different strategy
             // For now, just follow the path
             currentCell = nextCell;
