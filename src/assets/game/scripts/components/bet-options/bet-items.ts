@@ -28,7 +28,6 @@ export class BetItems extends BetItemsPolygonBase {
                 betItem.node.children.forEach((child) => {
                     if (child.name === "bg") {
                         ComponentUtils.setNodeColor(child, color);
-                        return;
                     }
                 });
             });
