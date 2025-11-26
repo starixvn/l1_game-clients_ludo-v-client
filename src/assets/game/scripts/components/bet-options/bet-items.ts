@@ -25,6 +25,8 @@ export class BetItems extends BetItemsPolygonBase {
     @render(OddsStore, (store) => store.oddsWithConfig)
     renderOddsWithConfig(oddsWithConfig: OddsWithConfig) {
         this.oddsWithConfig = oddsWithConfig;
+
+        this.renderOdds(oddsWithConfig);
     }
 
     renderOdds(oddsWithConfig: OddsWithConfig) {
@@ -42,8 +44,8 @@ export class BetItems extends BetItemsPolygonBase {
                 return;
             }
 
+            betItem.updateStatusLabelOdds(true);
             betItem.renderOdd(odd, fractional);
-            this.updateWidgets(betItem);
         });
     }
 

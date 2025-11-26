@@ -7,8 +7,8 @@ const { injectable, inject } = inversify;
 @injectable()
 export class OddsHandler implements gc.Shared.IHandler<Record<string, number>> {
     @inject(OddsStore) private readonly oddsStore: OddsStore;
-    name = gc.Shared.GameServiceMessage.GameOdds.eventName;
-    handle(input: Record<string, number>) {
-        this.oddsStore.odds = input;
+    name = "nextState";
+    handle(input: any) {
+        this.oddsStore.odds = input.odds;
     }
 }

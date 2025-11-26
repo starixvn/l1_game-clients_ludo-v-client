@@ -48,8 +48,16 @@ export default class BetItemCustomize extends BetItem {
 
     private updateOddsIndicators(deltaOdd: number): void {
         const isIncrease = deltaOdd > 0;
-        AnimationUtils.setOpacityNode(this.increaseOdd, isIncrease ? 255 : 1);
-        AnimationUtils.setOpacityNode(this.decreaseOdd, isIncrease ? 1 : 255);
+
+        if (deltaOdd === 0) {
+            AnimationUtils.setOpacityNode(this.increaseOdd, 1);
+            AnimationUtils.setOpacityNode(this.decreaseOdd, 1);
+        } else {
+            AnimationUtils.setOpacityNode(this.increaseOdd, isIncrease ? 255 : 1);
+            AnimationUtils.setOpacityNode(this.decreaseOdd, isIncrease ? 1 : 255);
+        }
+        this.setBlockIconVisibility(false);
+        this.setDisabledVisibility(false);
     }
 
     setDisabledVisibility(status: boolean) {
