@@ -7,31 +7,13 @@ import BetItemCustomize from "./bet-item-customize";
 
 const { ccclass, property } = _decorator;
 const { render } = observer;
-const { Rounds } = gc;
 
 @ccclass
 export class BetItems extends BetItemsPolygonBase {
-    oddsWithConfig: OddsWithConfig = null;
-
-    @render(Rounds.RoundTimeStore, (store) => store.isStartRound)
-    handleStartRound(isStartRound: boolean) {
-        if (isStartRound) {
-            if (this.oddsWithConfig) {
-                this.renderOdds(this.oddsWithConfig);
-            }
-        }
-    }
 
     @render(OddsStore, (store) => store.oddsWithConfig)
-    renderOddsWithConfig(oddsWithConfig: OddsWithConfig) {
-        this.oddsWithConfig = oddsWithConfig;
-
-        this.renderOdds(oddsWithConfig);
-    }
-
     renderOdds(oddsWithConfig: OddsWithConfig) {
         const { odds, fractional } = oddsWithConfig;
-
         Object.keys(odds || {}).forEach((choice) => {
             const betItem = this.filterBetItem(choice) as BetItemCustomize;
             if (!betItem) {
@@ -45,6 +27,7 @@ export class BetItems extends BetItemsPolygonBase {
             }
 
             betItem.updateStatusLabelOdds(true);
+            betItem.renderIncreaseOdds(oddsWithConfig);
             betItem.renderOdd(odd, fractional);
         });
     }

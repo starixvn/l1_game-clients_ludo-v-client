@@ -47,7 +47,7 @@ export class OddsStore {
         return {
             odds: this.odds,
             fractional: this.mainPlayerStore.fractionalOddsFormat,
-            deltaOdds,
+            deltaOdds: deltaOdds,
         };
     }
 
