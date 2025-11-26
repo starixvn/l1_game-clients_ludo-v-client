@@ -7,12 +7,13 @@
  * Data is read from game-board-data.ts
  */
 
-import { _decorator, Component, Node, Sprite, Label, UITransform, Button, Graphics } from "cc";
+import { _decorator, Component, Node, Sprite, Label, UITransform, Button, Graphics, Color } from "cc";
 import { Cell, GAME_CONSTANTS } from "../game-board-data";
 import { CELL_DIMENSION, WALKWAY_LENGTH } from "../global-constants";
 import { gameDataService } from "../services/game-data-service";
 import { Logger } from "../utils/logger";
 import { AnimationManager } from "../services/animation-manager";
+import { getCellColor } from "../utils/color-utils";
 
 const { ccclass, property, menu } = _decorator;
 
@@ -259,6 +260,7 @@ export class CellComponent extends Component {
         }
         if (this.isEnterHomeCell(this.cellData.cellID)) {
             // Show enter-home node instead of normal node
+            // Note: Enter-home cells do not get their sprite color updated
             if (this.nodeEnterHome) {
                 this.nodeEnterHome.active = true;
             }
@@ -275,6 +277,53 @@ export class CellComponent extends Component {
                 this.nodeEnterHome.active = false;
             }
             this.updateNormalNodePosition();
+            this.updateCellSpriteColor(this.nodeNormal);
+        }
+    }
+
+    /**
+     * Update sprite color for cell based on base color using CELL_COLORS
+     * Note: Enter-home cells (WEST_1_0, SOUTH_6_1, EAST_1_6, NORTH_0_1) are excluded from color updates
+     * @param targetNode The node containing the sprite to update
+     */
+    private updateCellSpriteColor(targetNode: Node | null) {
+        if (!targetNode || !this.cellData) {
+            return;
+        }
+
+        // Get base data from cell's baseID
+        const base = gameDataService.getBase(this.cellData.baseID);
+        if (!base) {
+            Logger.warn("CellComponent", `Base not found for baseID: ${this.cellData.baseID}`);
+            return;
+        }
+
+        // Get color from base color using CELL_COLORS constant
+        const color = getCellColor(base.color);
+        if (!color) {
+            Logger.warn("CellComponent", `Color not found for base color: ${base.color}`);
+            return;
+        }
+
+        // Find sprite component in the target node or its children
+        let sprite = targetNode.getComponent(Sprite);
+        if (!sprite) {
+            // Try to find sprite in child nodes
+            const children = targetNode.children;
+            for (const child of children) {
+                sprite = child.getComponent(Sprite);
+                if (sprite) {
+                    break;
+                }
+            }
+        }
+
+        // Set sprite color if found
+        if (sprite) {
+            sprite.color = color;
+            Logger.debug("CellComponent", `Updated sprite color for cell ${this.cellID} to ${base.color}`);
+        } else {
+            Logger.warn("CellComponent", `Sprite component not found in node for cell ${this.cellID}`);
         }
     }
 
@@ -290,6 +339,15 @@ export class CellComponent extends Component {
             this.nodeRelease.active = true;
         }
         this.updateReleaseNodePosition();
+        this.updateCellSpriteColor(this.nodeRelease);
+
+        // Also update color for star child node if it exists
+        if (this.nodeRelease) {
+            const starNode = this.nodeRelease.getChildByName("star");
+            if (starNode) {
+                this.updateCellSpriteColor(starNode);
+            }
+        }
     }
 
     private disableNormalAndEnterHomeNodes() {

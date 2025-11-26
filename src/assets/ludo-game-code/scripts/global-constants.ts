@@ -55,10 +55,17 @@ export const DEFAULT_STARTING_BASE = BaseID.BASE_3; // Default base that starts 
 
 // Base color hex values
 export const BASE_COLORS: Record<BaseColor, string> = {
-    RED: "#D22E2E",
-    GREEN: "#088812",
-    BLUE: "#17669F",
-    YELLOW: "#E3DE3B",
+    RED: "#FFC9BF",
+    GREEN: "#CEFFE5",
+    BLUE: "#D5DEF0",
+    YELLOW: "#FFE8A4",
+};
+
+export const CELL_COLORS: Record<BaseColor, string> = {
+    RED: "#C00000",
+    GREEN: "#00B050",
+    BLUE: "#4B8ECD",
+    YELLOW: "#FFD901",
 };
 
 // Timeout and delay constants (in milliseconds)
