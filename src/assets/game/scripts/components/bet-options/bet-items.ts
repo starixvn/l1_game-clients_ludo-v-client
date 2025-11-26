@@ -4,12 +4,36 @@ import observer from "observer";
 import gc from "@sg/game-client-base";
 import { OddsStore, OddsWithConfig } from "../../features/dynamic-odds/odds-store";
 import BetItemCustomize from "./bet-item-customize";
+import { GameBoardStore } from "../../features/game-board-state/game-board-store";
+import { GameServiceMessage } from "../../features/game-messages";
+import { ComponentUtils } from "db://shared-components/shared/utils";
 
 const { ccclass, property } = _decorator;
 const { render } = observer;
 
 @ccclass
 export class BetItems extends BetItemsPolygonBase {
+    mappingColor = {
+        0: "#BF9611 ",
+        1: "#189911",
+        2: "#9A2B28",
+        3: "#282E9A",
+    };
+
+    @render(GameBoardStore, (store) => store.boardState)
+    changeColorBetOptions(state: GameServiceMessage.BoardState) {
+        if (state) {
+            const color = this.mappingColor[state.nextPlayer];
+            this.betItemComponents.forEach((betItem) => {
+                betItem.node.children.forEach((child) => {
+                    if (child.name === "bg") {
+                        ComponentUtils.setNodeColor(child, color);
+                        return;
+                    }
+                });
+            });
+        }
+    }
 
     @render(OddsStore, (store) => store.oddsWithConfig)
     renderOdds(oddsWithConfig: OddsWithConfig) {

@@ -4,6 +4,21 @@
     <dict>
         <key>frames</key>
         <dict>
+            <key>bet-option-radius.png</key>
+            <dict>
+                <key>aliases</key>
+                <array/>
+                <key>spriteOffset</key>
+                <string>{0,0}</string>
+                <key>spriteSize</key>
+                <string>{40,40}</string>
+                <key>spriteSourceSize</key>
+                <string>{40,40}</string>
+                <key>textureRect</key>
+                <string>{{3,1684},{40,40}}</string>
+                <key>textureRotated</key>
+                <false/>
+            </dict>
             <key>bet-option.png</key>
             <dict>
                 <key>aliases</key>
@@ -11,13 +26,13 @@
                 <key>spriteOffset</key>
                 <string>{0,0}</string>
                 <key>spriteSize</key>
-                <string>{195,144}</string>
+                <string>{40,40}</string>
                 <key>spriteSourceSize</key>
-                <string>{195,144}</string>
+                <string>{40,40}</string>
                 <key>textureRect</key>
-                <string>{{3,1403},{195,144}}</string>
+                <string>{{3,1726},{40,40}}</string>
                 <key>textureRotated</key>
-                <true/>
+                <false/>
             </dict>
             <key>board-bg.png</key>
             <dict>
@@ -34,6 +49,36 @@
                 <key>textureRotated</key>
                 <false/>
             </dict>
+            <key>border-bet-option.png</key>
+            <dict>
+                <key>aliases</key>
+                <array/>
+                <key>spriteOffset</key>
+                <string>{0,0}</string>
+                <key>spriteSize</key>
+                <string>{42,40}</string>
+                <key>spriteSourceSize</key>
+                <string>{42,40}</string>
+                <key>textureRect</key>
+                <string>{{3,1640},{42,40}}</string>
+                <key>textureRotated</key>
+                <true/>
+            </dict>
+            <key>border-radius.png</key>
+            <dict>
+                <key>aliases</key>
+                <array/>
+                <key>spriteOffset</key>
+                <string>{0,0}</string>
+                <key>spriteSize</key>
+                <string>{42,41}</string>
+                <key>spriteSourceSize</key>
+                <string>{42,41}</string>
+                <key>textureRect</key>
+                <string>{{3,1596},{42,41}}</string>
+                <key>textureRotated</key>
+                <true/>
+            </dict>
             <key>decrease.png</key>
             <dict>
                 <key>aliases</key>
@@ -45,7 +90,7 @@
                 <key>spriteSourceSize</key>
                 <string>{9,7}</string>
                 <key>textureRect</key>
-                <string>{{3,1833},{9,7}}</string>
+                <string>{{3,1808},{9,7}}</string>
                 <key>textureRotated</key>
                 <true/>
             </dict>
@@ -60,7 +105,7 @@
                 <key>spriteSourceSize</key>
                 <string>{9,7}</string>
                 <key>textureRect</key>
-                <string>{{3,1844},{9,7}}</string>
+                <string>{{3,1819},{9,7}}</string>
                 <key>textureRotated</key>
                 <true/>
             </dict>
@@ -75,7 +120,7 @@
                 <key>spriteSourceSize</key>
                 <string>{38,38}</string>
                 <key>textureRect</key>
-                <string>{{3,1793},{38,38}}</string>
+                <string>{{3,1768},{38,38}}</string>
                 <key>textureRotated</key>
                 <false/>
             </dict>
@@ -105,7 +150,7 @@
                 <key>spriteSourceSize</key>
                 <string>{191,110}</string>
                 <key>textureRect</key>
-                <string>{{3,1600},{191,110}}</string>
+                <string>{{3,1403},{191,110}}</string>
                 <key>textureRotated</key>
                 <true/>
             </dict>
@@ -123,7 +168,7 @@
             <key>size</key>
             <string>{2048,2048}</string>
             <key>smartupdate</key>
-            <string>$TexturePacker:SmartUpdate:f52c8e561a4470392931181aa0e69385:4e3d4d0dd045a20ec971563b7666f0af:962c15ba16dc0bbb5cf4e464d8ec413c$</string>
+            <string>$TexturePacker:SmartUpdate:1e755a83dcd054fe9497bc9689adb574:fcbfc307ff484e76608a2999ad09b46f:962c15ba16dc0bbb5cf4e464d8ec413c$</string>
             <key>textureFileName</key>
             <string>ludo-main.webp</string>
         </dict>
