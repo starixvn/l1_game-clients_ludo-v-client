@@ -15,7 +15,7 @@
                 <key>spriteSourceSize</key>
                 <string>{40,40}</string>
                 <key>textureRect</key>
-                <string>{{1598,3},{40,40}}</string>
+                <string>{{1710,3},{40,40}}</string>
                 <key>textureRotated</key>
                 <false/>
             </dict>
@@ -30,7 +30,7 @@
                 <key>spriteSourceSize</key>
                 <string>{40,40}</string>
                 <key>textureRect</key>
-                <string>{{1640,3},{40,40}}</string>
+                <string>{{1752,3},{40,40}}</string>
                 <key>textureRotated</key>
                 <false/>
             </dict>
@@ -60,7 +60,7 @@
                 <key>spriteSourceSize</key>
                 <string>{42,40}</string>
                 <key>textureRect</key>
-                <string>{{1554,3},{42,40}}</string>
+                <string>{{1666,3},{42,40}}</string>
                 <key>textureRotated</key>
                 <false/>
             </dict>
@@ -75,7 +75,7 @@
                 <key>spriteSourceSize</key>
                 <string>{40,40}</string>
                 <key>textureRect</key>
-                <string>{{1682,3},{40,40}}</string>
+                <string>{{1794,3},{40,40}}</string>
                 <key>textureRotated</key>
                 <false/>
             </dict>
@@ -90,7 +90,7 @@
                 <key>spriteSourceSize</key>
                 <string>{9,7}</string>
                 <key>textureRect</key>
-                <string>{{1764,3},{9,7}}</string>
+                <string>{{1876,3},{9,7}}</string>
                 <key>textureRotated</key>
                 <false/>
             </dict>
@@ -105,7 +105,7 @@
                 <key>spriteSourceSize</key>
                 <string>{9,7}</string>
                 <key>textureRect</key>
-                <string>{{1775,3},{9,7}}</string>
+                <string>{{1887,3},{9,7}}</string>
                 <key>textureRotated</key>
                 <false/>
             </dict>
@@ -120,7 +120,7 @@
                 <key>spriteSourceSize</key>
                 <string>{38,38}</string>
                 <key>textureRect</key>
-                <string>{{1724,3},{38,38}}</string>
+                <string>{{1836,3},{38,38}}</string>
                 <key>textureRotated</key>
                 <false/>
             </dict>
@@ -139,6 +139,36 @@
                 <key>textureRotated</key>
                 <false/>
             </dict>
+            <key>statistic-bg.png</key>
+            <dict>
+                <key>aliases</key>
+                <array/>
+                <key>spriteOffset</key>
+                <string>{0,0}</string>
+                <key>spriteSize</key>
+                <string>{44,52}</string>
+                <key>spriteSourceSize</key>
+                <string>{44,52}</string>
+                <key>textureRect</key>
+                <string>{{1612,3},{44,52}}</string>
+                <key>textureRotated</key>
+                <true/>
+            </dict>
+            <key>statistic-button.png</key>
+            <dict>
+                <key>aliases</key>
+                <array/>
+                <key>spriteOffset</key>
+                <string>{0,0}</string>
+                <key>spriteSize</key>
+                <string>{56,56}</string>
+                <key>spriteSourceSize</key>
+                <string>{56,56}</string>
+                <key>textureRect</key>
+                <string>{{1554,3},{56,56}}</string>
+                <key>textureRotated</key>
+                <false/>
+            </dict>
         </dict>
         <key>metadata</key>
         <dict>
@@ -153,7 +183,7 @@
             <key>size</key>
             <string>{2048,2048}</string>
             <key>smartupdate</key>
-            <string>$TexturePacker:SmartUpdate:df4d6dba9bfcfef6664d37aa7538fbb8:7aeef678840563065dd27131eae29b0d:962c15ba16dc0bbb5cf4e464d8ec413c$</string>
+            <string>$TexturePacker:SmartUpdate:04cece1d8b8462e4c0bc1dc3358a4ee1:bfaafeb46d021e3426690d7566d94540:962c15ba16dc0bbb5cf4e464d8ec413c$</string>
             <key>textureFileName</key>
             <string>ludo-main.webp</string>
         </dict>

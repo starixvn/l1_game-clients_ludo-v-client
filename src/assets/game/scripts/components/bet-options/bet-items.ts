@@ -14,7 +14,7 @@ const { render } = observer;
 @ccclass
 export class BetItems extends BetItemsPolygonBase {
     mappingColor = {
-        0: "#BF9611 ",
+        0: "#BF9611",
         1: "#189911",
         2: "#9A2B28",
         3: "#282E9A",
