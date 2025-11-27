@@ -81,12 +81,6 @@ export class HorseComponent extends Component {
     /** Horse icon label component */
     private horseIconLabel: Label = null;
 
-    /** Whether auto-movement is enabled */
-    private isAutoMoving = false;
-
-    /** Auto-movement interval in seconds */
-    private readonly AUTO_MOVE_INTERVAL: number = 1.0;
-
     /** Unicode character for chess knight (♞) */
     private readonly HORSE_UNICODE = "\u265E";
 
@@ -373,7 +367,6 @@ export class HorseComponent extends Component {
         if (this.nodeHorseIcon) {
             this.nodeHorseIcon.active = true;
         }
-        this.stopAutoMovement();
         this.updateVisualState();
         this.updateBasePlaceholder();
 
@@ -467,7 +460,6 @@ export class HorseComponent extends Component {
         }
 
         this.node.active = true;
-        this.stopAutoMovement();
 
         const path = this.buildMovementPath(horseData, targetCell);
 
@@ -631,7 +623,6 @@ export class HorseComponent extends Component {
             if (this.nodeHorseIcon) {
                 this.nodeHorseIcon.active = true;
             }
-            this.stopAutoMovement();
             this.updateVisualState();
             this.updateBasePlaceholder();
 
@@ -652,7 +643,6 @@ export class HorseComponent extends Component {
         if (this.nodeHorseIcon) {
             this.nodeHorseIcon.active = true;
         }
-        this.stopAutoMovement();
 
         // Update horse data directly
         horseData.cellID = targetCell.cellID;
@@ -787,9 +777,7 @@ export class HorseComponent extends Component {
         }
 
         Logger.debug("HorseComponent", `Found SPAWN cell: ${spawnCell.cellID} for base ${baseID}`);
-        this.executeMove(spawnCell, () => {
-            this.startAutoMovement();
-        });
+        this.executeMove(spawnCell);
     }
 
     /**
@@ -802,18 +790,221 @@ export class HorseComponent extends Component {
             return;
         }
 
+        // Find horses that will be kicked BEFORE moving (capture the list)
+        const horsesToKick = this.findHorsesAtCell(targetCell);
+
         // Move horse to target position using tween
         this.moveHorseToPosition(targetPosition, () => {
-            // Update horse data after movement completes
+            // Update horse data after movement completes (occupy the cell)
             this.updateHorseDataAfterMove(targetCell);
 
             // Trigger blink animation on the target cell
             this.triggerCellBlinkAnimation(targetCell.cellID);
 
+            // Now kick the horses that were at this cell (after occupying it)
+            this.kickHorses(horsesToKick, targetCell, () => {
+                if (onComplete) {
+                    onComplete();
+                }
+            });
+        });
+    }
+
+    /**
+     * Find horses at a specific cell (before moving to it)
+     * @param targetCell The target cell to check
+     * @returns Array of horse data for horses at this cell
+     */
+    private findHorsesAtCell(targetCell: Cell): Horse[] {
+        // Find horses at this cell by checking all horses' cellID property
+        // This is more reliable than checking cell.horseIDs which might not be updated in real-time
+        const allHorses = gameDataService.getBases().flatMap((base) => gameDataService.getHorsesForBase(base.ID));
+        return allHorses.filter((horse) => horse.cellID === targetCell.cellID && horse.isSpawned && horse.horseID !== this.horseID);
+    }
+
+    /**
+     * Kick horses that were at a cell (called after the moving horse has occupied the cell)
+     * @param horsesToKick Array of horse data to kick
+     * @param targetCell The target cell (for logging)
+     * @param onComplete Callback when kicking is complete (or if no horse to kick)
+     */
+    private kickHorses(horsesToKick: Horse[], targetCell: Cell, onComplete?: () => void) {
+        if (horsesToKick.length === 0) {
+            // No horses to kick
             if (onComplete) {
                 onComplete();
             }
-        });
+            return;
+        }
+
+        // Kick all horses that were at this cell (usually just one)
+        let kickCount = 0;
+        const totalKicks = horsesToKick.length;
+
+        for (const horseData of horsesToKick) {
+            const kickedHorseComponent = this.findHorseComponentByID(horseData.horseID);
+            if (kickedHorseComponent) {
+                Logger.debug("HorseComponent", `Kicking horse ${horseData.horseID} from cell ${targetCell.cellID}`);
+                kickedHorseComponent.kickToBase(() => {
+                    kickCount++;
+                    if (kickCount >= totalKicks) {
+                        // All horses have been kicked
+                        if (onComplete) {
+                            onComplete();
+                        }
+                    }
+                });
+            } else {
+                // Horse component not found, just update data
+                Logger.debug("HorseComponent", `Horse component not found for ${horseData.horseID}, updating data only`);
+                this.updateHorseDataToBase(horseData);
+                kickCount++;
+                if (kickCount >= totalKicks) {
+                    if (onComplete) {
+                        onComplete();
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * Find HorseComponent by horseID in the scene
+     * @param horseID The horse ID to find
+     * @returns HorseComponent instance or null if not found
+     */
+    private findHorseComponentByID(horseID: string): HorseComponent | null {
+        const scene = this.node.scene;
+        if (!scene) {
+            return null;
+        }
+
+        const findHorseComponent = (node: Node): HorseComponent | null => {
+            const horseComponent = node.getComponent(HorseComponent);
+            if (horseComponent && horseComponent.horseID === horseID) {
+                return horseComponent;
+            }
+            for (const child of node.children) {
+                const found = findHorseComponent(child);
+                if (found) {
+                    return found;
+                }
+            }
+            return null;
+        };
+
+        return findHorseComponent(scene);
+    }
+
+    /**
+     * Kick this horse to base with flying animation
+     * @param onComplete Callback when kick animation completes
+     */
+    public kickToBase(onComplete?: () => void) {
+        if (!this.horseID) {
+            Logger.warn("HorseComponent", "Cannot kick to base: horseID is not set");
+            if (onComplete) {
+                onComplete();
+            }
+            return;
+        }
+
+        const horseData = gameDataService.getHorse(this.horseID);
+        if (!horseData) {
+            Logger.warn("HorseComponent", `Horse data not found for ${this.horseID}`);
+            if (onComplete) {
+                onComplete();
+            }
+            return;
+        }
+
+        Logger.debug("HorseComponent", `Kicking horse ${this.horseID} to base`);
+
+        // Set flying animation
+        this.setFlyingToBase(true);
+
+        // Find base position for flying animation
+        const base = gameDataService.getBase(horseData.baseID);
+        if (!base) {
+            Logger.warn("HorseComponent", `Base not found for ${horseData.baseID}`);
+            // Still update data even if base not found
+            this.updateHorseDataToBase(horseData);
+            this.setFlyingToBase(false);
+            if (onComplete) {
+                onComplete();
+            }
+            return;
+        }
+
+        // Find base component to get base position
+        const baseComponent = this.findBaseComponent(horseData.baseID);
+        if (baseComponent) {
+            const baseNode = baseComponent.node;
+            const baseWorldPos = new Vec3();
+            baseNode.getWorldPosition(baseWorldPos);
+            baseWorldPos.y += 12; // Add offset for horse positioning
+
+            // Fly to base position
+            this.moveHorseToPosition(baseWorldPos, () => {
+                // Update horse data after flying completes
+                this.updateHorseDataToBase(horseData);
+                this.setFlyingToBase(false);
+                this.updateBasePlaceholder();
+
+                Logger.debug("HorseComponent", `Horse ${this.horseID} kicked to base`);
+                if (onComplete) {
+                    onComplete();
+                }
+            });
+        } else {
+            // Base component not found, just update data
+            this.updateHorseDataToBase(horseData);
+            this.setFlyingToBase(false);
+            this.updateBasePlaceholder();
+            if (onComplete) {
+                onComplete();
+            }
+        }
+    }
+
+    /**
+     * Update horse data to base state
+     * @param horseData The horse data to update
+     */
+    private updateHorseDataToBase(horseData: Horse) {
+        horseData.isSpawned = false;
+        horseData.cellID = null;
+        horseData.position = null;
+        horseData.steps = 0;
+        horseData.isRetired = false;
+    }
+
+    /**
+     * Find BaseComponent by baseID in the scene
+     * @param baseID The base ID to find
+     * @returns BaseComponent instance or null if not found
+     */
+    private findBaseComponent(baseID: string): BaseComponent | null {
+        const scene = this.node.scene;
+        if (!scene) {
+            return null;
+        }
+
+        const findBase = (node: Node): BaseComponent | null => {
+            const baseComponent = node.getComponent(BaseComponent);
+            if (baseComponent && baseComponent.baseID === baseID) {
+                return baseComponent;
+            }
+            for (const child of node.children) {
+                const found = findBase(child);
+                if (found) {
+                    return found;
+                }
+            }
+            return null;
+        };
+
+        return findBase(scene);
     }
 
     /**
@@ -832,63 +1023,6 @@ export class HorseComponent extends Component {
         horseData.steps += 1;
 
         Logger.debug("HorseComponent", `Updated horse ${this.horseID} to cell ${targetCell.cellID}, steps: ${horseData.steps}`);
-    }
-
-    /**
-     * Start auto-movement - horse will move every 1 second automatically
-     */
-    private startAutoMovement() {
-        if (this.isAutoMoving) {
-            return;
-        }
-
-        this.isAutoMoving = true;
-        Logger.debug("HorseComponent", `Starting auto-movement with interval ${this.AUTO_MOVE_INTERVAL}s`);
-        this.schedule(this.autoMoveToNextCell, this.AUTO_MOVE_INTERVAL);
-    }
-
-    /**
-     * Stop auto-movement
-     */
-    private stopAutoMovement() {
-        if (!this.isAutoMoving) {
-            return;
-        }
-
-        this.isAutoMoving = false;
-        this.unschedule(this.autoMoveToNextCell);
-    }
-
-    /**
-     * Auto-move to next cell (called by schedule)
-     */
-    private autoMoveToNextCell() {
-        if (!this.isAutoMoving) {
-            return;
-        }
-
-        const horseData = gameDataService.getHorse(this.horseID);
-        if (!horseData || !horseData.cellID) {
-            Logger.warn("HorseComponent", "Horse data not found or not spawned");
-            this.stopAutoMovement();
-            return;
-        }
-
-        const links = gameDataService.getLinksForCell(horseData.cellID);
-        if (links.length === 0 || links[0].position === GAME_CONSTANTS.POSITION_HOME) {
-            this.stopAutoMovement();
-            return;
-        }
-
-        const nextCell = this.pathfindingService.findNextCell(horseData.cellID, horseData.baseID);
-        if (!nextCell) {
-            Logger.warn("HorseComponent", "No next cell found, stopping auto-movement");
-            this.stopAutoMovement();
-            return;
-        }
-
-        Logger.debug("HorseComponent", `Auto-moving to next cell: ${nextCell.cellID}`);
-        this.executeMove(nextCell);
     }
 
     /**
@@ -1109,9 +1243,6 @@ export class HorseComponent extends Component {
     }
 
     onDestroy() {
-        // Stop auto-movement
-        this.stopAutoMovement();
-
         // Remove click event listener
         if (this.nodeHorseIcon) {
             const iconButton = this.nodeHorseIcon.getComponent(Button);

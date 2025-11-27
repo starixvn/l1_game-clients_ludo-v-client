@@ -199,13 +199,7 @@ export class AnimationManager {
         );
     }
 
-    playCellHighlightAnimation(
-        node: Node,
-        sprite?: Sprite,
-        duration = 0.2,
-        repeatCount = 3,
-        onComplete?: () => void
-    ): void {
+    playCellHighlightAnimation(node: Node, sprite?: Sprite, duration = 0.2, repeatCount = 3, onComplete?: () => void): void {
         this.stopAnimation(node);
 
         if (!sprite) {
@@ -228,7 +222,7 @@ export class AnimationManager {
             .to(
                 duration,
                 {
-                    scale: 1.025,
+                    scale: 1.1,
                     r: highlightColor ? highlightColor.r : animObj.r,
                     g: highlightColor ? highlightColor.g : animObj.g,
                     b: highlightColor ? highlightColor.b : animObj.b,

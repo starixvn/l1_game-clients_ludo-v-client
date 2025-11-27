@@ -237,7 +237,7 @@ export default class Game extends GameComponent {
 
         // Convert MobX observable to plain JS object
         const boardStateJS = mobx.toJS(boardState) as GameServiceMessage.BoardState;
-        console.log("renderInitBoardState", boardStateJS);
+        console.log("[Game] renderInitBoardState", boardStateJS);
 
         // Apply state to GameRunnerComponent if available
         if (this.gameRunnerComponent) {
@@ -256,7 +256,7 @@ export default class Game extends GameComponent {
         }
 
         const boardStateJS = mobx.toJS(boardState) as GameServiceMessage.FinishBoardState;
-        console.log("renderFinishBoardState", boardStateJS);
+        console.log("[Game] renderFinishBoardState", boardStateJS);
 
         if (this.gameRunnerComponent) {
             // Wait 2 seconds before applying state
@@ -271,10 +271,12 @@ export default class Game extends GameComponent {
         if (!nextState) {
             return;
         }
-        console.log("renderNextState", nextState);
+
+        const nextStateJS = mobx.toJS(nextState) as GameServiceMessage.NextState;
+        console.log("[Game] renderNextState", nextStateJS);
 
         if (this.gameRunnerComponent) {
-            this.gameRunnerComponent.handleNextState(nextState);
+            this.gameRunnerComponent.handleNextState(nextStateJS);
         }
     }
 }

@@ -201,7 +201,7 @@ export class CellComponent extends Component {
      * @param duration Duration of each highlight cycle in seconds (default: 0.2)
      * @param repeatCount Number of times to highlight (default: 3)
      */
-    public playBlinkAnimation(duration = 0.2, repeatCount = 3): void {
+    public playBlinkAnimation(duration = 0.2, repeatCount = 2): void {
         // Find the target sprite to highlight
         const targetNode = this.getTargetNode();
         let sprite = targetNode.getComponent(Sprite);
@@ -247,7 +247,6 @@ export class CellComponent extends Component {
         }
 
         this.updateCellTypeUI();
-        this.updateHomepathIndex();
     }
 
     /**
@@ -622,35 +621,6 @@ export class CellComponent extends Component {
     }
 
     /**
-     * Update homepath index display
-     */
-    private updateHomepathIndex() {
-        if (!this.cellData) {
-            return;
-        }
-
-        if (!this.nodeHomepathIndex) {
-            Logger.warn("CellComponent", `nodeHomepathIndex not found for cell ${this.cellID}`);
-            return;
-        }
-
-        if (this.cellData.cellType === GAME_CONSTANTS.CELL_TYPE_HOMEPATH && this.homePathIndex !== undefined) {
-            const label = this.nodeHomepathIndex.getComponent(Label);
-            if (!label) {
-                Logger.warn("CellComponent", `Label component not found on nodeHomepathIndex for cell ${this.cellID}`);
-                return;
-            }
-
-            label.string = this.homePathIndex.toString();
-            this.nodeHomepathIndex.active = true;
-
-            Logger.info("CellComponent", `Updated homepath index to ${this.homePathIndex} for cell ${this.cellID}`);
-        } else {
-            this.nodeHomepathIndex.active = false;
-        }
-    }
-
-    /**
      * Get cell data
      */
     public getCellData(): Cell | null {
@@ -697,6 +667,7 @@ export class CellComponent extends Component {
     /**
      * Highlight this cell as a possible move destination
      * Hides normal-background and shows possible-move-background based on cell type
+     * Also plays highlight animation on the possible-move-background
      */
     public highlightAsPossibleMove(): void {
         const parentNode = this.getBackgroundParentNode();
@@ -705,21 +676,46 @@ export class CellComponent extends Component {
             return;
         }
 
+        Logger.debug(
+            "CellComponent",
+            `Highlighting cell ${this.cellID}, parent node: ${parentNode.name}, cell type: ${this.cellData?.cellType}`
+        );
+
         const normalBackground = parentNode.getChildByName("normal-background");
         const possibleMoveBackground = parentNode.getChildByName("possible-move-background");
 
         if (normalBackground) {
             normalBackground.active = false;
+            Logger.debug("CellComponent", `Hid normal-background for cell ${this.cellID}`);
         } else {
             Logger.debug("CellComponent", `normal-background node not found in ${this.cellData?.cellType} node for cell ${this.cellID}`);
         }
 
         if (possibleMoveBackground) {
             possibleMoveBackground.active = true;
+            Logger.debug(
+                "CellComponent",
+                `Showed possible-move-background for cell ${this.cellID}, node active: ${possibleMoveBackground.active}`
+            );
+
+            // Use scheduleOnce to ensure the node is fully activated before playing animation
+            this.scheduleOnce(() => {
+                // Play highlight animation on the possible-move-background
+                if (possibleMoveBackground && possibleMoveBackground.active) {
+                    this.playCellHighlightAnimationOnNode(possibleMoveBackground);
+                } else {
+                    Logger.warn(
+                        "CellComponent",
+                        `possible-move-background became inactive before animation could start for cell ${this.cellID}`
+                    );
+                }
+            }, 0.01);
         } else {
             Logger.warn(
                 "CellComponent",
-                `possible-move-background node not found in ${this.cellData?.cellType} node for cell ${this.cellID}`
+                `possible-move-background node not found in ${this.cellData?.cellType} node for cell ${
+                    this.cellID
+                }. Available children: ${parentNode.children.map((c) => c.name).join(", ")}`
             );
         }
 
@@ -727,8 +723,67 @@ export class CellComponent extends Component {
     }
 
     /**
+     * Play highlight animation on a specific node
+     * @param targetNode The node to play animation on
+     * @param duration Duration of each highlight cycle in seconds (default: 0.2)
+     * @param repeatCount Number of times to highlight (use a large number for continuous effect)
+     */
+    private playCellHighlightAnimationOnNode(targetNode: Node, duration = 0.5, repeatCount = 9999): void {
+        if (!targetNode) {
+            Logger.warn("CellComponent", `Cannot play animation: targetNode is null for cell ${this.cellID}`);
+            return;
+        }
+
+        // Ensure the node is active before playing animation
+        if (!targetNode.active) {
+            Logger.warn("CellComponent", `Cannot play animation: targetNode is not active for cell ${this.cellID}`);
+            return;
+        }
+
+        // Find sprite component in the target node or its children
+        let sprite = targetNode.getComponent(Sprite);
+
+        if (!sprite) {
+            // Try to find sprite in child nodes
+            for (const child of targetNode.children) {
+                sprite = child.getComponent(Sprite);
+                if (sprite) {
+                    Logger.debug("CellComponent", `Found sprite in child node ${child.name} for cell ${this.cellID}`);
+                    break;
+                }
+            }
+        } else {
+            Logger.debug("CellComponent", `Found sprite directly on target node for cell ${this.cellID}`);
+        }
+
+        // Log if no sprite found (animation will still work with scale)
+        if (!sprite) {
+            Logger.debug(
+                "CellComponent",
+                `No sprite found for possible-move-background in cell ${this.cellID}, animation will use scale only`
+            );
+        }
+
+        // Use AnimationManager to play the highlight animation
+        // Use the targetNode as the node parameter, and the sprite if found
+        // Note: Animation will work on node scale even without sprite
+        try {
+            this.animationManager.playCellHighlightAnimation(targetNode, sprite, duration, repeatCount);
+            Logger.debug(
+                "CellComponent",
+                `Started highlight animation on possible-move-background for cell ${
+                    this.cellID
+                } (repeatCount: ${repeatCount}, hasSprite: ${!!sprite})`
+            );
+        } catch (error) {
+            Logger.error("CellComponent", `Failed to play highlight animation for cell ${this.cellID}: ${error}`);
+        }
+    }
+
+    /**
      * Clear highlight from this cell
      * Shows normal-background and hides possible-move-background based on cell type
+     * Also stops the highlight animation
      */
     public clearHighlight(): void {
         const parentNode = this.getBackgroundParentNode();
@@ -740,11 +795,14 @@ export class CellComponent extends Component {
         const normalBackground = parentNode.getChildByName("normal-background");
         const possibleMoveBackground = parentNode.getChildByName("possible-move-background");
 
+        // Stop animation on possible-move-background before hiding it
+        if (possibleMoveBackground) {
+            this.animationManager.stopAnimation(possibleMoveBackground);
+            possibleMoveBackground.active = false;
+        }
+
         if (normalBackground) {
             normalBackground.active = true;
-        }
-        if (possibleMoveBackground) {
-            possibleMoveBackground.active = false;
         }
 
         Logger.debug("CellComponent", `Cleared highlight from cell ${this.cellID}`);
