@@ -109,8 +109,7 @@ export class LudoResult extends Component {
     }
 
     showResultText(result: gc.GameServiceMessage.TResult) {
-        const choiceWin = determineWinningChoice(calcTotalPoints(result));
-        this.setResultText(choiceWin.toUpperCase());
+        this.setResultText(calcTotalPoints(result).toString());
         this.setResultTextVisibility(true);
     }
 

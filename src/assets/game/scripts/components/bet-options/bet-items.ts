@@ -1,7 +1,6 @@
 import { _decorator, Widget } from "cc";
 import { BetItemsPolygon as BetItemsPolygonBase } from "db://shared-components/game/bets/scripts/components/bet-items-polygon";
 import observer from "observer";
-import gc from "@sg/game-client-base";
 import { OddsStore, OddsWithConfig } from "../../features/dynamic-odds/odds-store";
 import BetItemCustomize from "./bet-item-customize";
 import { GameBoardStore } from "../../features/game-board-state/game-board-store";
@@ -15,9 +14,9 @@ const { render } = observer;
 export class BetItems extends BetItemsPolygonBase {
     mappingColor = {
         0: "#BF9611",
-        1: "#189911",
+        1: "#282E9A",
         2: "#9A2B28",
-        3: "#282E9A",
+        3: "#189911",
     };
 
     @render(GameBoardStore, (store) => store.boardState)
@@ -64,15 +63,5 @@ export class BetItems extends BetItemsPolygonBase {
         }
     }
 
-    handleBetPercentage(betPercentage: gc.GameServiceMessage.BetPercentage) {}
-
     handleResetHighlight(isResetHighlight: boolean) {}
-
-    @render(gc.Rounds.RoundStore, (store) => store.userBetPercentage)
-    handleUserBetPercentage(userBetPercentage: gc.GameServiceMessage.UserBetPercentage) {
-        this.betItemComponents.forEach((betItem) => {
-            const choice = betItem.node.name;
-            betItem.renderUserBetPercentage(userBetPercentage?.[choice] ?? 0);
-        });
-    }
 }
