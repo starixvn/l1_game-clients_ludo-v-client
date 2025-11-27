@@ -7,7 +7,7 @@
  * Data is read from game-board-data.ts
  */
 
-import { _decorator, Component, Node, Sprite, Label, UITransform, Button, Graphics } from "cc";
+import { _decorator, Component, Node, Sprite, UITransform, Button, Graphics } from "cc";
 import { Cell, GAME_CONSTANTS } from "../game-board-data";
 import { CELL_DIMENSION, WALKWAY_LENGTH } from "../global-constants";
 import { gameDataService } from "../services/game-data-service";
@@ -701,12 +701,13 @@ export class CellComponent extends Component {
             // Use scheduleOnce to ensure the node is fully activated before playing animation
             this.scheduleOnce(() => {
                 // Play highlight animation on the possible-move-background
-                if (possibleMoveBackground && possibleMoveBackground.active) {
+                // Check if node is still valid and active
+                if (possibleMoveBackground?.isValid && possibleMoveBackground.active) {
                     this.playCellHighlightAnimationOnNode(possibleMoveBackground);
                 } else {
                     Logger.warn(
                         "CellComponent",
-                        `possible-move-background became inactive before animation could start for cell ${this.cellID}`
+                        `possible-move-background became inactive or invalid before animation could start for cell ${this.cellID}`
                     );
                 }
             }, 0.01);

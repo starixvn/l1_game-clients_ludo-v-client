@@ -12,7 +12,7 @@
  */
 
 import { _decorator, Component, Node, Label, UITransform, Vec3, Sprite, Button, SpriteFrame } from "cc";
-import { BaseColor, Cell, GAME_CONSTANTS, gameBoardData, Horse } from "../game-board-data";
+import { BaseColor, Cell, gameBoardData, Horse } from "../game-board-data";
 import { WalkwayComponent } from "./walkway-component";
 import { CellComponent } from "./cell-component";
 import { CELL_DIMENSION } from "../global-constants";
