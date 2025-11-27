@@ -1,7 +1,7 @@
 import { _decorator, sp, Component, UIOpacity, Vec3, SpriteFrame, Label, Node, Tween, SpriteAtlas } from "cc";
 import { AnimationUtils } from "../../../extensions/shared-components/assets/shared/utils";
 import { LudoDice } from "./ludo-dice";
-import { calcTotalPoints, determineWinningChoice, pauseSpineAnimation } from "./ludo-helper";
+import { calcTotalPoints, pauseSpineAnimation } from "./ludo-helper";
 
 import gc from "@sg/game-client-base";
 
