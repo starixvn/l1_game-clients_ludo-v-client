@@ -387,13 +387,15 @@ export class CellComponent extends Component {
     }
 
     private checkRange1(cellID: string): { xAdjustment: number; yAdjustment: number } | null {
+        const xAdjustment = 2;
+        const yAdjustment = 14;
         // Range 1: WEST_2_0 to WEST_2_6
         if (cellID.startsWith("WEST_2_")) {
             const match = cellID.match(/WEST_2_(\d+)/);
             if (match) {
                 const number = parseInt(match[1], 10);
                 if (number >= 0 && number <= 6) {
-                    return { xAdjustment: 3, yAdjustment: 8 };
+                    return { xAdjustment, yAdjustment };
                 }
             }
         }
@@ -403,7 +405,7 @@ export class CellComponent extends Component {
             if (match) {
                 const number = parseInt(match[1], 10);
                 if (number >= 1 && number <= 6) {
-                    return { xAdjustment: 3, yAdjustment: 8 };
+                    return { xAdjustment, yAdjustment };
                 }
             }
         }
@@ -411,13 +413,15 @@ export class CellComponent extends Component {
     }
 
     private checkRange2(cellID: string): { xAdjustment: number; yAdjustment: number } | null {
+        const xAdjustment = -2;
+        const yAdjustment = 13;
         // Range 2: SOUTH_1_2 to SOUTH_6_2
         if (cellID.startsWith("SOUTH_") && cellID.endsWith("_2")) {
             const match = cellID.match(/SOUTH_(\d+)_2/);
             if (match) {
                 const number = parseInt(match[1], 10);
                 if (number >= 1 && number <= 6) {
-                    return { xAdjustment: -4, yAdjustment: 9 };
+                    return { xAdjustment, yAdjustment };
                 }
             }
         }
@@ -427,7 +431,7 @@ export class CellComponent extends Component {
             if (match) {
                 const number = parseInt(match[1], 10);
                 if (number >= 0 && number <= 6) {
-                    return { xAdjustment: -4, yAdjustment: 9 };
+                    return { xAdjustment, yAdjustment };
                 }
             }
         }
@@ -435,13 +439,15 @@ export class CellComponent extends Component {
     }
 
     private checkRange3(cellID: string): { xAdjustment: number; yAdjustment: number } | null {
+        const xAdjustment = 4;
+        const yAdjustment = 1;
         // Range 3: NORTH_0_0 to NORTH_5_0
         if (cellID.startsWith("NORTH_") && cellID.endsWith("_0")) {
             const match = cellID.match(/NORTH_(\d+)_0/);
             if (match) {
                 const number = parseInt(match[1], 10);
                 if (number >= 0 && number <= 5) {
-                    return { xAdjustment: 4, yAdjustment: 1 };
+                    return { xAdjustment, yAdjustment };
                 }
             }
         }
@@ -451,7 +457,7 @@ export class CellComponent extends Component {
             if (match) {
                 const number = parseInt(match[1], 10);
                 if (number >= 0 && number <= 6) {
-                    return { xAdjustment: 4, yAdjustment: 1 };
+                    return { xAdjustment, yAdjustment };
                 }
             }
         }
@@ -459,13 +465,15 @@ export class CellComponent extends Component {
     }
 
     private checkRange4(cellID: string): { xAdjustment: number; yAdjustment: number } | null {
+        const xAdjustment = -3;
+        const yAdjustment = 2;
         // Range 4: NORTH_0_2 to NORTH_5_2
         if (cellID.startsWith("NORTH_") && cellID.endsWith("_2")) {
             const match = cellID.match(/NORTH_(\d+)_2/);
             if (match) {
                 const number = parseInt(match[1], 10);
                 if (number >= 0 && number <= 5) {
-                    return { xAdjustment: -3, yAdjustment: 2 };
+                    return { xAdjustment, yAdjustment };
                 }
             }
         }
@@ -475,7 +483,7 @@ export class CellComponent extends Component {
             if (match) {
                 const number = parseInt(match[1], 10);
                 if (number >= 0 && number <= 6) {
-                    return { xAdjustment: -3, yAdjustment: 2 };
+                    return { xAdjustment, yAdjustment };
                 }
             }
         }
@@ -587,6 +595,14 @@ export class CellComponent extends Component {
         }
 
         const position = this.cellData.position;
+        const northSouthWidth = 81;
+        const eastWestHeight = 81;
+        const northSouthHeight = CELL_DIMENSION + 1;
+        const eastWestWidth = CELL_DIMENSION + 1;
+        const yNorthSouth = position === GAME_CONSTANTS.POSITION_NORTH ? -5 : 21;
+        const xEastWest = position === GAME_CONSTANTS.POSITION_WEST ? 13 : -13; // 4
+        const xNorthSouth = 0;
+        const yEastWest = 8;
 
         // Get or add UITransform component
         let transform = this.nodeHomePath.getComponent(UITransform);
@@ -596,12 +612,12 @@ export class CellComponent extends Component {
 
         if (position === GAME_CONSTANTS.POSITION_NORTH || position === GAME_CONSTANTS.POSITION_SOUTH) {
             // For NORTH/SOUTH (vertical walkways), set width
-            transform.setContentSize(80, CELL_DIMENSION + 0.5);
-            this.nodeHomePath.setPosition(0, position === GAME_CONSTANTS.POSITION_NORTH ? -10 : 18);
+            transform.setContentSize(northSouthWidth, northSouthHeight);
+            this.nodeHomePath.setPosition(xNorthSouth, yNorthSouth);
         } else if (position === GAME_CONSTANTS.POSITION_EAST || position === GAME_CONSTANTS.POSITION_WEST) {
             // For EAST/WEST (horizontal walkways), set height
-            transform.setContentSize(CELL_DIMENSION + 0.5, 80);
-            this.nodeHomePath.setPosition(position === GAME_CONSTANTS.POSITION_WEST ? 12 : -13, 4);
+            transform.setContentSize(eastWestWidth, eastWestHeight);
+            this.nodeHomePath.setPosition(xEastWest, yEastWest);
         }
     }
 
@@ -653,6 +669,85 @@ export class CellComponent extends Component {
      */
     public getHomepathIndex(): number | undefined {
         return this.homePathIndex;
+    }
+
+    /**
+     * Get the parent node for background elements based on cell type
+     * @returns The parent node (normal, release, or home-path) based on cell type
+     */
+    private getBackgroundParentNode(): Node | null {
+        if (!this.cellData) {
+            Logger.warn("CellComponent", `Cell data not available for ${this.cellID}`);
+            return null;
+        }
+
+        switch (this.cellData.cellType) {
+            case GAME_CONSTANTS.CELL_TYPE_NORMAL:
+                return this.nodeNormal;
+            case GAME_CONSTANTS.CELL_TYPE_SPAWN:
+                return this.nodeRelease;
+            case GAME_CONSTANTS.CELL_TYPE_HOMEPATH:
+                return this.nodeHomePath;
+            default:
+                Logger.warn("CellComponent", `Unknown cell type: ${this.cellData.cellType} for cell ${this.cellID}`);
+                return null;
+        }
+    }
+
+    /**
+     * Highlight this cell as a possible move destination
+     * Hides normal-background and shows possible-move-background based on cell type
+     */
+    public highlightAsPossibleMove(): void {
+        const parentNode = this.getBackgroundParentNode();
+        if (!parentNode) {
+            Logger.warn("CellComponent", `Cannot highlight cell ${this.cellID}: parent node not found`);
+            return;
+        }
+
+        const normalBackground = parentNode.getChildByName("normal-background");
+        const possibleMoveBackground = parentNode.getChildByName("possible-move-background");
+
+        if (normalBackground) {
+            normalBackground.active = false;
+        } else {
+            Logger.debug("CellComponent", `normal-background node not found in ${this.cellData?.cellType} node for cell ${this.cellID}`);
+        }
+
+        if (possibleMoveBackground) {
+            possibleMoveBackground.active = true;
+        } else {
+            Logger.warn(
+                "CellComponent",
+                `possible-move-background node not found in ${this.cellData?.cellType} node for cell ${this.cellID}`
+            );
+        }
+
+        Logger.debug("CellComponent", `Highlighted cell ${this.cellID} as possible move`);
+    }
+
+    /**
+     * Clear highlight from this cell
+     * Shows normal-background and hides possible-move-background based on cell type
+     */
+    public clearHighlight(): void {
+        const parentNode = this.getBackgroundParentNode();
+        if (!parentNode) {
+            // If parent node not found, silently return (cell might not be initialized yet)
+            return;
+        }
+
+        const normalBackground = parentNode.getChildByName("normal-background");
+        const possibleMoveBackground = parentNode.getChildByName("possible-move-background");
+
+        if (normalBackground) {
+            normalBackground.active = true;
+        }
+        if (possibleMoveBackground) {
+            possibleMoveBackground.active = false;
+        }
+
+        Logger.debug("CellComponent", `Cleared highlight from cell ${this.cellID}`);
     }
 
     onDestroy() {

@@ -96,7 +96,7 @@ export class HorseComponent extends Component {
     /** Animation manager instance */
     private animationManager: AnimationManager;
 
-    /** Cached top layer node (auto-scale-widget) for reparenting */
+    /** Cached top layer node (game-board-prefab) for reparenting */
     private cachedTopLayer: Node = null;
 
     onLoad() {
@@ -1031,7 +1031,7 @@ export class HorseComponent extends Component {
     }
 
     /**
-     * Get or find the top layer node (auto-scale-widget)
+     * Get or find the top layer node (game-board-prefab)
      * Caches the result for reuse
      */
     private getTopLayer(): Node | null {
@@ -1047,10 +1047,10 @@ export class HorseComponent extends Component {
             return null;
         }
 
-        this.cachedTopLayer = this.findNodeRecursive(scene, "auto-scale-widget");
+        this.cachedTopLayer = this.findNodeRecursive(scene, "game-board-prefab");
 
         if (!this.cachedTopLayer) {
-            Logger.warn("HorseComponent", "auto-scale-widget not found in scene");
+            Logger.warn("HorseComponent", "game-board-prefab not found in scene");
             return null;
         }
 

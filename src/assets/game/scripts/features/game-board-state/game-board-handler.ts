@@ -17,6 +17,10 @@ export class MatchConfigHandler implements IMultipleHandlers {
         this.gameBoardStore.finishBoardState = finishBoardState;
     }
 
+    handleNextState(nextState: GameServiceMessage.NextState) {
+        this.gameBoardStore.nextState = nextState;
+    }
+
     eventHandleList = [
         {
             name: GameServiceMessage.BoardState.eventName,
@@ -25,6 +29,10 @@ export class MatchConfigHandler implements IMultipleHandlers {
         {
             name: GameServiceMessage.FinishBoardState.eventName,
             handle: this.handleFinishBoardState,
+        },
+        {
+            name: GameServiceMessage.NextState.eventName,
+            handle: this.handleNextState,
         },
     ];
 }

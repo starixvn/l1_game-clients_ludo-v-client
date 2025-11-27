@@ -14,4 +14,14 @@ export namespace GameServiceMessage {
 
         static eventName = "finish";
     }
+
+    export class NextState {
+        currentTurnCount: number;
+        nextAction: {
+            nextPlayer: number;
+            possibleActions: Array<{ oldPosition: number; newPosition: number }>;
+        };
+
+        static eventName = "nextState";
+    }
 }

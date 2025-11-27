@@ -265,4 +265,16 @@ export default class Game extends GameComponent {
             }, 4);
         }
     }
+
+    @render(GameBoardStore, (store) => store.nextState)
+    renderNextState(nextState: GameServiceMessage.NextState) {
+        if (!nextState) {
+            return;
+        }
+        console.log("renderNextState", nextState);
+
+        if (this.gameRunnerComponent) {
+            this.gameRunnerComponent.handleNextState(nextState);
+        }
+    }
 }

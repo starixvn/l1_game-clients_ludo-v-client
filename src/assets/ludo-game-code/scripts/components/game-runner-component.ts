@@ -9,7 +9,9 @@ import { _decorator, Component, Node } from "cc";
 import { Logger } from "../utils/logger";
 import { GameState } from "../stubs/game-state-stub";
 import { HorseComponent } from "./horse-component";
+import { CellComponent } from "./cell-component";
 import { gameDataService } from "../services/game-data-service";
+import { gameBoardData, Cell } from "../game-board-data";
 import { GameServiceMessage } from "../../../game/scripts/features/game-messages";
 
 const { ccclass, property, menu } = _decorator;
@@ -28,6 +30,9 @@ export class GameRunnerComponent extends Component {
     /** Map of horseID to HorseComponent for quick lookup */
     private readonly horseComponentsMap: Map<string, HorseComponent> = new Map();
 
+    /** Map of cellID to CellComponent for quick lookup */
+    private readonly cellComponentsMap: Map<string, CellComponent> = new Map();
+
     /** Initial game state to start from (optional) */
     private initialGameState: GameState | null = null;
 
@@ -37,11 +42,40 @@ export class GameRunnerComponent extends Component {
     start() {
         // Initialize horse components in start() to ensure scene is fully loaded
         this.initializeHorseComponents();
+        // Initialize cell components
+        this.initializeCellComponents();
 
         // Apply initial state immediately after a short delay to ensure everything is initialized
         this.scheduleOnce(() => {
             this.applyInitialGameState();
         }, 0.2);
+    }
+
+    /**
+     * Initialize cell components map by searching the scene
+     */
+    private initializeCellComponents(): void {
+        // Clear existing map
+        this.cellComponentsMap.clear();
+
+        const findCellComponents = (node: Node) => {
+            const cellComponent = node.getComponent(CellComponent);
+            if (cellComponent && cellComponent.cellID) {
+                this.cellComponentsMap.set(cellComponent.cellID, cellComponent);
+                Logger.debug("GameRunnerComponent", `Found cell component: ${cellComponent.cellID} (node: ${node.name})`);
+            }
+            for (const child of node.children) {
+                findCellComponents(child);
+            }
+        };
+
+        const scene = this.node.scene;
+        if (scene) {
+            findCellComponents(scene);
+            Logger.debug("GameRunnerComponent", `Initialized ${this.cellComponentsMap.size} cell components`);
+        } else {
+            Logger.warn("GameRunnerComponent", "Scene not available for cell component initialization");
+        }
     }
 
     /**
@@ -218,6 +252,9 @@ export class GameRunnerComponent extends Component {
      * @param finishBoardState External game state from FinishBoardState message
      */
     public applyGameState(finishBoardState: GameServiceMessage.BoardState): void {
+        // Clear any existing highlights when applying new game state
+        this.clearPossibleMoveHighlights();
+
         // Re-initialize horse components in case they weren't ready before
         if (this.horseComponentsMap.size === 0) {
             this.initializeHorseComponents();
@@ -353,6 +390,102 @@ export class GameRunnerComponent extends Component {
             // No horses to move
             Logger.debug("GameRunnerComponent", "No horses to move");
         }
+    }
+
+    /**
+     * Handle NextState action to highlight possible move cells
+     * @param nextState NextState message containing possible actions
+     */
+    public handleNextState(nextState: GameServiceMessage.NextState): void {
+        if (!nextState.nextAction || !nextState.nextAction.possibleActions) {
+            Logger.warn("GameRunnerComponent", "NextState does not contain valid nextAction or possibleActions");
+            return;
+        }
+
+        // Clear previous highlights first
+        this.clearPossibleMoveHighlights();
+
+        // Initialize cell components if not already done
+        if (this.cellComponentsMap.size === 0) {
+            this.initializeCellComponents();
+        }
+
+        const possibleActions = nextState.nextAction.possibleActions;
+        Logger.debug("GameRunnerComponent", `Handling NextState with ${possibleActions.length} possible actions`);
+
+        // Get unique new positions to highlight
+        const positionsToHighlight = new Set<number>();
+        for (const action of possibleActions) {
+            positionsToHighlight.add(action.newPosition);
+        }
+
+        // Highlight each position
+        for (const positionIndex of positionsToHighlight) {
+            this.highlightCellByIndex(positionIndex);
+        }
+
+        Logger.debug("GameRunnerComponent", `Highlighted ${positionsToHighlight.size} cells for possible moves`);
+    }
+
+    /**
+     * Highlight a cell by its index
+     * @param positionIndex The cell index to highlight
+     */
+    private highlightCellByIndex(positionIndex: number): void {
+        // Find cell by index in gameBoardData
+        const cell = this.findCellByIndex(positionIndex);
+        if (!cell) {
+            Logger.warn("GameRunnerComponent", `Cell with index ${positionIndex} not found`);
+            return;
+        }
+
+        // Get cell component from map
+        const cellComponent = this.cellComponentsMap.get(cell.cellID);
+        if (!cellComponent) {
+            Logger.warn("GameRunnerComponent", `CellComponent not found for cellID: ${cell.cellID}`);
+            return;
+        }
+
+        // Use CellComponent's method to handle highlighting based on cell type
+        cellComponent.highlightAsPossibleMove();
+        Logger.debug("GameRunnerComponent", `Highlighted cell ${cell.cellID} (index ${positionIndex})`);
+    }
+
+    /**
+     * Find cell by index number
+     * @param index The cell index to find
+     * @returns Cell data or null if not found
+     */
+    private findCellByIndex(index: number): Cell | null {
+        for (const position in gameBoardData.cells) {
+            const positionCells = gameBoardData.cells[position];
+            for (const cellID in positionCells) {
+                const cell = positionCells[cellID];
+                if (cell.index === index) {
+                    return cell;
+                }
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Clear all possible move highlights
+     */
+    public clearPossibleMoveHighlights(): void {
+        // Initialize cell components if not already done
+        if (this.cellComponentsMap.size === 0) {
+            this.initializeCellComponents();
+        }
+
+        let clearedCount = 0;
+        for (const [cellID, cellComponent] of this.cellComponentsMap) {
+            // Use CellComponent's method to clear highlight
+            cellComponent.clearHighlight();
+            clearedCount++;
+        }
+
+        Logger.debug("GameRunnerComponent", `Cleared highlights from ${clearedCount} cells`);
     }
 
     onDestroy() {
