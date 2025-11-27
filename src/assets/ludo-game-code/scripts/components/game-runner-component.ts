@@ -613,7 +613,7 @@ export class GameRunnerComponent extends Component {
      * @param resultNode The result node to position
      * @param duration Duration of the animation in seconds (default: 0.5)
      */
-    public positionDiceResultNearBase(baseComponent: BaseComponent, resultNode: Node, duration: number = 0.5): void {
+    public positionDiceResultNearBase(baseComponent: BaseComponent, resultNode: Node, duration = 0.5): void {
         if (!baseComponent || !resultNode || !baseComponent.node) {
             Logger.warn("GameRunnerComponent", "Cannot position dice result: missing baseComponent or resultNode");
             return;
@@ -689,8 +689,7 @@ export class GameRunnerComponent extends Component {
         // Fallback: calculate from nextPlayer (the player who rolled is before nextPlayer)
         if (result.nextPlayer !== undefined && result.nextPlayer !== null) {
             // The player who rolled is (nextPlayer - 1) mod 4
-            const playerIndex = (result.nextPlayer - 1 + 4) % 4;
-            return playerIndex;
+            return (result.nextPlayer - 1 + 4) % 4;
         }
 
         return -1;
@@ -702,7 +701,7 @@ export class GameRunnerComponent extends Component {
      * @param resultNode The result node to move
      * @param duration Duration of the animation in seconds (default: 0.5)
      */
-    public moveDiceResultToPlayerBase(playerIndex: number, resultNode: Node, duration: number = 0.5): void {
+    public moveDiceResultToPlayerBase(playerIndex: number, resultNode: Node, duration = 0.5): void {
         if (playerIndex < 0 || playerIndex > 3) {
             Logger.warn("GameRunnerComponent", `Invalid player index: ${playerIndex}`);
             return;
