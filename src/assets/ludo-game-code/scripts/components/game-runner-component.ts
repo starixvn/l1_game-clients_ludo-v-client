@@ -479,7 +479,7 @@ export class GameRunnerComponent extends Component {
         }
 
         let clearedCount = 0;
-        for (const [cellID, cellComponent] of this.cellComponentsMap) {
+        for (const cellComponent of this.cellComponentsMap.values()) {
             // Use CellComponent's method to clear highlight
             cellComponent.clearHighlight();
             clearedCount++;
