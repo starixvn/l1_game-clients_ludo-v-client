@@ -41,10 +41,13 @@
     "_components": [
       {
         "__id__": 78
+      },
+      {
+        "__id__": 80
       }
     ],
     "_prefab": {
-      "__id__": 80
+      "__id__": 82
     },
     "_lpos": {
       "__type__": "cc.Vec3",
@@ -471,7 +474,7 @@
     },
     "_contentSize": {
       "__type__": "cc.Size",
-      "width": 33.2421875,
+      "width": 34.76953125,
       "height": 50.4
     },
     "_anchorPoint": {
@@ -516,8 +519,11 @@
     "_lineHeight": 40,
     "_overflow": 0,
     "_enableWrapText": true,
-    "_font": null,
-    "_isSystemFontUsed": true,
+    "_font": {
+      "__uuid__": "0b9efa3d-c517-4301-af5b-ac67552528db",
+      "__expectedType__": "cc.TTFFont"
+    },
+    "_isSystemFontUsed": false,
     "_spacingX": 0,
     "_isItalic": false,
     "_isBold": false,
@@ -630,7 +636,7 @@
     },
     "_contentSize": {
       "__type__": "cc.Size",
-      "width": 46.03369140625,
+      "width": 0,
       "height": 50.4
     },
     "_anchorPoint": {
@@ -666,7 +672,7 @@
       "b": 255,
       "a": 255
     },
-    "_string": "30%",
+    "_string": "",
     "_horizontalAlign": 1,
     "_verticalAlign": 1,
     "_actualFontSize": 23,
@@ -675,8 +681,11 @@
     "_lineHeight": 40,
     "_overflow": 0,
     "_enableWrapText": true,
-    "_font": null,
-    "_isSystemFontUsed": true,
+    "_font": {
+      "__uuid__": "0b9efa3d-c517-4301-af5b-ac67552528db",
+      "__expectedType__": "cc.TTFFont"
+    },
+    "_isSystemFontUsed": false,
     "_spacingX": 0,
     "_isItalic": false,
     "_isBold": false,
@@ -884,7 +893,7 @@
     },
     "_contentSize": {
       "__type__": "cc.Size",
-      "width": 57.51123046875,
+      "width": 61.453125,
       "height": 50.4
     },
     "_anchorPoint": {
@@ -929,8 +938,11 @@
     "_lineHeight": 40,
     "_overflow": 0,
     "_enableWrapText": true,
-    "_font": null,
-    "_isSystemFontUsed": true,
+    "_font": {
+      "__uuid__": "0b9efa3d-c517-4301-af5b-ac67552528db",
+      "__expectedType__": "cc.TTFFont"
+    },
+    "_isSystemFontUsed": false,
     "_spacingX": 0,
     "_isItalic": false,
     "_isBold": false,
@@ -1043,7 +1055,7 @@
     },
     "_contentSize": {
       "__type__": "cc.Size",
-      "width": 46.03369140625,
+      "width": 0,
       "height": 50.4
     },
     "_anchorPoint": {
@@ -1079,7 +1091,7 @@
       "b": 255,
       "a": 255
     },
-    "_string": "30%",
+    "_string": "",
     "_horizontalAlign": 1,
     "_verticalAlign": 1,
     "_actualFontSize": 23,
@@ -1088,8 +1100,11 @@
     "_lineHeight": 40,
     "_overflow": 0,
     "_enableWrapText": true,
-    "_font": null,
-    "_isSystemFontUsed": true,
+    "_font": {
+      "__uuid__": "0b9efa3d-c517-4301-af5b-ac67552528db",
+      "__expectedType__": "cc.TTFFont"
+    },
+    "_isSystemFontUsed": false,
     "_spacingX": 0,
     "_isItalic": false,
     "_isBold": false,
@@ -1297,7 +1312,7 @@
     },
     "_contentSize": {
       "__type__": "cc.Size",
-      "width": 43.47314453125,
+      "width": 45.3037109375,
       "height": 50.4
     },
     "_anchorPoint": {
@@ -1342,8 +1357,11 @@
     "_lineHeight": 40,
     "_overflow": 0,
     "_enableWrapText": true,
-    "_font": null,
-    "_isSystemFontUsed": true,
+    "_font": {
+      "__uuid__": "0b9efa3d-c517-4301-af5b-ac67552528db",
+      "__expectedType__": "cc.TTFFont"
+    },
+    "_isSystemFontUsed": false,
     "_spacingX": 0,
     "_isItalic": false,
     "_isBold": false,
@@ -1456,7 +1474,7 @@
     },
     "_contentSize": {
       "__type__": "cc.Size",
-      "width": 46.03369140625,
+      "width": 0,
       "height": 50.4
     },
     "_anchorPoint": {
@@ -1492,7 +1510,7 @@
       "b": 255,
       "a": 255
     },
-    "_string": "30%",
+    "_string": "",
     "_horizontalAlign": 1,
     "_verticalAlign": 1,
     "_actualFontSize": 23,
@@ -1501,8 +1519,11 @@
     "_lineHeight": 40,
     "_overflow": 0,
     "_enableWrapText": true,
-    "_font": null,
-    "_isSystemFontUsed": true,
+    "_font": {
+      "__uuid__": "0b9efa3d-c517-4301-af5b-ac67552528db",
+      "__expectedType__": "cc.TTFFont"
+    },
+    "_isSystemFontUsed": false,
     "_spacingX": 0,
     "_isItalic": false,
     "_isBold": false,
@@ -1710,7 +1731,7 @@
     },
     "_contentSize": {
       "__type__": "cc.Size",
-      "width": 52.423828125,
+      "width": 54.79345703125,
       "height": 50.4
     },
     "_anchorPoint": {
@@ -1755,8 +1776,11 @@
     "_lineHeight": 40,
     "_overflow": 0,
     "_enableWrapText": true,
-    "_font": null,
-    "_isSystemFontUsed": true,
+    "_font": {
+      "__uuid__": "0b9efa3d-c517-4301-af5b-ac67552528db",
+      "__expectedType__": "cc.TTFFont"
+    },
+    "_isSystemFontUsed": false,
     "_spacingX": 0,
     "_isItalic": false,
     "_isBold": false,
@@ -1869,7 +1893,7 @@
     },
     "_contentSize": {
       "__type__": "cc.Size",
-      "width": 46.03369140625,
+      "width": 0,
       "height": 50.4
     },
     "_anchorPoint": {
@@ -1905,7 +1929,7 @@
       "b": 255,
       "a": 255
     },
-    "_string": "30%",
+    "_string": "",
     "_horizontalAlign": 1,
     "_verticalAlign": 1,
     "_actualFontSize": 23,
@@ -1914,8 +1938,11 @@
     "_lineHeight": 40,
     "_overflow": 0,
     "_enableWrapText": true,
-    "_font": null,
-    "_isSystemFontUsed": true,
+    "_font": {
+      "__uuid__": "0b9efa3d-c517-4301-af5b-ac67552528db",
+      "__expectedType__": "cc.TTFFont"
+    },
+    "_isSystemFontUsed": false,
     "_spacingX": 0,
     "_isItalic": false,
     "_isBold": false,
@@ -2034,6 +2061,36 @@
     "fileId": "6b4GRkW5xNC6WpCxqL+FaZ"
   },
   {
+    "__type__": "a7012WTkdBEBpjtLS2kog/t",
+    "_name": "",
+    "_objFlags": 0,
+    "__editorExtras__": {},
+    "node": {
+      "__id__": 1
+    },
+    "_enabled": true,
+    "__prefab": {
+      "__id__": 81
+    },
+    "lblBig": {
+      "__id__": 24
+    },
+    "lblSmall": {
+      "__id__": 40
+    },
+    "lblOdd": {
+      "__id__": 56
+    },
+    "lblEven": {
+      "__id__": 72
+    },
+    "_id": ""
+  },
+  {
+    "__type__": "cc.CompPrefabInfo",
+    "fileId": "a9S+Pk4zhJPpfHkASqXoTi"
+  },
+  {
     "__type__": "cc.PrefabInfo",
     "root": {
       "__id__": 1
@@ -2042,6 +2099,7 @@
       "__id__": 0
     },
     "fileId": "61tot/KdFM2Ys5LGxKJrNM",
+    "instance": null,
     "targetOverrides": null
   }
 ]
