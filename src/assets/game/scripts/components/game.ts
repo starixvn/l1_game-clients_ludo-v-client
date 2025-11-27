@@ -46,6 +46,8 @@ export default class Game extends GameComponent {
     override containerOptions = containerOptions;
     isLoading = true;
     isFinishDiceAnim = false;
+    isPlayAnimSettlement = false;
+    
     disabledGame: boolean = null;
 
     protected clientRoundId = -1;
@@ -120,7 +122,7 @@ export default class Game extends GameComponent {
         }
 
         // Handle animations or static display
-        if (animationHighlight && roundTime > settings.durations.wholeRound - 8) {
+        if (animationHighlight && roundTime > settings.durations.wholeRound - 8 && !this.isPlayAnimSettlement) {
             await this.showResultAnim(result, roundId, result);
         } else {
             this.resultComp?.showResultNoAnim(result, roundId);
@@ -149,6 +151,7 @@ export default class Game extends GameComponent {
             this.resultComp?.setResultTextVisibility(false);
 
             if (hasAnimation) {
+                this.isPlayAnimSettlement = true;
                 this.handleDiceDropSound();
                 await AnimationUtils.delayTime(this.delayTimeShowWinningBox);
                 await this.showResultAnim(result, this.roundId, settlementResult);
@@ -221,6 +224,7 @@ export default class Game extends GameComponent {
             super.handleStartRound(isStartRound);
             this.resultComp?.setResultTextVisibility(false);
             this.resultsSoundInfo = [];
+            this.isFinishDiceAnim = this.isPlayAnimSettlement = false;
         }
     }
 
