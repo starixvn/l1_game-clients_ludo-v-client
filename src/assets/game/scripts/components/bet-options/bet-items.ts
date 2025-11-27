@@ -19,17 +19,40 @@ export class BetItems extends BetItemsPolygonBase {
         3: "#189911",
     };
 
-    @render(GameBoardStore, (store) => store.boardState)
-    changeColorBetOptions(state: GameServiceMessage.BoardState) {
-        if (state) {
-            const color = this.mappingColor[state.nextPlayer];
-            this.betItemComponents.forEach((betItem) => {
-                betItem.node.children.forEach((child) => {
-                    if (child.name === "bg") {
-                        ComponentUtils.setNodeColor(child, color);
-                    }
-                });
+    /**
+     * Update bet item background colors based on player index
+     * @param playerIndex The player index to get color from mappingColor
+     */
+    private updateBetItemColors(playerIndex: number): void {
+        if (playerIndex === undefined || playerIndex === null) {
+            return;
+        }
+
+        const color = this.mappingColor[playerIndex];
+        if (!color) {
+            return;
+        }
+
+        this.betItemComponents.forEach((betItem) => {
+            betItem.node.children.forEach((child) => {
+                if (child.name === "bg") {
+                    ComponentUtils.setNodeColor(child, color);
+                }
             });
+        });
+    }
+
+    @render(GameBoardStore, (store) => store.boardState)
+    changeColorBetOptionsOnJoinGame(state: GameServiceMessage.BoardState) {
+        if (state) {
+            this.updateBetItemColors(state.nextPlayer);
+        }
+    }
+
+    @render(GameBoardStore, (store) => store.nextState)
+    changeColorBetOptionsOnNextState(state: GameServiceMessage.NextState) {
+        if (state?.nextAction) {
+            this.updateBetItemColors(state.nextAction.nextPlayer);
         }
     }
 
