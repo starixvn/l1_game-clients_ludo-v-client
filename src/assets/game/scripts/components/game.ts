@@ -258,8 +258,13 @@ export default class Game extends GameComponent {
         const boardStateJS = mobx.toJS(boardState) as GameServiceMessage.FinishBoardState;
         console.log("[Game] renderFinishBoardState", boardStateJS);
 
+        // Move dice result to the player's base
+        if (this.gameRunnerComponent && this.resultNode) {
+            this.gameRunnerComponent.moveDiceResultForFinishState(boardStateJS.result, this.resultNode);
+        }
+
+        // Wait 4 seconds before applying state
         if (this.gameRunnerComponent) {
-            // Wait 2 seconds before applying state
             this.scheduleOnce(() => {
                 this.gameRunnerComponent.applyGameState(boardStateJS.result);
             }, 4);
@@ -275,6 +280,15 @@ export default class Game extends GameComponent {
         const nextStateJS = mobx.toJS(nextState) as GameServiceMessage.NextState;
         console.log("[Game] renderNextState", nextStateJS);
 
+        // Get the nextPlayer from nextAction
+        const nextPlayer = nextStateJS.nextAction?.nextPlayer;
+
+        // Move dice result to the next player's base
+        if (this.gameRunnerComponent && this.resultNode && nextPlayer !== undefined && nextPlayer !== null) {
+            this.gameRunnerComponent.moveDiceResultForNextState(nextPlayer, this.resultNode);
+        }
+
+        // Handle next state highlighting
         if (this.gameRunnerComponent) {
             this.gameRunnerComponent.handleNextState(nextStateJS);
         }

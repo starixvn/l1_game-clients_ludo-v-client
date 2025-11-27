@@ -73,16 +73,14 @@ export class LudoResult extends Component {
         this.dicesComponent.forEach((dice, index) => {
             const endPos = result[`dice${index + 1}`];
             const frame = this.diceSpriteFrames.find((spriteFrame) => spriteFrame.name === `end-${endPos}-${this.DICE_END_FRAME}`);
-            if (frame) 
-            {
+            if (frame) {
                 dice.setFrame(frame);
             }
         });
     }
 
     setResultTextVisibility(isShow: boolean) {
-        if (!this.nodeResult) 
-        {
+        if (!this.nodeResult) {
             return;
         }
 

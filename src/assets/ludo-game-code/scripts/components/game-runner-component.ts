@@ -5,7 +5,7 @@
  * Manages the progression through game states and coordinates horse movements
  */
 
-import { _decorator, Component, Node } from "cc";
+import { _decorator, Component, Node, Vec3, UITransform, tween } from "cc";
 import { Logger } from "../utils/logger";
 import { GameState } from "../stubs/game-state-stub";
 import { HorseComponent } from "./horse-component";
@@ -13,6 +13,7 @@ import { CellComponent } from "./cell-component";
 import { gameDataService } from "../services/game-data-service";
 import { gameBoardData, Cell, Horse } from "../game-board-data";
 import { GameServiceMessage } from "../../../game/scripts/features/game-messages";
+import { BaseComponent } from "./base-component";
 
 const { ccclass, property, menu } = _decorator;
 
@@ -418,7 +419,7 @@ export class GameRunnerComponent extends Component {
         const positionsToHighlight = new Set<number>();
         // Get unique old positions to highlight (horses that can move)
         const horsePositionsToHighlight = new Set<number>();
-        
+
         for (const action of possibleActions) {
             positionsToHighlight.add(action.newPosition);
             // Collect old positions where horses can move from
@@ -535,14 +536,9 @@ export class GameRunnerComponent extends Component {
             }
 
             // Find all horses in this base that are not spawned and not retired
-            horsesToHighlight = gameDataService
-                .getHorsesForBase(baseID)
-                .filter((horse) => !horse.isSpawned && !horse.isRetired);
+            horsesToHighlight = gameDataService.getHorsesForBase(baseID).filter((horse) => !horse.isSpawned && !horse.isRetired);
 
-            Logger.debug(
-                "GameRunnerComponent",
-                `Found ${horsesToHighlight.length} horses in base ${baseID} for player ${nextPlayer}`
-            );
+            Logger.debug("GameRunnerComponent", `Found ${horsesToHighlight.length} horses in base ${baseID} for player ${nextPlayer}`);
         } else {
             // Position > 0 means horses are spawned on a cell
             const cell = this.findCellByIndex(positionIndex);
@@ -555,9 +551,9 @@ export class GameRunnerComponent extends Component {
             horsesToHighlight = gameDataService
                 .getBases()
                 .flatMap((base) =>
-                    gameDataService.getHorsesForBase(base.ID).filter(
-                        (horse) => horse.cellID === cell.cellID && horse.isSpawned && !horse.isRetired
-                    )
+                    gameDataService
+                        .getHorsesForBase(base.ID)
+                        .filter((horse) => horse.cellID === cell.cellID && horse.isSpawned && !horse.isRetired)
                 );
 
             Logger.debug(
@@ -580,6 +576,186 @@ export class GameRunnerComponent extends Component {
             } else {
                 Logger.warn("GameRunnerComponent", `HorseComponent not found for horseID: ${horseData.horseID}`);
             }
+        }
+    }
+
+    /**
+     * Find BaseComponent by baseID in the scene
+     * @param baseID The base ID to find
+     * @returns BaseComponent instance or null if not found
+     */
+    private findBaseComponent(baseID: string): BaseComponent | null {
+        const scene = this.node.scene;
+        if (!scene) {
+            return null;
+        }
+
+        const findBase = (node: Node): BaseComponent | null => {
+            const baseComponent = node.getComponent(BaseComponent);
+            if (baseComponent && baseComponent.baseID === baseID) {
+                return baseComponent;
+            }
+            for (const child of node.children) {
+                const found = findBase(child);
+                if (found) {
+                    return found;
+                }
+            }
+            return null;
+        };
+
+        return findBase(scene);
+    }
+
+    /**
+     * Position result node near the base with smooth tween animation
+     * @param baseComponent The BaseComponent to position near
+     * @param resultNode The result node to position
+     * @param duration Duration of the animation in seconds (default: 0.5)
+     */
+    public positionDiceResultNearBase(baseComponent: BaseComponent, resultNode: Node, duration: number = 0.5): void {
+        if (!baseComponent || !resultNode || !baseComponent.node) {
+            Logger.warn("GameRunnerComponent", "Cannot position dice result: missing baseComponent or resultNode");
+            return;
+        }
+
+        const baseNode = baseComponent.node;
+        const baseTransform = baseNode.getComponent(UITransform);
+
+        if (!baseTransform) {
+            Logger.warn("GameRunnerComponent", "Base node does not have UITransform component");
+            return;
+        }
+
+        // Get world position of the base center using UITransform
+        const baseWorldPos = baseTransform.convertToWorldSpaceAR(Vec3.ZERO);
+
+        // Ensure resultNode is active and visible
+        resultNode.active = true;
+
+        // Get current position
+        const currentPos = resultNode.position.clone();
+
+        // Convert world position to resultNode's parent local space
+        let targetPos: Vec3;
+        if (resultNode.parent) {
+            const parentTransform = resultNode.parent.getComponent(UITransform);
+            if (parentTransform) {
+                // Convert world position to parent's local space
+                targetPos = parentTransform.convertToNodeSpaceAR(baseWorldPos);
+                Logger.debug(
+                    "GameRunnerComponent",
+                    `Animating dice result node from (${currentPos.x}, ${currentPos.y}) to (${targetPos.x}, ${targetPos.y}) relative to base ${baseComponent.baseID}`
+                );
+            } else {
+                // Fallback: use world position directly
+                targetPos = new Vec3(baseWorldPos.x, baseWorldPos.y, baseWorldPos.z);
+                Logger.debug("GameRunnerComponent", `Animating dice result node to world position (${targetPos.x}, ${targetPos.y})`);
+            }
+        } else {
+            // If no parent, use world position directly
+            targetPos = new Vec3(baseWorldPos.x, baseWorldPos.y, baseWorldPos.z);
+            Logger.debug(
+                "GameRunnerComponent",
+                `Animating dice result node to world position (${targetPos.x}, ${targetPos.y}) - no parent`
+            );
+        }
+
+        // Animate the position change using tween
+        tween(resultNode)
+            .to(duration, { position: targetPos }, { easing: "sineOut" })
+            .call(() => {
+                Logger.debug("GameRunnerComponent", `Dice result node animation completed at (${targetPos.x}, ${targetPos.y})`);
+            })
+            .start();
+    }
+
+    /**
+     * Get the player index who rolled the dice from BoardState
+     * @param result The BoardState result
+     * @returns Player index (0-3) or -1 if cannot determine
+     */
+    public getPlayerWhoRolled(result: GameServiceMessage.BoardState): number {
+        // First try to get from action.player
+        if (result.action?.player !== undefined && result.action.player !== null) {
+            return result.action.player;
+        }
+
+        // Try to get from action.playerColor
+        if (result.action?.playerColor !== undefined && result.action.playerColor !== null) {
+            return result.action.playerColor;
+        }
+
+        // Fallback: calculate from nextPlayer (the player who rolled is before nextPlayer)
+        if (result.nextPlayer !== undefined && result.nextPlayer !== null) {
+            // The player who rolled is (nextPlayer - 1) mod 4
+            const playerIndex = (result.nextPlayer - 1 + 4) % 4;
+            return playerIndex;
+        }
+
+        return -1;
+    }
+
+    /**
+     * Move dice result to a specific player's base
+     * @param playerIndex Player index (0-3)
+     * @param resultNode The result node to move
+     * @param duration Duration of the animation in seconds (default: 0.5)
+     */
+    public moveDiceResultToPlayerBase(playerIndex: number, resultNode: Node, duration: number = 0.5): void {
+        if (playerIndex < 0 || playerIndex > 3) {
+            Logger.warn("GameRunnerComponent", `Invalid player index: ${playerIndex}`);
+            return;
+        }
+
+        const baseID = this.playerToBaseMap[playerIndex];
+        if (!baseID) {
+            Logger.warn("GameRunnerComponent", `No baseID mapping found for player: ${playerIndex}`);
+            return;
+        }
+
+        const baseComponent = this.findBaseComponent(baseID);
+        if (!baseComponent || !baseComponent.node) {
+            Logger.warn("GameRunnerComponent", `BaseComponent not found for baseID: ${baseID}`);
+            return;
+        }
+
+        Logger.debug("GameRunnerComponent", `Moving dice result to base of player ${playerIndex} (${baseID})`);
+        this.positionDiceResultNearBase(baseComponent, resultNode, duration);
+    }
+
+    /**
+     * Move dice result to the player who rolled the dice (for FinishBoardState)
+     * @param result The BoardState result
+     * @param resultNode The result node to position
+     */
+    public moveDiceResultForFinishState(result: GameServiceMessage.BoardState, resultNode: Node): void {
+        const playerWhoRolled = this.getPlayerWhoRolled(result);
+        Logger.debug("GameRunnerComponent", `Moving dice result to player who rolled: ${playerWhoRolled}`);
+
+        if (playerWhoRolled >= 0 && resultNode) {
+            // Use scheduleOnce to ensure scene is fully loaded before finding base
+            this.scheduleOnce(() => {
+                this.moveDiceResultToPlayerBase(playerWhoRolled, resultNode);
+            }, 0.1); // Small delay to ensure scene is ready
+        } else {
+            Logger.warn("GameRunnerComponent", `Cannot move result: playerWhoRolled=${playerWhoRolled}, resultNode=${!!resultNode}`);
+        }
+    }
+
+    /**
+     * Move dice result to the next player's base (for NextState)
+     * @param nextPlayer The next player index
+     * @param resultNode The result node to position
+     */
+    public moveDiceResultForNextState(nextPlayer: number, resultNode: Node): void {
+        if (nextPlayer !== undefined && nextPlayer !== null && resultNode) {
+            Logger.debug("GameRunnerComponent", `Moving dice result to base of nextPlayer: ${nextPlayer}`);
+
+            // Use scheduleOnce to ensure scene is fully loaded before finding base
+            this.scheduleOnce(() => {
+                this.moveDiceResultToPlayerBase(nextPlayer, resultNode);
+            }, 0.1); // Small delay to ensure scene is ready
         }
     }
 
