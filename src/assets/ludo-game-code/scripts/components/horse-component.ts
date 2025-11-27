@@ -351,45 +351,68 @@ export class HorseComponent extends Component {
     }
 
     /**
+     * Try to get sprite component from a node
+     * @param node The node to get sprite from
+     * @param nodeName Name of the node for logging
+     * @returns Sprite component or null if not found
+     */
+    private tryGetSpriteFromNode(node: Node | null, nodeName: string): Sprite | null {
+        if (!node?.isValid) {
+            return null;
+        }
+
+        try {
+            const sprite = node.getComponent(Sprite);
+            return sprite || null;
+        } catch (error) {
+            Logger.warn("HorseComponent", `Error getting sprite from ${nodeName}: ${error}`);
+            return null;
+        }
+    }
+
+    /**
+     * Try to find sprite in child nodes
+     * @param parentNode The parent node to search children of
+     * @returns Sprite component or null if not found
+     */
+    private tryFindSpriteInChildren(parentNode: Node): Sprite | null {
+        try {
+            for (const child of parentNode.children) {
+                if (child?.isValid) {
+                    const sprite = child.getComponent(Sprite);
+                    if (sprite) {
+                        return sprite;
+                    }
+                }
+            }
+        } catch (error) {
+            Logger.warn("HorseComponent", `Error searching for sprite in children: ${error}`);
+        }
+        return null;
+    }
+
+    /**
      * Find sprite component in the horse nodes
      * @returns Sprite component or null if not found
      */
     private findHorseSprite(): Sprite | null {
         // Try nodeHorseIcon first
-        if (this.nodeHorseIcon?.isValid) {
-            try {
-                const sprite = this.nodeHorseIcon.getComponent(Sprite);
-                if (sprite) {
-                    return sprite;
-                }
-            } catch (error) {
-                Logger.warn("HorseComponent", `Error getting sprite from nodeHorseIcon: ${error}`);
-            }
+        const iconSprite = this.tryGetSpriteFromNode(this.nodeHorseIcon, "nodeHorseIcon");
+        if (iconSprite) {
+            return iconSprite;
         }
 
         // Try main node
         if (this.node?.isValid) {
-            try {
-                const sprite = this.node.getComponent(Sprite);
-                if (sprite) {
-                    return sprite;
-                }
-            } catch (error) {
-                Logger.warn("HorseComponent", `Error getting sprite from node: ${error}`);
+            const nodeSprite = this.tryGetSpriteFromNode(this.node, "node");
+            if (nodeSprite) {
+                return nodeSprite;
             }
 
             // Try child nodes
-            try {
-                for (const child of this.node.children) {
-                    if (child?.isValid) {
-                        const sprite = child.getComponent(Sprite);
-                        if (sprite) {
-                            return sprite;
-                        }
-                    }
-                }
-            } catch (error) {
-                Logger.warn("HorseComponent", `Error searching for sprite in children: ${error}`);
+            const childSprite = this.tryFindSpriteInChildren(this.node);
+            if (childSprite) {
+                return childSprite;
             }
         }
 
