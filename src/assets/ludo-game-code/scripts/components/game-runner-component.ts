@@ -11,7 +11,7 @@ import { GameState } from "../stubs/game-state-stub";
 import { HorseComponent } from "./horse-component";
 import { CellComponent } from "./cell-component";
 import { gameDataService } from "../services/game-data-service";
-import { gameBoardData, Cell } from "../game-board-data";
+import { gameBoardData, Cell, Horse } from "../game-board-data";
 import { GameServiceMessage } from "../../../game/scripts/features/game-messages";
 
 const { ccclass, property, menu } = _decorator;
@@ -411,20 +411,36 @@ export class GameRunnerComponent extends Component {
         }
 
         const possibleActions = nextState.nextAction.possibleActions;
-        Logger.debug("GameRunnerComponent", `Handling NextState with ${possibleActions.length} possible actions`);
+        const nextPlayer = nextState.nextAction.nextPlayer;
+        Logger.debug("GameRunnerComponent", `Handling NextState with ${possibleActions.length} possible actions for player ${nextPlayer}`);
 
-        // Get unique new positions to highlight
+        // Get unique new positions to highlight (destination cells)
         const positionsToHighlight = new Set<number>();
+        // Get unique old positions to highlight (horses that can move)
+        const horsePositionsToHighlight = new Set<number>();
+        
         for (const action of possibleActions) {
             positionsToHighlight.add(action.newPosition);
+            // Collect old positions where horses can move from
+            if (action.oldPosition !== null && action.oldPosition !== undefined) {
+                horsePositionsToHighlight.add(action.oldPosition);
+            }
         }
 
-        // Highlight each position
+        // Highlight destination cells
         for (const positionIndex of positionsToHighlight) {
             this.highlightCellByIndex(positionIndex);
         }
 
-        Logger.debug("GameRunnerComponent", `Highlighted ${positionsToHighlight.size} cells for possible moves`);
+        // Highlight horses that can move
+        for (const positionIndex of horsePositionsToHighlight) {
+            this.highlightHorseByPositionIndex(positionIndex, nextPlayer);
+        }
+
+        Logger.debug(
+            "GameRunnerComponent",
+            `Highlighted ${positionsToHighlight.size} cells and ${horsePositionsToHighlight.size} horse positions for possible moves`
+        );
     }
 
     /**
@@ -470,7 +486,7 @@ export class GameRunnerComponent extends Component {
     }
 
     /**
-     * Clear all possible move highlights
+     * Clear all possible move highlights (both cells and horses)
      */
     public clearPossibleMoveHighlights(): void {
         // Initialize cell components if not already done
@@ -478,14 +494,93 @@ export class GameRunnerComponent extends Component {
             this.initializeCellComponents();
         }
 
-        let clearedCount = 0;
+        // Clear cell highlights
+        let clearedCellCount = 0;
         for (const cellComponent of this.cellComponentsMap.values()) {
-            // Use CellComponent's method to clear highlight
             cellComponent.clearHighlight();
-            clearedCount++;
+            clearedCellCount++;
         }
 
-        Logger.debug("GameRunnerComponent", `Cleared highlights from ${clearedCount} cells`);
+        // Clear horse highlights
+        let clearedHorseCount = 0;
+        for (const horseComponent of this.horseComponentsMap.values()) {
+            horseComponent.clearHighlight();
+            clearedHorseCount++;
+        }
+
+        Logger.debug("GameRunnerComponent", `Cleared highlights from ${clearedCellCount} cells and ${clearedHorseCount} horses`);
+    }
+
+    /**
+     * Highlight horses at a specific position index
+     * @param positionIndex The position index (0 = base, >0 = cell index)
+     * @param nextPlayer The player whose turn it is (required for base horses)
+     */
+    private highlightHorseByPositionIndex(positionIndex: number, nextPlayer: number): void {
+        let horsesToHighlight: Horse[] = [];
+
+        if (positionIndex === 0) {
+            // Position 0 means horses are in base (not spawned yet)
+            // Find the base for the current player
+            const baseID = this.playerToBaseMap[nextPlayer];
+            if (!baseID) {
+                Logger.warn("GameRunnerComponent", `No base mapping found for player ${nextPlayer}`);
+                return;
+            }
+
+            const base = gameDataService.getBase(baseID);
+            if (!base) {
+                Logger.warn("GameRunnerComponent", `Base not found: ${baseID} for player ${nextPlayer}`);
+                return;
+            }
+
+            // Find all horses in this base that are not spawned and not retired
+            horsesToHighlight = gameDataService
+                .getHorsesForBase(baseID)
+                .filter((horse) => !horse.isSpawned && !horse.isRetired);
+
+            Logger.debug(
+                "GameRunnerComponent",
+                `Found ${horsesToHighlight.length} horses in base ${baseID} for player ${nextPlayer}`
+            );
+        } else {
+            // Position > 0 means horses are spawned on a cell
+            const cell = this.findCellByIndex(positionIndex);
+            if (!cell) {
+                Logger.warn("GameRunnerComponent", `Cell with index ${positionIndex} not found for horse highlighting`);
+                return;
+            }
+
+            // Find all horses at this cell position that are spawned and not retired
+            horsesToHighlight = gameDataService
+                .getBases()
+                .flatMap((base) =>
+                    gameDataService.getHorsesForBase(base.ID).filter(
+                        (horse) => horse.cellID === cell.cellID && horse.isSpawned && !horse.isRetired
+                    )
+                );
+
+            Logger.debug(
+                "GameRunnerComponent",
+                `Found ${horsesToHighlight.length} horses at position ${positionIndex} (cell ${cell.cellID})`
+            );
+        }
+
+        if (horsesToHighlight.length === 0) {
+            Logger.debug("GameRunnerComponent", `No horses found at position ${positionIndex} to highlight`);
+            return;
+        }
+
+        // Highlight each horse found at this position
+        for (const horseData of horsesToHighlight) {
+            const horseComponent = this.horseComponentsMap.get(horseData.horseID);
+            if (horseComponent) {
+                horseComponent.highlightAsPossibleMove();
+                Logger.debug("GameRunnerComponent", `Highlighted horse ${horseData.horseID} at position ${positionIndex}`);
+            } else {
+                Logger.warn("GameRunnerComponent", `HorseComponent not found for horseID: ${horseData.horseID}`);
+            }
+        }
     }
 
     onDestroy() {
