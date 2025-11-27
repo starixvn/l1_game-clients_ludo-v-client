@@ -351,63 +351,40 @@ export class HorseComponent extends Component {
     }
 
     /**
-     * Highlight this horse as a possible move candidate
-     * Plays a continuous highlight animation
+     * Find sprite component in the horse nodes
+     * @returns Sprite component or null if not found
      */
-    public highlightAsPossibleMove(): void {
-        // Ensure animationManager is initialized
-        if (!this.animationManager) {
-            this.animationManager = new AnimationManager();
-        }
-
-        // Check if nodes are valid
-        if (!this.node || !this.node.isValid) {
-            Logger.warn("HorseComponent", `Cannot highlight: node is invalid for horse ${this.horseID}`);
-            return;
-        }
-
-        // Set flag to prevent other animations from overriding
-        this.isHighlightedAsPossibleMove = true;
-
-        // Stop any existing animations first (with error handling)
-        try {
-            if (this.node && this.node.isValid) {
-                this.animationManager.stopAnimation(this.node);
-            }
-            if (this.nodeHorseIcon && this.nodeHorseIcon.isValid) {
-                this.animationManager.stopAnimation(this.nodeHorseIcon);
-            }
-        } catch (error) {
-            Logger.warn("HorseComponent", `Error stopping existing animations: ${error}`);
-        }
-
-        // Find sprite component for color animation
-        // Prefer nodeHorseIcon sprite as that's what's visible
-        let sprite: Sprite | null = null;
-        if (this.nodeHorseIcon && this.nodeHorseIcon.isValid) {
+    private findHorseSprite(): Sprite | null {
+        // Try nodeHorseIcon first
+        if (this.nodeHorseIcon?.isValid) {
             try {
-                sprite = this.nodeHorseIcon.getComponent(Sprite);
+                const sprite = this.nodeHorseIcon.getComponent(Sprite);
+                if (sprite) {
+                    return sprite;
+                }
             } catch (error) {
                 Logger.warn("HorseComponent", `Error getting sprite from nodeHorseIcon: ${error}`);
             }
         }
 
-        if (!sprite && this.node && this.node.isValid) {
+        // Try main node
+        if (this.node?.isValid) {
             try {
-                sprite = this.node.getComponent(Sprite);
+                const sprite = this.node.getComponent(Sprite);
+                if (sprite) {
+                    return sprite;
+                }
             } catch (error) {
                 Logger.warn("HorseComponent", `Error getting sprite from node: ${error}`);
             }
-        }
 
-        if (!sprite && this.node && this.node.isValid) {
-            // Try to find sprite in child nodes
+            // Try child nodes
             try {
                 for (const child of this.node.children) {
-                    if (child && child.isValid) {
-                        sprite = child.getComponent(Sprite);
+                    if (child?.isValid) {
+                        const sprite = child.getComponent(Sprite);
                         if (sprite) {
-                            break;
+                            return sprite;
                         }
                     }
                 }
@@ -416,15 +393,48 @@ export class HorseComponent extends Component {
             }
         }
 
-        // Use nodeHorseIcon for animation if available and valid, otherwise use main node
-        const targetNode = this.nodeHorseIcon && this.nodeHorseIcon.isValid ? this.nodeHorseIcon : this.node;
+        return null;
+    }
 
-        if (!targetNode || !targetNode.isValid) {
-            Logger.warn("HorseComponent", `Cannot highlight: target node is invalid for horse ${this.horseID}`);
-            return;
+    /**
+     * Get the target node for animation (prefers nodeHorseIcon)
+     * @returns Target node or null if invalid
+     */
+    private getAnimationTargetNode(): Node | null {
+        if (this.nodeHorseIcon?.isValid) {
+            return this.nodeHorseIcon;
+        }
+        if (this.node?.isValid) {
+            return this.node;
+        }
+        return null;
+    }
+
+    /**
+     * Stop animations on all horse nodes
+     */
+    private stopAllHorseAnimations(): void {
+        if (!this.animationManager) {
+            this.animationManager = new AnimationManager();
         }
 
-        // Store original scale before starting animation
+        try {
+            if (this.node?.isValid) {
+                this.animationManager.stopAnimation(this.node);
+            }
+            if (this.nodeHorseIcon?.isValid) {
+                this.animationManager.stopAnimation(this.nodeHorseIcon);
+            }
+        } catch (error) {
+            Logger.warn("HorseComponent", `Error stopping existing animations: ${error}`);
+        }
+    }
+
+    /**
+     * Store original scale of the target node
+     * @param targetNode The node to store scale from
+     */
+    private storeOriginalScale(targetNode: Node): void {
         if (!this.originalHorseIconScale) {
             const currentScale = targetNode.getScale();
             this.originalHorseIconScale = new Vec3(currentScale.x, currentScale.y, currentScale.z);
@@ -433,17 +443,70 @@ export class HorseComponent extends Component {
                 `Stored original scale for horse ${this.horseID}: (${currentScale.x}, ${currentScale.y}, ${currentScale.z})`
             );
         }
+    }
 
-        // Use AnimationManager to play the highlight animation
-        // Use continuous animation (large repeatCount) similar to cell highlighting
+    /**
+     * Highlight this horse as a possible move candidate
+     * Plays a continuous highlight animation
+     */
+    public highlightAsPossibleMove(): void {
+        if (!this.node?.isValid) {
+            Logger.warn("HorseComponent", `Cannot highlight: node is invalid for horse ${this.horseID}`);
+            return;
+        }
+
+        if (!this.animationManager) {
+            this.animationManager = new AnimationManager();
+        }
+
+        this.isHighlightedAsPossibleMove = true;
+        this.stopAllHorseAnimations();
+
+        const sprite = this.findHorseSprite();
+        const targetNode = this.getAnimationTargetNode();
+
+        if (!targetNode) {
+            Logger.warn("HorseComponent", `Cannot highlight: target node is invalid for horse ${this.horseID}`);
+            this.isHighlightedAsPossibleMove = false;
+            return;
+        }
+
+        this.storeOriginalScale(targetNode);
+
         try {
             this.animationManager.playCellHighlightAnimation(targetNode, sprite, 0.5, 9999);
             Logger.debug("HorseComponent", `Started highlight animation for horse ${this.horseID} on node ${targetNode.name}`);
         } catch (error) {
             Logger.error("HorseComponent", `Error playing highlight animation: ${error}`);
-            // Reset flag on error
             this.isHighlightedAsPossibleMove = false;
             this.originalHorseIconScale = null;
+        }
+    }
+
+    /**
+     * Restore original scale to target node
+     * @param targetNode The node to restore scale on
+     */
+    private restoreOriginalScale(targetNode: Node): void {
+        if (!this.animationManager) {
+            this.animationManager = new AnimationManager();
+        }
+
+        try {
+            this.animationManager.stopAnimation(targetNode);
+
+            if (this.originalHorseIconScale) {
+                targetNode.setScale(this.originalHorseIconScale.x, this.originalHorseIconScale.y, this.originalHorseIconScale.z);
+                Logger.debug(
+                    "HorseComponent",
+                    `Restored original scale for horse ${this.horseID}: (${this.originalHorseIconScale.x}, ${this.originalHorseIconScale.y}, ${this.originalHorseIconScale.z})`
+                );
+                this.originalHorseIconScale = null;
+            } else {
+                this.animationManager.resetScale(targetNode);
+            }
+        } catch (error) {
+            Logger.warn("HorseComponent", `Error resetting scale on target node: ${error}`);
         }
     }
 
@@ -451,56 +514,19 @@ export class HorseComponent extends Component {
      * Clear highlight animation from this horse
      */
     public clearHighlight(): void {
-        // Clear the flag
         this.isHighlightedAsPossibleMove = false;
 
         if (!this.animationManager) {
             this.animationManager = new AnimationManager();
         }
 
-        // Stop any highlight animation on both nodes (with null checks)
-        if (this.node && this.node.isValid) {
-            try {
-                this.animationManager.stopAnimation(this.node);
-            } catch (error) {
-                Logger.warn("HorseComponent", `Error stopping animation on node: ${error}`);
-            }
+        this.stopAllHorseAnimations();
+
+        const targetNode = this.getAnimationTargetNode();
+        if (targetNode) {
+            this.restoreOriginalScale(targetNode);
         }
 
-        if (this.nodeHorseIcon && this.nodeHorseIcon.isValid) {
-            try {
-                this.animationManager.stopAnimation(this.nodeHorseIcon);
-            } catch (error) {
-                Logger.warn("HorseComponent", `Error stopping animation on nodeHorseIcon: ${error}`);
-            }
-        }
-
-        // Reset scale to original value (with null checks)
-        const targetNode = this.nodeHorseIcon && this.nodeHorseIcon.isValid ? this.nodeHorseIcon : this.node;
-
-        if (targetNode && targetNode.isValid) {
-            try {
-                // Stop animation first
-                this.animationManager.stopAnimation(targetNode);
-
-                // Restore original scale if we stored it
-                if (this.originalHorseIconScale) {
-                    targetNode.setScale(this.originalHorseIconScale.x, this.originalHorseIconScale.y, this.originalHorseIconScale.z);
-                    Logger.debug(
-                        "HorseComponent",
-                        `Restored original scale for horse ${this.horseID}: (${this.originalHorseIconScale.x}, ${this.originalHorseIconScale.y}, ${this.originalHorseIconScale.z})`
-                    );
-                    this.originalHorseIconScale = null;
-                } else {
-                    // Fallback to resetScale if original scale not stored
-                    this.animationManager.resetScale(targetNode);
-                }
-            } catch (error) {
-                Logger.warn("HorseComponent", `Error resetting scale on target node: ${error}`);
-            }
-        }
-
-        // Update animations to restore any other active states
         try {
             this.updateAnimations();
         } catch (error) {
