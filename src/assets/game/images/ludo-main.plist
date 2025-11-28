@@ -15,7 +15,7 @@
                 <key>spriteSourceSize</key>
                 <string>{40,40}</string>
                 <key>textureRect</key>
-                <string>{{1710,3},{40,40}}</string>
+                <string>{{1754,3},{40,40}}</string>
                 <key>textureRotated</key>
                 <false/>
             </dict>
@@ -30,7 +30,7 @@
                 <key>spriteSourceSize</key>
                 <string>{40,40}</string>
                 <key>textureRect</key>
-                <string>{{1752,3},{40,40}}</string>
+                <string>{{1796,3},{40,40}}</string>
                 <key>textureRotated</key>
                 <false/>
             </dict>
@@ -60,7 +60,7 @@
                 <key>spriteSourceSize</key>
                 <string>{42,40}</string>
                 <key>textureRect</key>
-                <string>{{1666,3},{42,40}}</string>
+                <string>{{1710,3},{42,40}}</string>
                 <key>textureRotated</key>
                 <false/>
             </dict>
@@ -71,11 +71,11 @@
                 <key>spriteOffset</key>
                 <string>{0,0}</string>
                 <key>spriteSize</key>
-                <string>{40,40}</string>
+                <string>{42,42}</string>
                 <key>spriteSourceSize</key>
-                <string>{40,40}</string>
+                <string>{42,42}</string>
                 <key>textureRect</key>
-                <string>{{1794,3},{40,40}}</string>
+                <string>{{1666,3},{42,42}}</string>
                 <key>textureRotated</key>
                 <false/>
             </dict>
@@ -90,7 +90,7 @@
                 <key>spriteSourceSize</key>
                 <string>{9,7}</string>
                 <key>textureRect</key>
-                <string>{{1876,3},{9,7}}</string>
+                <string>{{1878,3},{9,7}}</string>
                 <key>textureRotated</key>
                 <false/>
             </dict>
@@ -105,7 +105,7 @@
                 <key>spriteSourceSize</key>
                 <string>{9,7}</string>
                 <key>textureRect</key>
-                <string>{{1887,3},{9,7}}</string>
+                <string>{{1889,3},{9,7}}</string>
                 <key>textureRotated</key>
                 <false/>
             </dict>
@@ -120,7 +120,7 @@
                 <key>spriteSourceSize</key>
                 <string>{38,38}</string>
                 <key>textureRect</key>
-                <string>{{1836,3},{38,38}}</string>
+                <string>{{1838,3},{38,38}}</string>
                 <key>textureRotated</key>
                 <false/>
             </dict>
@@ -183,7 +183,7 @@
             <key>size</key>
             <string>{2048,2048}</string>
             <key>smartupdate</key>
-            <string>$TexturePacker:SmartUpdate:04cece1d8b8462e4c0bc1dc3358a4ee1:bfaafeb46d021e3426690d7566d94540:962c15ba16dc0bbb5cf4e464d8ec413c$</string>
+            <string>$TexturePacker:SmartUpdate:8fac24cbbfc8936bae318aea7e2cc528:3661d8744285738bc799852a70890dc7:962c15ba16dc0bbb5cf4e464d8ec413c$</string>
             <key>textureFileName</key>
             <string>ludo-main.webp</string>
         </dict>
