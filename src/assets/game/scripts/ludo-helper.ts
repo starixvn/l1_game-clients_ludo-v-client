@@ -17,9 +17,18 @@ export const calcTotalPoints = (result: gc.GameServiceMessage.TResult): number =
 };
 
 export const pauseSpineAnimation = (spineAnimation: sp.Skeleton, startProgress: number, animationName) => {
+    if (!spineAnimation) {
+        return;
+    }
+
     spineAnimation.node.active = true;
     spineAnimation.timeScale = 0;
     spineAnimation.setAnimation(0, animationName, false);
     const trackEntry = spineAnimation.getCurrent(0);
+
+    if (!trackEntry) {
+        return;
+    }
+
     trackEntry.animationStart = trackEntry.animationEnd * startProgress;
 };

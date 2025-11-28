@@ -47,7 +47,7 @@ export default class Game extends GameComponent {
     isLoading = true;
     isFinishDiceAnim = false;
     isPlayAnimSettlement = false;
-    
+
     disabledGame: boolean = null;
 
     protected clientRoundId = -1;
