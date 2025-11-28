@@ -14,6 +14,7 @@ import { gameDataService } from "../services/game-data-service";
 import { gameBoardData, Cell, Horse } from "../game-board-data";
 import { GameServiceMessage } from "../../../game/scripts/features/game-messages";
 import { BaseComponent } from "./base-component";
+import { BaseID } from "../global-constants";
 
 const { ccclass, property, menu } = _decorator;
 
@@ -22,10 +23,10 @@ const { ccclass, property, menu } = _decorator;
 export class GameRunnerComponent extends Component {
     /** Player to Base mapping */
     private readonly playerToBaseMap: { [key: number]: string } = {
-        0: "BASE_1", // YELLOW
-        1: "BASE_3", // BLUE
-        2: "BASE_4", // RED
-        3: "BASE_2", // GREEN
+        0: BaseID.BASE_1, // YELLOW
+        1: BaseID.BASE_3, // BLUE
+        2: BaseID.BASE_4, // RED
+        3: BaseID.BASE_2, // GREEN
     };
 
     /** Map of horseID to HorseComponent for quick lookup */
@@ -33,6 +34,9 @@ export class GameRunnerComponent extends Component {
 
     /** Map of cellID to CellComponent for quick lookup */
     private readonly cellComponentsMap: Map<string, CellComponent> = new Map();
+
+    /** Map of baseID to BaseComponent for quick lookup */
+    private readonly baseComponentsMap: Map<string, BaseComponent> = new Map();
 
     /** Initial game state to start from (optional) */
     private initialGameState: GameState | null = null;
@@ -45,6 +49,8 @@ export class GameRunnerComponent extends Component {
         this.initializeHorseComponents();
         // Initialize cell components
         this.initializeCellComponents();
+        // Initialize base components
+        this.initializeBaseComponents();
 
         // Apply initial state immediately after a short delay to ensure everything is initialized
         this.scheduleOnce(() => {
@@ -438,6 +444,12 @@ export class GameRunnerComponent extends Component {
             this.highlightHorseByPositionIndex(positionIndex, nextPlayer);
         }
 
+        // Update base border highlights based on next player
+        this.updateBaseBorderHighlights(nextPlayer);
+
+        // Update base border highlights based on next player
+        this.updateBaseBorderHighlights(nextPlayer);
+
         Logger.debug(
             "GameRunnerComponent",
             `Highlighted ${positionsToHighlight.size} cells and ${horsePositionsToHighlight.size} horse positions for possible moves`
@@ -580,11 +592,66 @@ export class GameRunnerComponent extends Component {
     }
 
     /**
+     * Initialize base components map
+     */
+    private initializeBaseComponents(): void {
+        const scene = this.node.scene;
+        if (!scene) {
+            Logger.warn("GameRunnerComponent", "Scene not available, cannot initialize base components");
+            return;
+        }
+
+        this.searchAndCacheBaseComponents(scene);
+        Logger.debug("GameRunnerComponent", `Initialized ${this.baseComponentsMap.size} base components`);
+    }
+
+    /**
+     * Recursively search and cache base components
+     */
+    private searchAndCacheBaseComponents(node: Node): void {
+        const baseComponent = node.getComponent(BaseComponent);
+        if (this.isValidBaseComponent(baseComponent)) {
+            this.baseComponentsMap.set(baseComponent.baseID, baseComponent);
+            Logger.debug("GameRunnerComponent", `Found base component: ${baseComponent.baseID}`);
+        }
+
+        node.children.forEach((child) => {
+            this.searchAndCacheBaseComponents(child);
+        });
+    }
+
+    /**
+     * Check if base component is valid
+     */
+    private isValidBaseComponent(baseComponent: BaseComponent | null): boolean {
+        return baseComponent !== null && !!baseComponent.baseID;
+    }
+
+    /**
+     * Update border highlights for all bases based on next player
+     * @param nextPlayer Player index (0-3) of the next player
+     */
+    private updateBaseBorderHighlights(nextPlayer: number): void {
+        this.baseComponentsMap.forEach((baseComponent) => {
+            if (baseComponent && baseComponent.isValid) {
+                baseComponent.updateBorderHighlight(nextPlayer);
+            }
+        });
+    }
+
+    /**
      * Find BaseComponent by baseID in the scene
      * @param baseID The base ID to find
      * @returns BaseComponent instance or null if not found
      */
     private findBaseComponent(baseID: string): BaseComponent | null {
+        // First check the map
+        const cached = this.baseComponentsMap.get(baseID);
+        if (cached && cached.isValid) {
+            return cached;
+        }
+
+        // Fallback to searching the scene
         const scene = this.node.scene;
         if (!scene) {
             return null;

@@ -10,10 +10,12 @@
 
 import { _decorator, Component, Node, Sprite, UITransform, instantiate, Prefab, resources } from "cc";
 import { Base, Horse } from "../game-board-data";
-import { WALKWAY_ROW_COUNT, CELL_DIMENSION } from "../global-constants";
+import { WALKWAY_ROW_COUNT, CELL_DIMENSION, BaseID } from "../global-constants";
 import { HorsePlaceholderComponent } from "./horse-placeholder-component";
 import { gameDataService } from "../services/game-data-service";
 import { getBaseColor } from "../utils/color-utils";
+import { BorderLightHighlightComponent } from "./border-light-highlight-component";
+import { Logger } from "../utils/logger";
 
 const { ccclass, property, menu } = _decorator;
 
@@ -78,8 +80,19 @@ export class BaseComponent extends Component {
     /** Map of horse IDs to their placeholder component instances */
     private readonly horsePlaceholdersMap: Map<string, HorsePlaceholderComponent> = new Map();
 
+    /** Array of border light highlight components found recursively */
+    private readonly borderHighlightComponents: BorderLightHighlightComponent[] = [];
+
     /** Path to horse placeholder prefab resource */
     private readonly HORSE_PLACEHOLDER_PREFAB_PATH = "ludo-game-code/prefabs/horse-placeholder-prefab";
+
+    /** Player index mapping for bases */
+    private readonly BASE_TO_PLAYER_MAP: { [key: string]: number } = {
+        [BaseID.BASE_1]: 0, // YELLOW
+        [BaseID.BASE_2]: 3, // GREEN
+        [BaseID.BASE_3]: 1, // BLUE
+        [BaseID.BASE_4]: 2, // RED
+    };
 
     onLoad() {
         this.initializeBase();
@@ -119,6 +132,9 @@ export class BaseComponent extends Component {
 
         // Load and create horse placeholders
         this.loadAndCreateHorsePlaceholders();
+
+        // Find border highlight components recursively
+        this.findBorderHighlightComponents();
     }
 
     /**
@@ -434,5 +450,124 @@ export class BaseComponent extends Component {
 
         // Update visual state
         this.updateVisualState();
+    }
+
+    /**
+     * Recursively find all border child nodes and get their BorderLightHighlightComponent
+     */
+    private findBorderHighlightComponents(): void {
+        this.borderHighlightComponents.length = 0;
+        this.searchBorderNodesRecursively(this.node);
+        Logger.debug("BaseComponent", `Found ${this.borderHighlightComponents.length} border highlight components for base ${this.baseID}`);
+    }
+
+    /**
+     * Recursively search for border nodes with highlight components
+     */
+    private searchBorderNodesRecursively(node: Node): void {
+        if (!this.isNodeValid(node)) {
+            return;
+        }
+
+        if (this.isBorderNode(node)) {
+            this.addBorderHighlightComponentIfExists(node);
+        }
+
+        node.children.forEach((child) => {
+            this.searchBorderNodesRecursively(child);
+        });
+    }
+
+    /**
+     * Check if node is valid
+     */
+    private isNodeValid(node: Node | null): boolean {
+        return node !== null && node.isValid;
+    }
+
+    /**
+     * Check if node name contains "border" (case insensitive)
+     */
+    private isBorderNode(node: Node): boolean {
+        return node.name.toLowerCase().includes("border");
+    }
+
+    /**
+     * Add border highlight component if it exists on the node
+     */
+    private addBorderHighlightComponentIfExists(node: Node): void {
+        const highlightComponent = node.getComponent(BorderLightHighlightComponent);
+        if (highlightComponent) {
+            this.borderHighlightComponents.push(highlightComponent);
+            Logger.debug("BaseComponent", `Found border highlight component on node: ${node.name} for base ${this.baseID}`);
+        }
+    }
+
+    /**
+     * Get the player index for this base
+     * @returns Player index (0-3) or -1 if not found
+     */
+    public getPlayerIndex(): number {
+        return this.BASE_TO_PLAYER_MAP[this.baseID] ?? -1;
+    }
+
+    /**
+     * Update border highlight based on next player
+     * @param nextPlayer Player index (0-3) of the next player
+     */
+    public updateBorderHighlight(nextPlayer: number): void {
+        const thisPlayerIndex = this.getPlayerIndex();
+        const shouldHighlight = thisPlayerIndex === nextPlayer;
+
+        if (shouldHighlight) {
+            this.startBorderHighlight();
+        } else {
+            this.stopBorderHighlight();
+        }
+    }
+
+    /**
+     * Start border highlight for this base
+     */
+    private startBorderHighlight(): void {
+        this.borderHighlightComponents.forEach((component) => {
+            if (this.isComponentValidAndInactive(component)) {
+                component.startHighlight();
+                Logger.debug("BaseComponent", `Started border highlight for base ${this.baseID}`);
+            }
+        });
+    }
+
+    /**
+     * Stop border highlight for this base
+     */
+    private stopBorderHighlight(): void {
+        this.borderHighlightComponents.forEach((component) => {
+            if (this.isComponentValidAndActive(component)) {
+                component.stopHighlight();
+                Logger.debug("BaseComponent", `Stopped border highlight for base ${this.baseID}`);
+            }
+        });
+    }
+
+    /**
+     * Check if component is valid and inactive
+     */
+    private isComponentValidAndInactive(component: BorderLightHighlightComponent): boolean {
+        return component?.isValid && !component.getIsActive();
+    }
+
+    /**
+     * Check if component is valid and active
+     */
+    private isComponentValidAndActive(component: BorderLightHighlightComponent): boolean {
+        return component?.isValid && component.getIsActive();
+    }
+
+    /**
+     * Refresh border highlight components (call this if border nodes are added/removed dynamically)
+     */
+    public refreshBorderHighlightComponents(): void {
+        this.findBorderHighlightComponents();
     }
 }

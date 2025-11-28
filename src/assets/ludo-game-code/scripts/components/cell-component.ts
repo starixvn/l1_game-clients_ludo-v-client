@@ -7,7 +7,7 @@
  * Data is read from game-board-data.ts
  */
 
-import { _decorator, Component, Node, Sprite, UITransform, Button, Graphics } from "cc";
+import { _decorator, Component, Node, Sprite, UITransform, Button, Graphics, SpriteFrame } from "cc";
 import { Cell, GAME_CONSTANTS } from "../game-board-data";
 import { CELL_DIMENSION, WALKWAY_LENGTH } from "../global-constants";
 import { gameDataService } from "../services/game-data-service";
@@ -51,6 +51,10 @@ export class CellComponent extends Component {
     /** Homepath index label node */
     @property({ type: Node, tooltip: "Homepath index label node" })
     nodeHomepathIndex: Node = null;
+
+    /** Custom node for border light effect (optional, will create a default one if not provided) */
+    @property({ type: Node, tooltip: "Custom node for border light effect (can be a prefab or scene node)" })
+    borderLightNode: Node = null;
 
     /** Button component for click handling */
     private button: Button = null;
@@ -768,13 +772,22 @@ export class CellComponent extends Component {
         // Use AnimationManager to play the highlight animation
         // Use the targetNode as the node parameter, and the sprite if found
         // Note: Animation will work on node scale even without sprite
+        // Show border light for possible move cells (showBorderLight = true)
         try {
-            this.animationManager.playCellHighlightAnimation(targetNode, sprite, duration, repeatCount);
+            this.animationManager.playCellHighlightAnimation(
+                targetNode,
+                sprite,
+                duration,
+                repeatCount,
+                undefined,
+                this.borderLightNode,
+                true // showBorderLight = true for possible move cells
+            );
             Logger.debug(
                 "CellComponent",
-                `Started highlight animation on possible-move-background for cell ${
+                `Started highlight animation with border light on possible-move-background for cell ${
                     this.cellID
-                } (repeatCount: ${repeatCount}, hasSprite: ${!!sprite})`
+                } (repeatCount: ${repeatCount}, hasSprite: ${!!sprite}, hasBorderLightNode: ${!!this.borderLightNode})`
             );
         } catch (error) {
             Logger.error("CellComponent", `Failed to play highlight animation for cell ${this.cellID}: ${error}`);
