@@ -50,7 +50,7 @@ export class BorderLightHighlightComponent extends Component {
     shapeType: BorderLightShapeType = BorderLightShapeType.CIRCLE;
 
     /** Whether the highlight is currently active */
-    private isActive: boolean = false;
+    private isActive = false;
 
     /** Array of light nodes */
     private lightNodes: Node[] = [];

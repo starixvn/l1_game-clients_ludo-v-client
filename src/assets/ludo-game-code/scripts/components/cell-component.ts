@@ -7,7 +7,7 @@
  * Data is read from game-board-data.ts
  */
 
-import { _decorator, Component, Node, Sprite, UITransform, Button, Graphics, SpriteFrame } from "cc";
+import { _decorator, Component, Node, Sprite, UITransform, Button, Graphics } from "cc";
 import { Cell, GAME_CONSTANTS } from "../game-board-data";
 import { CELL_DIMENSION, WALKWAY_LENGTH } from "../global-constants";
 import { gameDataService } from "../services/game-data-service";
