@@ -222,8 +222,8 @@
     "_string": "Time",
     "_horizontalAlign": 0,
     "_verticalAlign": 1,
-    "_actualFontSize": 21,
-    "_fontSize": 21,
+    "_actualFontSize": 40,
+    "_fontSize": 40,
     "_fontFamily": "Arial",
     "_lineHeight": 44,
     "_overflow": 0,
@@ -301,7 +301,7 @@
     },
     "_contentSize": {
       "__type__": "cc.Size",
-      "width": 53.7919921875,
+      "width": 102.4609375,
       "height": 55.44
     },
     "_anchorPoint": {
@@ -445,7 +445,7 @@
     },
     "_lpos": {
       "__type__": "cc.Vec3",
-      "x": -150.691,
+      "x": -86.768,
       "y": 0,
       "z": 0
     },
@@ -497,8 +497,8 @@
     "_string": "Round",
     "_horizontalAlign": 0,
     "_verticalAlign": 1,
-    "_actualFontSize": 21,
-    "_fontSize": 21,
+    "_actualFontSize": 40,
+    "_fontSize": 40,
     "_fontFamily": "Arial",
     "_lineHeight": 44,
     "_overflow": 0,
@@ -576,7 +576,7 @@
     },
     "_contentSize": {
       "__type__": "cc.Size",
-      "width": 69.357421875,
+      "width": 132.109375,
       "height": 55.44
     },
     "_anchorPoint": {
@@ -720,7 +720,7 @@
     },
     "_lpos": {
       "__type__": "cc.Vec3",
-      "x": 103.454,
+      "x": 163.207,
       "y": 0,
       "z": 0
     },
@@ -772,8 +772,8 @@
     "_string": "Total Stake",
     "_horizontalAlign": 0,
     "_verticalAlign": 1,
-    "_actualFontSize": 21,
-    "_fontSize": 21,
+    "_actualFontSize": 40,
+    "_fontSize": 40,
     "_fontFamily": "Arial",
     "_lineHeight": 44,
     "_overflow": 0,
@@ -851,7 +851,7 @@
     },
     "_contentSize": {
       "__type__": "cc.Size",
-      "width": 118.19677734375,
+      "width": 225.13671875,
       "height": 55.44
     },
     "_anchorPoint": {
@@ -995,7 +995,7 @@
     },
     "_lpos": {
       "__type__": "cc.Vec3",
-      "x": 290.209,
+      "x": 398.055,
       "y": 0,
       "z": 0
     },
@@ -1047,8 +1047,8 @@
     "_string": "Win",
     "_horizontalAlign": 0,
     "_verticalAlign": 1,
-    "_actualFontSize": 21,
-    "_fontSize": 21,
+    "_actualFontSize": 40,
+    "_fontSize": 40,
     "_fontFamily": "Arial",
     "_lineHeight": 44,
     "_overflow": 0,
@@ -1126,7 +1126,7 @@
     },
     "_contentSize": {
       "__type__": "cc.Size",
-      "width": 43.8046875,
+      "width": 83.4375,
       "height": 55.44
     },
     "_anchorPoint": {
