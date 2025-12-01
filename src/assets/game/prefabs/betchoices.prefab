@@ -2631,9 +2631,7 @@
     "chipBox": {
       "__id__": 61
     },
-    "highlightStatic": {
-      "__id__": 17
-    },
+    "highlightStatic": null,
     "highlightAnim": {
       "__id__": 27
     },
@@ -5079,9 +5077,7 @@
     "chipBox": {
       "__id__": 167
     },
-    "highlightStatic": {
-      "__id__": 123
-    },
+    "highlightStatic": null,
     "highlightAnim": {
       "__id__": 133
     },
@@ -7593,9 +7589,7 @@
     "chipBox": {
       "__id__": 271
     },
-    "highlightStatic": {
-      "__id__": 227
-    },
+    "highlightStatic": null,
     "highlightAnim": {
       "__id__": 237
     },
@@ -10080,9 +10074,7 @@
     "chipBox": {
       "__id__": 379
     },
-    "highlightStatic": {
-      "__id__": 335
-    },
+    "highlightStatic": null,
     "highlightAnim": {
       "__id__": 345
     },
@@ -12732,9 +12724,7 @@
     "chipBox": {
       "__id__": 493
     },
-    "highlightStatic": {
-      "__id__": 449
-    },
+    "highlightStatic": null,
     "highlightAnim": {
       "__id__": 459
     },
@@ -15219,9 +15209,7 @@
     "chipBox": {
       "__id__": 599
     },
-    "highlightStatic": {
-      "__id__": 555
-    },
+    "highlightStatic": null,
     "highlightAnim": {
       "__id__": 565
     },
@@ -17733,9 +17721,7 @@
     "chipBox": {
       "__id__": 705
     },
-    "highlightStatic": {
-      "__id__": 661
-    },
+    "highlightStatic": null,
     "highlightAnim": {
       "__id__": 671
     },
@@ -20220,9 +20206,7 @@
     "chipBox": {
       "__id__": 813
     },
-    "highlightStatic": {
-      "__id__": 769
-    },
+    "highlightStatic": null,
     "highlightAnim": {
       "__id__": 779
     },
@@ -22899,9 +22883,7 @@
     "chipBox": {
       "__id__": 935
     },
-    "highlightStatic": {
-      "__id__": 891
-    },
+    "highlightStatic": null,
     "highlightAnim": {
       "__id__": 901
     },
@@ -25242,9 +25224,7 @@
     "chipBox": {
       "__id__": 1035
     },
-    "highlightStatic": {
-      "__id__": 991
-    },
+    "highlightStatic": null,
     "highlightAnim": {
       "__id__": 1001
     },
@@ -27585,9 +27565,7 @@
     "chipBox": {
       "__id__": 1135
     },
-    "highlightStatic": {
-      "__id__": 1091
-    },
+    "highlightStatic": null,
     "highlightAnim": {
       "__id__": 1101
     },
@@ -29928,9 +29906,7 @@
     "chipBox": {
       "__id__": 1235
     },
-    "highlightStatic": {
-      "__id__": 1191
-    },
+    "highlightStatic": null,
     "highlightAnim": {
       "__id__": 1201
     },

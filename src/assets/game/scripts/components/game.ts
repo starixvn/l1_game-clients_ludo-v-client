@@ -54,8 +54,6 @@ export default class Game extends GameComponent {
     protected openAnimationIndex = 0;
     protected randomResults = [1, 1, 1];
     protected hasResetBox = false;
-    protected diceDropSound = "dice_drop";
-    protected delayDiceDropSound = 0.1;
     protected delayTimeShowWinningBox = 2;
     protected resultsSoundInfo: ResultSoundInfo[] = [];
     private gameRunnerComponent: GameRunnerComponent = null;
@@ -152,7 +150,6 @@ export default class Game extends GameComponent {
 
             if (hasAnimation) {
                 this.isPlayAnimSettlement = true;
-                this.handleDiceDropSound();
                 await AnimationUtils.delayTime(this.delayTimeShowWinningBox);
                 await this.showResultAnim(result, this.roundId, settlementResult);
                 this.winningSound();
@@ -169,6 +166,7 @@ export default class Game extends GameComponent {
         await new Promise<void>((resolve) => {
             tween(this.resultNode)
                 .call(() => {
+                    this.playStoppableSFX("dice_shake");
                     this.resultComp?.showResultAnim(prevResult, result, roundId); // Show the result animation
                 })
                 .delay(this.resultComp?.RESULT_DURATION || 0)
@@ -180,11 +178,6 @@ export default class Game extends GameComponent {
         });
 
         this.isFinishDiceAnim = true;
-    }
-
-    async handleDiceDropSound() {
-        await AnimationUtils.delayTime(this.delayDiceDropSound);
-        this.playSound(this.diceDropSound);
     }
 
     async winningSound() {
@@ -213,6 +206,11 @@ export default class Game extends GameComponent {
     @render(gc.RoundHistories.RoundHistoryStore, (store) => store.histories)
     updateHistories(dataLogs: any[]) {
         this.histories = dataLogs;
+    }
+
+    @handle(gc.Audios.AudioHandler, (handle, id: string) => handle.playStoppableSFX(id))
+    playStoppableSFX(id: string) {
+        return id;
     }
 
     getAudioKeyForLanguage(name: string): string {

@@ -1,4 +1,7 @@
 {
+    "dice_shake": {
+        "bundle": "resources"
+    },
     "blue_en": {
         "bundle": "resources"
     },
