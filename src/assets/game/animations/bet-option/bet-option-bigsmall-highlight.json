@@ -1,0 +1,54 @@
+{
+"skeleton": { "hash": "b/qei0wmlWOmaEv8NvUAwAHAtbE", "spine": "3.8.99" },
+"bones": [
+	{ "name": "root" },
+	{ "name": "bet-option-highlight", "parent": "root" }
+],
+"slots": [
+	{ "name": "bet-option-highlight", "bone": "bet-option-highlight" },
+	{ "name": "bet-option-highlight2", "bone": "bet-option-highlight", "color": "ffffff7e", "blend": "additive" }
+],
+"skins": [
+	{
+		"name": "default",
+		"attachments": {
+			"bet-option-highlight": {
+				"bet-option-bigsmall-highlight": { "width": 190, "height": 110 }
+			},
+			"bet-option-highlight2": {
+				"bet-option-bigsmall-highlight": { "width": 190, "height": 110 }
+			}
+		}
+	}
+],
+"animations": {
+	"show": {
+		"slots": {
+			"bet-option-highlight": {
+				"color": [
+					{ "time": 0, "color": "ffffff00" },
+					{ "time": 0.5, "color": "ffffffff" },
+					{ "time": 1, "color": "ffffff00" },
+					{ "time": 1.5, "color": "ffffffff" },
+					{ "time": 2, "color": "ffffff00" }
+				],
+				"attachment": [
+					{ "name": "bet-option-bigsmall-highlight" }
+				]
+			},
+			"bet-option-highlight2": {
+				"color": [
+					{ "color": "ffffff00" },
+					{ "time": 0.5, "color": "ffffffaf" },
+					{ "time": 1, "color": "ffffff00" },
+					{ "time": 1.5, "color": "ffffffff" },
+					{ "time": 2, "color": "ffffff00" }
+				],
+				"attachment": [
+					{ "name": "bet-option-bigsmall-highlight" }
+				]
+			}
+		}
+	}
+}
+}

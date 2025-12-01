@@ -1,0 +1,13 @@
+
+bet-option-normal.png
+size: 194,144
+format: RGBA8888
+filter: Linear,Linear
+repeat: none
+bet-option-highlight
+  rotate: false
+  xy: 2, 2
+  size: 190, 140
+  orig: 190, 140
+  offset: 0, 0
+  index: -1

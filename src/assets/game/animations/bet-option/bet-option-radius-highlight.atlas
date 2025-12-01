@@ -1,0 +1,13 @@
+
+bet-option-radius-highlight.png
+size: 194,114
+format: RGBA8888
+filter: Linear,Linear
+repeat: none
+bet-option-radius-highlight
+  rotate: false
+  xy: 2, 2
+  size: 190, 110
+  orig: 190, 110
+  offset: 0, 0
+  index: -1
