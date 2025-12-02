@@ -298,7 +298,7 @@ export default class Game extends GameComponent {
         }
     }
 
-    private sfxEnabled: boolean = true;
+    private sfxEnabled = true;
 
     @render(gc.UserSettings.UserSettingStore, (store) => store.sfxEnable)
     renderSfxComp(enable: boolean) {

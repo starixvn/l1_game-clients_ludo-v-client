@@ -42,7 +42,7 @@ export class GameRunnerComponent extends Component {
     private initialGameState: GameState | null = null;
 
     /** SFX enabled state (controls horse sound effects) */
-    private sfxEnabled: boolean = true;
+    private sfxEnabled = true;
 
     /** Whether initial game state has been applied instantly */
     private initialGameStateApplied = false;

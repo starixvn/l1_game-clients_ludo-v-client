@@ -119,7 +119,7 @@ export class HorseComponent extends Component {
     private audioSource: AudioSource = null;
 
     /** Whether SFX is enabled (controls if sounds should play) */
-    private sfxEnabled: boolean = true;
+    private sfxEnabled = true;
 
     onLoad() {
         this.pathfindingService = new PathfindingService(gameDataService);
