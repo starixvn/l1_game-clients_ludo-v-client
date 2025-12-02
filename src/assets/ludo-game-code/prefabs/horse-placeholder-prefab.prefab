@@ -479,6 +479,22 @@
         "__expectedType__": "cc.SpriteFrame"
       }
     ],
+    "jumpSound": {
+      "__uuid__": "2a190486-8132-438e-9b9c-344a6ad6df1c",
+      "__expectedType__": "cc.AudioClip"
+    },
+    "kickSound": {
+      "__uuid__": "0ea6d733-316e-4e32-a19f-0e97b6558ca6",
+      "__expectedType__": "cc.AudioClip"
+    },
+    "spawnSound": {
+      "__uuid__": "a1fe4ebb-8f75-490b-8883-28af28b8b4ea",
+      "__expectedType__": "cc.AudioClip"
+    },
+    "moveSound": {
+      "__uuid__": "2a190486-8132-438e-9b9c-344a6ad6df1c",
+      "__expectedType__": "cc.AudioClip"
+    },
     "nodeHorseIcon": {
       "__id__": 3
     },

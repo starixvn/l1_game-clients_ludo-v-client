@@ -41,6 +41,9 @@ export class GameRunnerComponent extends Component {
     /** Initial game state to start from (optional) */
     private initialGameState: GameState | null = null;
 
+    /** SFX enabled state (controls horse sound effects) */
+    private sfxEnabled: boolean = true;
+
     /** Whether initial game state has been applied instantly */
     private initialGameStateApplied = false;
 
@@ -110,6 +113,8 @@ export class GameRunnerComponent extends Component {
 
                 if (horseID) {
                     this.horseComponentsMap.set(horseID, horseComponent);
+                    // Set initial SFX state
+                    horseComponent.setSfxEnabled(this.sfxEnabled);
                     Logger.debug("GameRunnerComponent", `Found horse component: ${horseID} (node: ${node.name})`);
                 } else {
                     Logger.warn("GameRunnerComponent", `Found HorseComponent but no horseID (node: ${node.name})`);
@@ -822,6 +827,22 @@ export class GameRunnerComponent extends Component {
             this.scheduleOnce(() => {
                 this.moveDiceResultToPlayerBase(nextPlayer, resultNode);
             }, 0.1); // Small delay to ensure scene is ready
+        }
+    }
+
+    /**
+     * Set SFX enabled state and update all horse components
+     * @param enabled Whether SFX is enabled
+     */
+    public setSfxEnabled(enabled: boolean): void {
+        this.sfxEnabled = enabled;
+        Logger.debug("GameRunnerComponent", `SFX enabled set to: ${enabled}`);
+
+        // Update all horse components
+        for (const horseComponent of this.horseComponentsMap.values()) {
+            if (horseComponent && horseComponent.isValid) {
+                horseComponent.setSfxEnabled(enabled);
+            }
         }
     }
 

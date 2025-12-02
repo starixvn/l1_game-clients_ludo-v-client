@@ -73,6 +73,8 @@ export default class Game extends GameComponent {
             this.gameRunnerComponent = scene.getComponentInChildren(GameRunnerComponent);
             if (this.gameRunnerComponent) {
                 console.log("GameRunnerComponent found");
+                // Set initial SFX state
+                this.gameRunnerComponent.setSfxEnabled(this.sfxEnabled);
             } else {
                 console.warn("GameRunnerComponent not found in scene");
             }
@@ -293,6 +295,19 @@ export default class Game extends GameComponent {
         // Handle next state highlighting
         if (this.gameRunnerComponent) {
             this.gameRunnerComponent.handleNextState(nextStateJS);
+        }
+    }
+
+    private sfxEnabled: boolean = true;
+
+    @render(gc.UserSettings.UserSettingStore, (store) => store.sfxEnable)
+    renderSfxComp(enable: boolean) {
+        console.log("[Game] renderSfxComp", enable);
+        this.sfxEnabled = enable;
+
+        // Update SFX state in GameRunnerComponent if available
+        if (this.gameRunnerComponent) {
+            this.gameRunnerComponent.setSfxEnabled(enable);
         }
     }
 }
