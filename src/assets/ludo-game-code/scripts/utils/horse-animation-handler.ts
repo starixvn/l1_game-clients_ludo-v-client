@@ -9,7 +9,7 @@ import { AnimationManager } from "../services/animation-manager";
 import { Logger } from "./logger";
 
 export class HorseAnimationHandler {
-    private animationManager: AnimationManager;
+    private readonly animationManager: AnimationManager;
     private originalHorseIconScale: Vec3 | null = null;
 
     constructor() {

@@ -11,7 +11,7 @@
  * Data is read from game-board-data.ts
  */
 
-import { _decorator, Component, Node, Label, UITransform, Vec3, Sprite, Button, SpriteFrame, AudioClip } from "cc";
+import { _decorator, Component, Node, Label, Vec3, Button, SpriteFrame, AudioClip, sp } from "cc";
 import { BaseColor, Cell, Horse } from "../game-board-data";
 import { CELL_DIMENSION } from "../global-constants";
 import { gameDataService } from "../services/game-data-service";
@@ -26,6 +26,7 @@ import { HorseVisualHandler } from "../utils/horse-visual-handler";
 import { HorseAnimationHandler } from "../utils/horse-animation-handler";
 import { HorseCellFinder } from "../utils/horse-cell-finder";
 import { HorseKickHandler } from "../utils/horse-kick-handler";
+import { AnimationUtils } from "../../../../extensions/shared-components/assets/shared/utils";
 
 const { ccclass, property, menu } = _decorator;
 
@@ -96,6 +97,22 @@ export class HorseComponent extends Component {
     /** Sound effect for movement action */
     @property({ type: AudioClip, tooltip: "Sound effect played when horse moves to a cell" })
     moveSound: AudioClip = null;
+
+    /** Spine Skeleton component for horse animations */
+    @property({ type: sp.Skeleton, tooltip: "Spine Skeleton component for horse animations" })
+    horseSkeleton: sp.Skeleton = null;
+
+    /** Animation name for move action */
+    @property({ type: String, tooltip: "Spine animation name for move action" })
+    moveAnimationName = "move";
+
+    /** Animation name for kick action */
+    @property({ type: String, tooltip: "Spine animation name for kick action" })
+    kickAnimationName = "kick";
+
+    /** Animation name for spawn action */
+    @property({ type: String, tooltip: "Spine animation name for spawn action" })
+    spawnAnimationName = "spawn";
 
     /** Node for the horse icon (Unicode character) */
     @property({ type: Node, tooltip: "Horse icon label node" })
@@ -720,13 +737,20 @@ export class HorseComponent extends Component {
         // Play spawn sound effect
         this.playSpawnSound();
 
-        this.executeMove(spawnCell);
+        // Play spawn animation (don't wait - let it play while moving)
+        this.playSpawnAnimation();
+
+        // Execute move immediately without playing move animation (spawn animation already playing)
+        this.executeMove(spawnCell, undefined, true);
     }
 
     /**
      * Execute movement to target cell
+     * @param targetCell Target cell to move to
+     * @param onComplete Optional callback when movement completes
+     * @param skipMoveAnimation If true, skip playing move animation (e.g., when spawn animation already played)
      */
-    private executeMove(targetCell: Cell, onComplete?: () => void) {
+    private executeMove(targetCell: Cell, onComplete?: () => void, skipMoveAnimation = false) {
         const targetPosition = this.findCellNodePosition(targetCell.cellID);
         if (!targetPosition) {
             Logger.warn("HorseComponent", `Cell node not found in scene for ${targetCell.cellID}`);
@@ -735,6 +759,11 @@ export class HorseComponent extends Component {
 
         // Play movement sound effect
         this.playMoveSound();
+
+        // Play move animation only if not skipped (e.g., during spawn, spawn animation already played)
+        if (!skipMoveAnimation) {
+            this.playMoveAnimation();
+        }
 
         // Find horses that will be kicked BEFORE moving (capture the list)
         const horsesToKick = this.kickHandler.findHorsesAtCell(targetCell, this.horseID);
@@ -783,6 +812,9 @@ export class HorseComponent extends Component {
 
         // Play kick sound effect
         this.playKickSound();
+
+        // Play kick animation
+        this.playKickAnimation();
 
         // Set flying animation
         this.setFlyingToBase(true);
@@ -911,6 +943,54 @@ export class HorseComponent extends Component {
     private playMoveSound(): void {
         if (this.soundHandler) {
             this.soundHandler.playSoundEffect(this.moveSound, "move");
+        }
+    }
+
+    /**
+     * Play move animation using Spine Skeleton
+     */
+    private async playMoveAnimation(): Promise<void> {
+        if (!this.horseSkeleton || !this.moveAnimationName) {
+            return;
+        }
+
+        try {
+            await AnimationUtils.playSpine(this.horseSkeleton, this.moveAnimationName, false);
+            Logger.debug("HorseComponent", `Played move animation for horse ${this.horseID}`);
+        } catch (error) {
+            Logger.warn("HorseComponent", `Failed to play move animation: ${error}`);
+        }
+    }
+
+    /**
+     * Play kick animation using Spine Skeleton
+     */
+    private async playKickAnimation(): Promise<void> {
+        if (!this.horseSkeleton || !this.kickAnimationName) {
+            return;
+        }
+
+        try {
+            await AnimationUtils.playSpine(this.horseSkeleton, this.kickAnimationName, false);
+            Logger.debug("HorseComponent", `Played kick animation for horse ${this.horseID}`);
+        } catch (error) {
+            Logger.warn("HorseComponent", `Failed to play kick animation: ${error}`);
+        }
+    }
+
+    /**
+     * Play spawn animation using Spine Skeleton
+     */
+    private async playSpawnAnimation(): Promise<void> {
+        if (!this.horseSkeleton || !this.spawnAnimationName) {
+            return;
+        }
+
+        try {
+            await AnimationUtils.playSpine(this.horseSkeleton, this.spawnAnimationName, false);
+            Logger.debug("HorseComponent", `Played spawn animation for horse ${this.horseID}`);
+        } catch (error) {
+            Logger.warn("HorseComponent", `Failed to play spawn animation: ${error}`);
         }
     }
 
