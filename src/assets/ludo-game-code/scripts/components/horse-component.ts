@@ -12,18 +12,20 @@
  */
 
 import { _decorator, Component, Node, Label, UITransform, Vec3, Sprite, Button, SpriteFrame, AudioClip } from "cc";
-import { BaseColor, Cell, gameBoardData, Horse } from "../game-board-data";
-import { WalkwayComponent } from "./walkway-component";
-import { CellComponent } from "./cell-component";
+import { BaseColor, Cell, Horse } from "../game-board-data";
 import { CELL_DIMENSION } from "../global-constants";
 import { gameDataService } from "../services/game-data-service";
 import { PathfindingService } from "../services/pathfinding-service";
 import { AnimationManager } from "../services/animation-manager";
 import { Logger } from "../utils/logger";
 import { BaseComponent } from "./base-component";
-import { HorseSoundManager } from "../utils/horse-sound-manager";
-import { HorseMovementManager } from "../utils/horse-movement-manager";
+import { HorseSoundHandler } from "../utils/horse-sound-handler";
+import { HorseMovementHandler } from "../utils/horse-movement-handler";
 import { HorseNodePositioning } from "../utils/horse-node-positioning";
+import { HorseVisualHandler } from "../utils/horse-visual-handler";
+import { HorseAnimationHandler } from "../utils/horse-animation-handler";
+import { HorseCellFinder } from "../utils/horse-cell-finder";
+import { HorseKickHandler } from "../utils/horse-kick-handler";
 
 const { ccclass, property, menu } = _decorator;
 
@@ -71,9 +73,6 @@ export class HorseComponent extends Component {
     /** Whether the horse is highlighted as a possible move candidate */
     private isHighlightedAsPossibleMove = false;
 
-    /** Original scale of the horse icon before highlighting (to restore after clearing) */
-    private originalHorseIconScale: Vec3 | null = null;
-
     /** Optional horse ID */
     @property({ type: String, tooltip: "Horse ID (e.g., BASE_1_HORSE_1)" })
     horseID = "";
@@ -105,57 +104,59 @@ export class HorseComponent extends Component {
     /** Horse icon label component */
     private horseIconLabel: Label = null;
 
-    /** Unicode character for chess knight (♞) */
-    private readonly HORSE_UNICODE = "\u265E";
-
     /** Pathfinding service instance */
     private pathfindingService: PathfindingService;
 
-    /** Movement manager for pathfinding logic */
-    private movementManager: HorseMovementManager;
+    /** Movement handler for pathfinding logic */
+    private movementHandler: HorseMovementHandler;
 
     /** Node positioning utility */
     private nodePositioning: HorseNodePositioning;
 
+    /** Visual handler for visual state */
+    private visualHandler: HorseVisualHandler;
+
+    /** Animation handler for animations */
+    private animationHandler: HorseAnimationHandler;
+
+    /** Cell finder utility */
+    private cellFinder: HorseCellFinder;
+
+    /** Kick handler utility */
+    private kickHandler: HorseKickHandler;
+
     /** Animation manager instance */
     private animationManager: AnimationManager;
 
-    /** Sound manager for handling sound effects */
-    private soundManager: HorseSoundManager = null;
+    /** Sound handler for handling sound effects */
+    private soundHandler: HorseSoundHandler = null;
+
+    /** Flag to track if handlers have been initialized */
+    private handlersInitialized = false;
 
     onLoad() {
         this.pathfindingService = new PathfindingService(gameDataService);
-        this.movementManager = new HorseMovementManager(this.pathfindingService);
+        this.movementHandler = new HorseMovementHandler(this.pathfindingService);
         this.nodePositioning = new HorseNodePositioning();
+        this.visualHandler = new HorseVisualHandler();
+        this.animationHandler = new HorseAnimationHandler();
+        this.cellFinder = new HorseCellFinder();
+        this.kickHandler = new HorseKickHandler();
         this.animationManager = new AnimationManager();
         this.initializeHorse();
-        // Initialize sound manager after horse is set up
-        this.soundManager = new HorseSoundManager(this.node, this.horseID);
+        // Initialize sound handler after horse is set up
+        this.soundHandler = new HorseSoundHandler(this.node, this.horseID);
     }
 
     /**
      * Initialize the horse component
      */
     private setupHorseTransform() {
-        const transform = this.node.getComponent(UITransform);
-        if (!transform) {
-            const newTransform = this.node.addComponent(UITransform);
-            newTransform.setContentSize(this.horseSize, this.horseSize);
-            newTransform.setAnchorPoint(0.5, 0.5);
-        } else {
-            transform.setContentSize(this.horseSize, this.horseSize);
-            transform.setAnchorPoint(0.5, 0.5);
-        }
+        this.visualHandler.setupHorseTransform(this.node, this.horseSize);
     }
 
     private createHorseIconNode(): Node {
-        const iconNode = new Node("HorseIcon");
-        this.node.addChild(iconNode);
-        const iconTransform = iconNode.addComponent(UITransform);
-        iconTransform.setContentSize(this.horseSize * 0.8, this.horseSize * 0.8);
-        iconTransform.setAnchorPoint(0.5, 0.5);
-        iconNode.setPosition(0, 0, 0);
-        return iconNode;
+        return this.visualHandler.createHorseIconNode(this.node, this.horseSize);
     }
 
     private ensureHorseIconNode() {
@@ -171,14 +172,7 @@ export class HorseComponent extends Component {
     }
 
     private setupHorseIconComponents() {
-        this.horseIconLabel = this.nodeHorseIcon.getComponent(Label);
-        if (!this.horseIconLabel) {
-            this.horseIconLabel = this.nodeHorseIcon.addComponent(Label);
-        }
-
-        if (!this.nodeHorseIcon.getComponent(Sprite)) {
-            this.nodeHorseIcon.addComponent(Sprite);
-        }
+        this.horseIconLabel = this.visualHandler.setupHorseIconComponents(this.nodeHorseIcon);
     }
 
     private initializeHorse() {
@@ -222,6 +216,9 @@ export class HorseComponent extends Component {
      * Update the visual state of the horse
      */
     public updateVisualState() {
+        // Ensure handlers are initialized (may be called before onLoad completes)
+        this.ensureHandlersInitialized();
+
         // Update horse icon
         this.updateHorseIcon();
 
@@ -230,42 +227,41 @@ export class HorseComponent extends Component {
     }
 
     /**
-     * Get index for base color in sprite frames array
-     * Mapping: YELLOW -> 0, GREEN -> 1, BLUE -> 2, RED -> 3
+     * Ensure all handlers are initialized (lazy initialization for methods called before onLoad)
+     * Uses a flag to avoid redundant checks after initialization
      */
-    private getBaseColorIndex(baseColor: BaseColor): number {
-        const colorIndexMap: { [key in BaseColor]: number } = {
-            YELLOW: 0,
-            GREEN: 1,
-            BLUE: 2,
-            RED: 3,
-        };
-        return colorIndexMap[baseColor] ?? 0;
-    }
-
-    /**
-     * Update the sprite frame of the HorseIcon node based on base color
-     */
-    private updateHorseIconSpriteFrame() {
-        if (!this.nodeHorseIcon) {
+    private ensureHandlersInitialized(): void {
+        // Early return if already initialized (optimization)
+        if (this.handlersInitialized) {
             return;
         }
 
-        // Get or add Sprite component to HorseIcon node
-        let iconSprite = this.nodeHorseIcon.getComponent(Sprite);
-        if (!iconSprite) {
-            this.nodeHorseIcon.addComponent(Sprite);
-            iconSprite = this.nodeHorseIcon.getComponent(Sprite);
+        // Initialize handlers if not already done
+        if (!this.visualHandler) {
+            this.visualHandler = new HorseVisualHandler();
+        }
+        if (!this.animationHandler) {
+            this.animationHandler = new HorseAnimationHandler();
+        }
+        if (!this.cellFinder) {
+            this.cellFinder = new HorseCellFinder();
+        }
+        if (!this.kickHandler) {
+            this.kickHandler = new HorseKickHandler();
+        }
+        if (!this.movementHandler) {
+            this.pathfindingService = new PathfindingService(gameDataService);
+            this.movementHandler = new HorseMovementHandler(this.pathfindingService);
+        }
+        if (!this.nodePositioning) {
+            this.nodePositioning = new HorseNodePositioning();
+        }
+        if (!this.animationManager) {
+            this.animationManager = new AnimationManager();
         }
 
-        // Use HorseSpriteFrames array if available
-        if (this.HorseSpriteFrames && this.HorseSpriteFrames.length > 0) {
-            const colorIndex = this.getBaseColorIndex(this.baseColor);
-            if (colorIndex >= 0 && colorIndex < this.HorseSpriteFrames.length && this.HorseSpriteFrames[colorIndex]) {
-                iconSprite.spriteFrame = this.HorseSpriteFrames[colorIndex];
-                return;
-            }
-        }
+        // Mark as initialized after all handlers are set up
+        this.handlersInitialized = true;
     }
 
     /**
@@ -276,59 +272,22 @@ export class HorseComponent extends Component {
             return;
         }
 
-        // Update sprite frame first
-        this.updateHorseIconSpriteFrame();
-
-        // Note: Sprite color is not set here as sprites are used for rendering
-        // The sprite frame should already contain the correct visual representation
-
-        // Update label if it exists
-        if (!this.horseIconLabel) {
-            this.horseIconLabel = this.nodeHorseIcon.getComponent(Label);
-        }
-
-        if (this.horseIconLabel) {
-            // Set Unicode character
-            this.horseIconLabel.string = this.HORSE_UNICODE;
-
-            // Note: Label color is not set here as sprites are used for rendering
-            // The sprite frame should already contain the correct visual representation
-
-            // Configure label
-            this.horseIconLabel.fontSize = Math.floor(this.horseSize * 0.6);
-            this.horseIconLabel.fontFamily = "Arial";
-            this.horseIconLabel.horizontalAlign = Label.HorizontalAlign.CENTER;
-            this.horseIconLabel.verticalAlign = Label.VerticalAlign.CENTER;
-            this.horseIconLabel.overflow = Label.Overflow.SHRINK;
-            (this.horseIconLabel as any)._isSystemFontUsed = true;
-            (this.horseIconLabel as any)._font = null;
-        }
+        this.visualHandler.updateHorseIcon(this.nodeHorseIcon, this.baseColor, this.HorseSpriteFrames, this.horseSize);
+        this.horseIconLabel = this.nodeHorseIcon.getComponent(Label);
     }
 
     /**
      * Update animations based on state
      */
     private updateAnimations() {
-        // Ensure animationManager is initialized (onLoad might not have completed yet)
-        if (!this.animationManager) {
-            this.animationManager = new AnimationManager();
-        }
-
-        // Don't override highlight animation if horse is highlighted as possible move
-        if (this.isHighlightedAsPossibleMove) {
-            return;
-        }
-
-        if (this.isFlyingToBase) {
-            this.animationManager.playFlyingToBaseAnimation(this.node);
-        } else if (this.isJumping) {
-            this.playJumpSound();
-            this.animationManager.playJumpingAnimation(this.node);
-        } else if (this.isHovered) {
-            this.animationManager.playHoveredAnimation(this.node);
-        } else {
-            this.animationManager.resetScale(this.node);
-        }
+        this.animationHandler.updateAnimations(
+            this.node,
+            this.isFlyingToBase,
+            this.isJumping,
+            this.isHovered,
+            this.isHighlightedAsPossibleMove,
+            () => this.playJumpSound()
+        );
     }
 
     /**
@@ -343,6 +302,7 @@ export class HorseComponent extends Component {
      * Set the horse size
      */
     public setHorseSize(size: number) {
+        this.ensureHandlersInitialized();
         this.horseSize = size;
         this.initializeHorse();
     }
@@ -351,6 +311,7 @@ export class HorseComponent extends Component {
      * Set jumping state
      */
     public setJumping(jumping: boolean) {
+        this.ensureHandlersInitialized();
         this.isJumping = jumping;
         this.updateAnimations();
     }
@@ -359,6 +320,7 @@ export class HorseComponent extends Component {
      * Set flying to base state
      */
     public setFlyingToBase(flying: boolean) {
+        this.ensureHandlersInitialized();
         this.isFlyingToBase = flying;
         this.updateAnimations();
     }
@@ -367,6 +329,7 @@ export class HorseComponent extends Component {
      * Set hovered state
      */
     public setHovered(hovered: boolean) {
+        this.ensureHandlersInitialized();
         this.isHovered = hovered;
         this.updateAnimations();
     }
@@ -380,185 +343,16 @@ export class HorseComponent extends Component {
     }
 
     /**
-     * Try to get sprite component from a node
-     * @param node The node to get sprite from
-     * @param nodeName Name of the node for logging
-     * @returns Sprite component or null if not found
-     */
-    private tryGetSpriteFromNode(node: Node | null, nodeName: string): Sprite | null {
-        if (!node?.isValid) {
-            return null;
-        }
-
-        try {
-            const sprite = node.getComponent(Sprite);
-            return sprite || null;
-        } catch (error) {
-            Logger.warn("HorseComponent", `Error getting sprite from ${nodeName}: ${error}`);
-            return null;
-        }
-    }
-
-    /**
-     * Try to find sprite in child nodes
-     * @param parentNode The parent node to search children of
-     * @returns Sprite component or null if not found
-     */
-    private tryFindSpriteInChildren(parentNode: Node): Sprite | null {
-        try {
-            for (const child of parentNode.children) {
-                if (child?.isValid) {
-                    const sprite = child.getComponent(Sprite);
-                    if (sprite) {
-                        return sprite;
-                    }
-                }
-            }
-        } catch (error) {
-            Logger.warn("HorseComponent", `Error searching for sprite in children: ${error}`);
-        }
-        return null;
-    }
-
-    /**
-     * Find sprite component in the horse nodes
-     * @returns Sprite component or null if not found
-     */
-    private findHorseSprite(): Sprite | null {
-        // Try nodeHorseIcon first
-        const iconSprite = this.tryGetSpriteFromNode(this.nodeHorseIcon, "nodeHorseIcon");
-        if (iconSprite) {
-            return iconSprite;
-        }
-
-        // Try main node
-        if (this.node?.isValid) {
-            const nodeSprite = this.tryGetSpriteFromNode(this.node, "node");
-            if (nodeSprite) {
-                return nodeSprite;
-            }
-
-            // Try child nodes
-            const childSprite = this.tryFindSpriteInChildren(this.node);
-            if (childSprite) {
-                return childSprite;
-            }
-        }
-
-        return null;
-    }
-
-    /**
-     * Get the target node for animation (prefers nodeHorseIcon)
-     * @returns Target node or null if invalid
-     */
-    private getAnimationTargetNode(): Node | null {
-        if (this.nodeHorseIcon?.isValid) {
-            return this.nodeHorseIcon;
-        }
-        if (this.node?.isValid) {
-            return this.node;
-        }
-        return null;
-    }
-
-    /**
-     * Stop animations on all horse nodes
-     */
-    private stopAllHorseAnimations(): void {
-        if (!this.animationManager) {
-            this.animationManager = new AnimationManager();
-        }
-
-        try {
-            if (this.node?.isValid) {
-                this.animationManager.stopAnimation(this.node);
-            }
-            if (this.nodeHorseIcon?.isValid) {
-                this.animationManager.stopAnimation(this.nodeHorseIcon);
-            }
-        } catch (error) {
-            Logger.warn("HorseComponent", `Error stopping existing animations: ${error}`);
-        }
-    }
-
-    /**
-     * Store original scale of the target node
-     * @param targetNode The node to store scale from
-     */
-    private storeOriginalScale(targetNode: Node): void {
-        if (!this.originalHorseIconScale) {
-            const currentScale = targetNode.getScale();
-            this.originalHorseIconScale = new Vec3(currentScale.x, currentScale.y, currentScale.z);
-            Logger.debug(
-                "HorseComponent",
-                `Stored original scale for horse ${this.horseID}: (${currentScale.x}, ${currentScale.y}, ${currentScale.z})`
-            );
-        }
-    }
-
-    /**
      * Highlight this horse as a possible move candidate
      * Plays a continuous highlight animation
      */
     public highlightAsPossibleMove(): void {
-        if (!this.node?.isValid) {
-            Logger.warn("HorseComponent", `Cannot highlight: node is invalid for horse ${this.horseID}`);
-            return;
-        }
-
-        if (!this.animationManager) {
-            this.animationManager = new AnimationManager();
-        }
-
-        this.isHighlightedAsPossibleMove = true;
-        this.stopAllHorseAnimations();
-
-        const sprite = this.findHorseSprite();
-        const targetNode = this.getAnimationTargetNode();
-
-        if (!targetNode) {
-            Logger.warn("HorseComponent", `Cannot highlight: target node is invalid for horse ${this.horseID}`);
+        this.ensureHandlersInitialized();
+        const success = this.animationHandler.highlightAsPossibleMove(this.node, this.nodeHorseIcon, this.horseID, () => {
+            this.isHighlightedAsPossibleMove = true;
+        });
+        if (!success) {
             this.isHighlightedAsPossibleMove = false;
-            return;
-        }
-
-        this.storeOriginalScale(targetNode);
-
-        try {
-            this.animationManager.playCellHighlightAnimation(targetNode, sprite, 0.5, 9999);
-            Logger.debug("HorseComponent", `Started highlight animation for horse ${this.horseID} on node ${targetNode.name}`);
-        } catch (error) {
-            Logger.error("HorseComponent", `Error playing highlight animation: ${error}`);
-            this.isHighlightedAsPossibleMove = false;
-            this.originalHorseIconScale = null;
-        }
-    }
-
-    /**
-     * Restore original scale to target node
-     * @param targetNode The node to restore scale on
-     */
-    private restoreOriginalScale(targetNode: Node): void {
-        if (!this.animationManager) {
-            this.animationManager = new AnimationManager();
-        }
-
-        try {
-            this.animationManager.stopAnimation(targetNode);
-
-            if (this.originalHorseIconScale) {
-                targetNode.setScale(this.originalHorseIconScale.x, this.originalHorseIconScale.y, this.originalHorseIconScale.z);
-                Logger.debug(
-                    "HorseComponent",
-                    `Restored original scale for horse ${this.horseID}: (${this.originalHorseIconScale.x}, ${this.originalHorseIconScale.y}, ${this.originalHorseIconScale.z})`
-                );
-                this.originalHorseIconScale = null;
-            } else {
-                this.animationManager.resetScale(targetNode);
-            }
-        } catch (error) {
-            Logger.warn("HorseComponent", `Error resetting scale on target node: ${error}`);
         }
     }
 
@@ -567,25 +361,13 @@ export class HorseComponent extends Component {
      */
     public clearHighlight(): void {
         this.isHighlightedAsPossibleMove = false;
-
-        if (!this.animationManager) {
-            this.animationManager = new AnimationManager();
-        }
-
-        this.stopAllHorseAnimations();
-
-        const targetNode = this.getAnimationTargetNode();
-        if (targetNode) {
-            this.restoreOriginalScale(targetNode);
-        }
-
+        this.ensureHandlersInitialized();
+        this.animationHandler.clearHighlight(this.node, this.nodeHorseIcon, this.horseID);
         try {
             this.updateAnimations();
         } catch (error) {
             Logger.warn("HorseComponent", `Error updating animations: ${error}`);
         }
-
-        Logger.debug("HorseComponent", `Cleared highlight animation for horse ${this.horseID}`);
     }
 
     /** Movement delay between cells in seconds */
@@ -626,10 +408,11 @@ export class HorseComponent extends Component {
     }
 
     private buildMovementPath(horseData: Horse, targetCell: Cell): Cell[] {
-        return this.movementManager.buildMovementPath(horseData, targetCell);
+        return this.movementHandler.buildMovementPath(horseData, targetCell);
     }
 
     public moveToPositionIndex(positionIndex: number, onComplete?: () => void) {
+        this.ensureHandlersInitialized();
         if (!this.horseID) {
             Logger.warn("HorseComponent", `Cannot move: horseID is not set`);
             if (onComplete) {
@@ -745,18 +528,7 @@ export class HorseComponent extends Component {
      * Find cell by index number
      */
     private findCellByIndex(index: number): Cell | null {
-        for (const position in gameBoardData.cells) {
-            const positionCells = gameBoardData.cells[position];
-            for (const cellID in positionCells) {
-                const cell = positionCells[cellID];
-                if (cell.index === index) {
-                    Logger.debug("HorseComponent", `Found cell ${cellID} (index ${index}) at ${position}`);
-                    return cell;
-                }
-            }
-        }
-        Logger.warn("HorseComponent", `Cell with index ${index} not found in gameBoardData`);
-        return null;
+        return this.cellFinder.findCellByIndex(index);
     }
 
     /**
@@ -764,6 +536,7 @@ export class HorseComponent extends Component {
      * @param positionIndex Position index from game state (0 = base, >0 = cell index)
      */
     public setPositionIndexInstantly(positionIndex: number): void {
+        this.ensureHandlersInitialized();
         if (!this.horseID) {
             Logger.warn("HorseComponent", `Cannot set position: horseID is not set`);
             return;
@@ -817,7 +590,7 @@ export class HorseComponent extends Component {
         horseData.steps = positionIndex;
 
         // Set position instantly without animation
-        const targetPosition = this.findCellNodePosition(targetCell.cellID);
+        const targetPosition = this.cellFinder.findCellNodePosition(this.node.scene, targetCell.cellID);
         if (targetPosition) {
             // Reparent to top layer if needed
             this.nodePositioning.reparentToTopLayer(this.nodeHorseIcon, this.node.scene);
@@ -964,7 +737,7 @@ export class HorseComponent extends Component {
         this.playMoveSound();
 
         // Find horses that will be kicked BEFORE moving (capture the list)
-        const horsesToKick = this.findHorsesAtCell(targetCell);
+        const horsesToKick = this.kickHandler.findHorsesAtCell(targetCell, this.horseID);
 
         // Move horse to target position using tween
         this.moveHorseToPosition(targetPosition, () => {
@@ -975,7 +748,7 @@ export class HorseComponent extends Component {
             this.triggerCellBlinkAnimation(targetCell.cellID);
 
             // Now kick the horses that were at this cell (after occupying it)
-            this.kickHorses(horsesToKick, targetCell, () => {
+            this.kickHandler.kickHorses(this.node.scene, horsesToKick, targetCell, this.horseID, () => {
                 if (onComplete) {
                     onComplete();
                 }
@@ -984,96 +757,11 @@ export class HorseComponent extends Component {
     }
 
     /**
-     * Find horses at a specific cell (before moving to it)
-     * @param targetCell The target cell to check
-     * @returns Array of horse data for horses at this cell
-     */
-    private findHorsesAtCell(targetCell: Cell): Horse[] {
-        // Find horses at this cell by checking all horses' cellID property
-        // This is more reliable than checking cell.horseIDs which might not be updated in real-time
-        const allHorses = gameDataService.getBases().flatMap((base) => gameDataService.getHorsesForBase(base.ID));
-        return allHorses.filter((horse) => horse.cellID === targetCell.cellID && horse.isSpawned && horse.horseID !== this.horseID);
-    }
-
-    /**
-     * Kick horses that were at a cell (called after the moving horse has occupied the cell)
-     * @param horsesToKick Array of horse data to kick
-     * @param targetCell The target cell (for logging)
-     * @param onComplete Callback when kicking is complete (or if no horse to kick)
-     */
-    private kickHorses(horsesToKick: Horse[], targetCell: Cell, onComplete?: () => void) {
-        if (horsesToKick.length === 0) {
-            // No horses to kick
-            if (onComplete) {
-                onComplete();
-            }
-            return;
-        }
-
-        // Kick all horses that were at this cell (usually just one)
-        let kickCount = 0;
-        const totalKicks = horsesToKick.length;
-
-        for (const horseData of horsesToKick) {
-            const kickedHorseComponent = this.findHorseComponentByID(horseData.horseID);
-            if (kickedHorseComponent) {
-                Logger.debug("HorseComponent", `Kicking horse ${horseData.horseID} from cell ${targetCell.cellID}`);
-                kickedHorseComponent.kickToBase(() => {
-                    kickCount++;
-                    if (kickCount >= totalKicks) {
-                        // All horses have been kicked
-                        if (onComplete) {
-                            onComplete();
-                        }
-                    }
-                });
-            } else {
-                // Horse component not found, just update data
-                Logger.debug("HorseComponent", `Horse component not found for ${horseData.horseID}, updating data only`);
-                this.updateHorseDataToBase(horseData);
-                kickCount++;
-                if (kickCount >= totalKicks) {
-                    if (onComplete) {
-                        onComplete();
-                    }
-                }
-            }
-        }
-    }
-
-    /**
-     * Find HorseComponent by horseID in the scene
-     * @param horseID The horse ID to find
-     * @returns HorseComponent instance or null if not found
-     */
-    private findHorseComponentByID(horseID: string): HorseComponent | null {
-        const scene = this.node.scene;
-        if (!scene) {
-            return null;
-        }
-
-        const findHorseComponent = (node: Node): HorseComponent | null => {
-            const horseComponent = node.getComponent(HorseComponent);
-            if (horseComponent && horseComponent.horseID === horseID) {
-                return horseComponent;
-            }
-            for (const child of node.children) {
-                const found = findHorseComponent(child);
-                if (found) {
-                    return found;
-                }
-            }
-            return null;
-        };
-
-        return findHorseComponent(scene);
-    }
-
-    /**
      * Kick this horse to base with flying animation
      * @param onComplete Callback when kick animation completes
      */
     public kickToBase(onComplete?: () => void) {
+        this.ensureHandlersInitialized();
         if (!this.horseID) {
             Logger.warn("HorseComponent", "Cannot kick to base: horseID is not set");
             if (onComplete) {
@@ -1100,30 +788,12 @@ export class HorseComponent extends Component {
         this.setFlyingToBase(true);
 
         // Find base position for flying animation
-        const base = gameDataService.getBase(horseData.baseID);
-        if (!base) {
-            Logger.warn("HorseComponent", `Base not found for ${horseData.baseID}`);
-            // Still update data even if base not found
-            this.updateHorseDataToBase(horseData);
-            this.setFlyingToBase(false);
-            if (onComplete) {
-                onComplete();
-            }
-            return;
-        }
-
-        // Find base component to get base position
-        const baseComponent = this.findBaseComponent(horseData.baseID);
-        if (baseComponent) {
-            const baseNode = baseComponent.node;
-            const baseWorldPos = new Vec3();
-            baseNode.getWorldPosition(baseWorldPos);
-            baseWorldPos.y += 12; // Add offset for horse positioning
-
+        const baseWorldPos = this.kickHandler.getBasePosition(this.node.scene, horseData.baseID);
+        if (baseWorldPos) {
             // Fly to base position
             this.moveHorseToPosition(baseWorldPos, () => {
                 // Update horse data after flying completes
-                this.updateHorseDataToBase(horseData);
+                this.kickHandler.updateHorseDataToBase(horseData);
                 this.setFlyingToBase(false);
                 this.updateBasePlaceholder();
 
@@ -1133,54 +803,14 @@ export class HorseComponent extends Component {
                 }
             });
         } else {
-            // Base component not found, just update data
-            this.updateHorseDataToBase(horseData);
+            // Base not found, just update data
+            this.kickHandler.updateHorseDataToBase(horseData);
             this.setFlyingToBase(false);
             this.updateBasePlaceholder();
             if (onComplete) {
                 onComplete();
             }
         }
-    }
-
-    /**
-     * Update horse data to base state
-     * @param horseData The horse data to update
-     */
-    private updateHorseDataToBase(horseData: Horse) {
-        horseData.isSpawned = false;
-        horseData.cellID = null;
-        horseData.position = null;
-        horseData.steps = 0;
-        horseData.isRetired = false;
-    }
-
-    /**
-     * Find BaseComponent by baseID in the scene
-     * @param baseID The base ID to find
-     * @returns BaseComponent instance or null if not found
-     */
-    private findBaseComponent(baseID: string): BaseComponent | null {
-        const scene = this.node.scene;
-        if (!scene) {
-            return null;
-        }
-
-        const findBase = (node: Node): BaseComponent | null => {
-            const baseComponent = node.getComponent(BaseComponent);
-            if (baseComponent && baseComponent.baseID === baseID) {
-                return baseComponent;
-            }
-            for (const child of node.children) {
-                const found = findBase(child);
-                if (found) {
-                    return found;
-                }
-            }
-            return null;
-        };
-
-        return findBase(scene);
     }
 
     /**
@@ -1201,66 +831,8 @@ export class HorseComponent extends Component {
         Logger.debug("HorseComponent", `Updated horse ${this.horseID} to cell ${targetCell.cellID}, steps: ${horseData.steps}`);
     }
 
-    /**
-     * Find cell node position in the scene by searching WalkwayComponents
-     */
-    /**
-     * Find all WalkwayComponents in the scene
-     * @returns Array of WalkwayComponent instances
-     */
-    private findAllWalkwayComponents(): WalkwayComponent[] {
-        const scene = this.node.scene;
-        if (!scene) {
-            return [];
-        }
-
-        const walkwayComponents: WalkwayComponent[] = [];
-        const findWalkways = (node: Node) => {
-            const walkway = node.getComponent(WalkwayComponent);
-            if (walkway) {
-                walkwayComponents.push(walkway);
-            }
-            for (const child of node.children) {
-                findWalkways(child);
-            }
-        };
-
-        findWalkways(scene);
-        return walkwayComponents;
-    }
-
     private findCellNodePosition(cellID: string): Vec3 | null {
-        const walkwayComponents = this.findAllWalkwayComponents();
-
-        if (walkwayComponents.length === 0) {
-            Logger.warn("HorseComponent", "No WalkwayComponents found in scene");
-            return null;
-        }
-
-        for (const walkway of walkwayComponents) {
-            const cellNode = walkway.getCellNode(cellID);
-            if (cellNode) {
-                // Get the CellComponent to access the target node based on cell type
-                const cellComponent = cellNode.getComponent(CellComponent);
-                const worldPos = new Vec3();
-                if (cellComponent) {
-                    // Get the appropriate target node based on cell type
-                    const targetNode = cellComponent.getTargetNode();
-
-                    targetNode.getWorldPosition(worldPos);
-                } else {
-                    // Fallback to cell node if CellComponent not found
-                    cellNode.getWorldPosition(worldPos);
-                }
-                // Add +5 to Y position for horse positioning
-
-                // Add +5 to Y position for horse positioning
-                worldPos.y += 12;
-                return worldPos;
-            }
-        }
-
-        return null;
+        return this.cellFinder.findCellNodePosition(this.node.scene, cellID);
     }
 
     /**
@@ -1268,19 +840,7 @@ export class HorseComponent extends Component {
      * @param cellID Cell ID to trigger blink animation on
      */
     private triggerCellBlinkAnimation(cellID: string): void {
-        const walkwayComponents = this.findAllWalkwayComponents();
-
-        // Find the cell component and trigger blink animation
-        for (const walkway of walkwayComponents) {
-            const cellNode = walkway.getCellNode(cellID);
-            if (cellNode) {
-                const cellComponent = cellNode.getComponent(CellComponent);
-                if (cellComponent) {
-                    cellComponent.playBlinkAnimation();
-                    return;
-                }
-            }
-        }
+        this.cellFinder.triggerCellBlinkAnimation(this.node.scene, cellID);
     }
 
     /**
@@ -1293,15 +853,10 @@ export class HorseComponent extends Component {
             return;
         }
 
-        // Ensure animationManager is initialized
-        if (!this.animationManager) {
-            this.animationManager = new AnimationManager();
-        }
-
         // Ensure horse icon is active
         this.nodeHorseIcon.active = true;
 
-        this.animationManager.stopAnimation(this.nodeHorseIcon);
+        this.animationHandler.stopAnimation(this.nodeHorseIcon);
         this.nodePositioning.reparentToTopLayer(this.nodeHorseIcon, this.node.scene);
         this.nodePositioning.ensureRenderOnTop(this.nodeHorseIcon);
 
@@ -1310,7 +865,7 @@ export class HorseComponent extends Component {
 
         const localTargetPos = this.nodePositioning.convertToLocalPosition(this.nodeHorseIcon, targetPosition);
 
-        this.animationManager.playMovementAnimation(this.nodeHorseIcon, startPos, localTargetPos, onComplete);
+        this.animationHandler.playMovementAnimation(this.nodeHorseIcon, startPos, localTargetPos, onComplete);
     }
 
     /**
@@ -1318,8 +873,8 @@ export class HorseComponent extends Component {
      * @param enabled Whether SFX is enabled
      */
     public setSfxEnabled(enabled: boolean): void {
-        if (this.soundManager) {
-            this.soundManager.setSfxEnabled(enabled);
+        if (this.soundHandler) {
+            this.soundHandler.setSfxEnabled(enabled);
         }
     }
 
@@ -1327,8 +882,8 @@ export class HorseComponent extends Component {
      * Play jump sound effect
      */
     private playJumpSound(): void {
-        if (this.soundManager) {
-            this.soundManager.playSoundEffect(this.jumpSound, "jump");
+        if (this.soundHandler) {
+            this.soundHandler.playSoundEffect(this.jumpSound, "jump");
         }
     }
 
@@ -1336,8 +891,8 @@ export class HorseComponent extends Component {
      * Play kick sound effect
      */
     private playKickSound(): void {
-        if (this.soundManager) {
-            this.soundManager.playSoundEffect(this.kickSound, "kick");
+        if (this.soundHandler) {
+            this.soundHandler.playSoundEffect(this.kickSound, "kick");
         }
     }
 
@@ -1345,8 +900,8 @@ export class HorseComponent extends Component {
      * Play spawn sound effect
      */
     private playSpawnSound(): void {
-        if (this.soundManager) {
-            this.soundManager.playSoundEffect(this.spawnSound, "spawn");
+        if (this.soundHandler) {
+            this.soundHandler.playSoundEffect(this.spawnSound, "spawn");
         }
     }
 
@@ -1354,8 +909,8 @@ export class HorseComponent extends Component {
      * Play movement sound effect
      */
     private playMoveSound(): void {
-        if (this.soundManager) {
-            this.soundManager.playSoundEffect(this.moveSound, "move");
+        if (this.soundHandler) {
+            this.soundHandler.playSoundEffect(this.moveSound, "move");
         }
     }
 
@@ -1369,10 +924,10 @@ export class HorseComponent extends Component {
         }
 
         // Stop any running animations
-        if (this.animationManager) {
-            this.animationManager.stopAnimation(this.node);
+        if (this.animationHandler) {
+            this.animationHandler.stopAnimation(this.node);
             if (this.nodeHorseIcon) {
-                this.animationManager.stopAnimation(this.nodeHorseIcon);
+                this.animationHandler.stopAnimation(this.nodeHorseIcon);
             }
         }
     }

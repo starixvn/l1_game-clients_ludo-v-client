@@ -1,7 +1,7 @@
 /**
- * Horse Movement Manager
+ * Horse Movement Handler
  *
- * Utility class for managing horse movement and pathfinding logic
+ * Utility class for handling horse movement and pathfinding logic
  */
 
 import { Cell, Horse } from "../game-board-data";
@@ -9,7 +9,7 @@ import { gameDataService } from "../services/game-data-service";
 import { PathfindingService } from "../services/pathfinding-service";
 import { Logger } from "./logger";
 
-export class HorseMovementManager {
+export class HorseMovementHandler {
     private readonly pathfindingService: PathfindingService;
 
     constructor(pathfindingService: PathfindingService) {
@@ -55,7 +55,7 @@ export class HorseMovementManager {
         if (!horseData.cellID || !horseData.isSpawned) {
             const spawnCell = gameDataService.findSpawnCellForBase(horseData.baseID);
             if (!spawnCell) {
-                Logger.warn("HorseMovementManager", `Spawn cell not found for base ${horseData.baseID}`);
+                Logger.warn("HorseMovementHandler", `Spawn cell not found for base ${horseData.baseID}`);
                 return [];
             }
             return this.buildPathFromBase(horseData, spawnCell, targetCell);
@@ -112,3 +112,4 @@ export class HorseMovementManager {
         return path;
     }
 }
+

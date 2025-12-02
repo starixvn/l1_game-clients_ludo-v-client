@@ -1,13 +1,13 @@
 /**
- * Horse Sound Manager
+ * Horse Sound Handler
  *
- * Utility class for managing sound effects for horse components
+ * Utility class for handling sound effects for horse components
  */
 
 import { AudioClip, AudioSource, Node } from "cc";
 import { Logger } from "./logger";
 
-export class HorseSoundManager {
+export class HorseSoundHandler {
     private audioSource: AudioSource = null;
     private sfxEnabled = true;
     private readonly node: Node;
@@ -26,7 +26,7 @@ export class HorseSoundManager {
     private initializeAudioSource() {
         // Always use main node for AudioSource to avoid issues when nodeHorseIcon is reparented
         if (!this.node?.isValid) {
-            Logger.warn("HorseSoundManager", `Main node is invalid for AudioSource initialization for horse ${this.horseID}`);
+            Logger.warn("HorseSoundHandler", `Main node is invalid for AudioSource initialization for horse ${this.horseID}`);
             return;
         }
 
@@ -43,9 +43,9 @@ export class HorseSoundManager {
             this.audioSource.volume = 1.0;
             this.audioSource.playOnAwake = false;
             this.audioSource.enabled = true;
-            Logger.debug("HorseSoundManager", `AudioSource initialized on main node for horse ${this.horseID}`);
+            Logger.debug("HorseSoundHandler", `AudioSource initialized on main node for horse ${this.horseID}`);
         } else {
-            Logger.warn("HorseSoundManager", `Failed to initialize AudioSource for horse ${this.horseID}`);
+            Logger.warn("HorseSoundHandler", `Failed to initialize AudioSource for horse ${this.horseID}`);
         }
     }
 
@@ -87,7 +87,7 @@ export class HorseSoundManager {
      */
     public setSfxEnabled(enabled: boolean): void {
         this.sfxEnabled = enabled;
-        Logger.debug("HorseSoundManager", `SFX enabled set to ${enabled} for horse ${this.horseID}`);
+        Logger.debug("HorseSoundHandler", `SFX enabled set to ${enabled} for horse ${this.horseID}`);
     }
 
     /**
@@ -96,31 +96,31 @@ export class HorseSoundManager {
     public playSoundEffect(soundClip: AudioClip | null, soundName: string): void {
         // Check if SFX is enabled first
         if (!this.sfxEnabled) {
-            Logger.debug("HorseSoundManager", `SFX disabled, skipping ${soundName} sound for horse ${this.horseID}`);
+            Logger.debug("HorseSoundHandler", `SFX disabled, skipping ${soundName} sound for horse ${this.horseID}`);
             return;
         }
 
         if (!soundClip) {
-            Logger.debug("HorseSoundManager", `${soundName} sound not assigned for horse ${this.horseID}`);
+            Logger.debug("HorseSoundHandler", `${soundName} sound not assigned for horse ${this.horseID}`);
             return;
         }
 
         // Ensure AudioSource is ready (this also ensures main node is active)
         if (!this.ensureAudioSourceReady()) {
-            Logger.warn("HorseSoundManager", `AudioSource not ready, cannot play ${soundName} sound for horse ${this.horseID}`);
+            Logger.warn("HorseSoundHandler", `AudioSource not ready, cannot play ${soundName} sound for horse ${this.horseID}`);
             return;
         }
 
         // Ensure main node is active (AudioSource is on main node)
         if (!this.node?.isValid) {
-            Logger.warn("HorseSoundManager", `Main node is invalid, cannot play ${soundName} sound for horse ${this.horseID}`);
+            Logger.warn("HorseSoundHandler", `Main node is invalid, cannot play ${soundName} sound for horse ${this.horseID}`);
             return;
         }
 
         if (!this.node.active) {
             // Try to activate the main node
             this.node.active = true;
-            Logger.debug("HorseSoundManager", `Activated main node to play ${soundName} sound for horse ${this.horseID}`);
+            Logger.debug("HorseSoundHandler", `Activated main node to play ${soundName} sound for horse ${this.horseID}`);
         }
 
         try {
@@ -128,7 +128,7 @@ export class HorseSoundManager {
             if (!this.audioSource || !this.audioSource.isValid) {
                 this.initializeAudioSource();
                 if (!this.audioSource || !this.audioSource.isValid) {
-                    Logger.error("HorseSoundManager", `Failed to initialize AudioSource for ${soundName} sound`);
+                    Logger.error("HorseSoundHandler", `Failed to initialize AudioSource for ${soundName} sound`);
                     return;
                 }
             }
@@ -144,11 +144,12 @@ export class HorseSoundManager {
             }
 
             this.audioSource.playOneShot(soundClip, 1.0);
-            Logger.debug("HorseSoundManager", `Playing ${soundName} sound for horse ${this.horseID}`);
+            Logger.debug("HorseSoundHandler", `Playing ${soundName} sound for horse ${this.horseID}`);
         } catch (error) {
-            Logger.error("HorseSoundManager", `Error playing ${soundName} sound for horse ${this.horseID}: ${error}`);
+            Logger.error("HorseSoundHandler", `Error playing ${soundName} sound for horse ${this.horseID}: ${error}`);
             // Try to re-initialize AudioSource on error
             this.initializeAudioSource();
         }
     }
 }
+
