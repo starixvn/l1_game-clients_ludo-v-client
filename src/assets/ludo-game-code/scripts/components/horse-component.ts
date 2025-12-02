@@ -11,7 +11,7 @@
  * Data is read from game-board-data.ts
  */
 
-import { _decorator, Component, Node, Label, UITransform, Vec3, Sprite, Button, SpriteFrame, AudioClip, AudioSource } from "cc";
+import { _decorator, Component, Node, Label, UITransform, Vec3, Sprite, Button, SpriteFrame, AudioClip } from "cc";
 import { BaseColor, Cell, gameBoardData, Horse } from "../game-board-data";
 import { WalkwayComponent } from "./walkway-component";
 import { CellComponent } from "./cell-component";
@@ -22,6 +22,7 @@ import { AnimationManager } from "../services/animation-manager";
 import { CELL_CONFIG } from "../utils/cell-config";
 import { Logger } from "../utils/logger";
 import { BaseComponent } from "./base-component";
+import { HorseSoundManager } from "../utils/horse-sound-manager";
 
 const { ccclass, property, menu } = _decorator;
 
@@ -115,48 +116,15 @@ export class HorseComponent extends Component {
     /** Cached top layer node (game-board-prefab) for reparenting */
     private cachedTopLayer: Node = null;
 
-    /** AudioSource component for playing sound effects */
-    private audioSource: AudioSource = null;
-
-    /** Whether SFX is enabled (controls if sounds should play) */
-    private sfxEnabled = true;
+    /** Sound manager for handling sound effects */
+    private soundManager: HorseSoundManager = null;
 
     onLoad() {
         this.pathfindingService = new PathfindingService(gameDataService);
         this.animationManager = new AnimationManager();
         this.initializeHorse();
-        // Initialize AudioSource after horse is set up so nodeHorseIcon is available
-        this.initializeAudioSource();
-    }
-
-    /**
-     * Initialize AudioSource component for playing sound effects
-     * Always uses main node (this.node) to avoid issues when nodeHorseIcon is reparented
-     */
-    private initializeAudioSource() {
-        // Always use main node for AudioSource to avoid issues when nodeHorseIcon is reparented
-        if (!this.node?.isValid) {
-            Logger.warn("HorseComponent", `Main node is invalid for AudioSource initialization for horse ${this.horseID}`);
-            return;
-        }
-
-        // Try to get existing AudioSource component from main node
-        this.audioSource = this.node.getComponent(AudioSource);
-
-        // If not found, add one
-        if (!this.audioSource) {
-            this.audioSource = this.node.addComponent(AudioSource);
-        }
-
-        // Ensure AudioSource is properly configured
-        if (this.audioSource) {
-            this.audioSource.volume = 1.0;
-            this.audioSource.playOnAwake = false;
-            this.audioSource.enabled = true;
-            Logger.debug("HorseComponent", `AudioSource initialized on main node for horse ${this.horseID}`);
-        } else {
-            Logger.warn("HorseComponent", `Failed to initialize AudioSource for horse ${this.horseID}`);
-        }
+        // Initialize sound manager after horse is set up
+        this.soundManager = new HorseSoundManager(this.node, this.horseID);
     }
 
     /**
@@ -1528,105 +1496,12 @@ export class HorseComponent extends Component {
     }
 
     /**
-     * Ensure AudioSource is available and ready to play
-     */
-    private ensureAudioSourceReady(): boolean {
-        // Re-initialize if not available or invalid
-        if (!this.audioSource || !this.audioSource.isValid || !this.audioSource.node?.isValid) {
-            this.initializeAudioSource();
-        }
-
-        if (!this.audioSource || !this.audioSource.isValid) {
-            return false;
-        }
-
-        // Ensure the AudioSource node is active (main node should stay active)
-        if (!this.audioSource.node.active) {
-            // Try to activate the node
-            this.audioSource.node.active = true;
-        }
-
-        // Ensure AudioSource is enabled
-        if (!this.audioSource.enabled) {
-            this.audioSource.enabled = true;
-        }
-
-        // Ensure volume is set
-        if (this.audioSource.volume === 0) {
-            this.audioSource.volume = 1.0;
-        }
-
-        return true;
-    }
-
-    /**
      * Set SFX enabled state
      * @param enabled Whether SFX is enabled
      */
     public setSfxEnabled(enabled: boolean): void {
-        this.sfxEnabled = enabled;
-        Logger.debug("HorseComponent", `SFX enabled set to ${enabled} for horse ${this.horseID}`);
-    }
-
-    /**
-     * Helper method to safely play a sound effect
-     */
-    private playSoundEffect(soundClip: AudioClip | null, soundName: string): void {
-        // Check if SFX is enabled first
-        if (!this.sfxEnabled) {
-            Logger.debug("HorseComponent", `SFX disabled, skipping ${soundName} sound for horse ${this.horseID}`);
-            return;
-        }
-
-        if (!soundClip) {
-            Logger.debug("HorseComponent", `${soundName} sound not assigned for horse ${this.horseID}`);
-            return;
-        }
-
-        // Ensure AudioSource is ready (this also ensures main node is active)
-        if (!this.ensureAudioSourceReady()) {
-            Logger.warn("HorseComponent", `AudioSource not ready, cannot play ${soundName} sound for horse ${this.horseID}`);
-            return;
-        }
-
-        // Ensure main node is active (AudioSource is on main node)
-        if (!this.node?.isValid) {
-            Logger.warn("HorseComponent", `Main node is invalid, cannot play ${soundName} sound for horse ${this.horseID}`);
-            return;
-        }
-
-        if (!this.node.active) {
-            // Try to activate the main node
-            this.node.active = true;
-            Logger.debug("HorseComponent", `Activated main node to play ${soundName} sound for horse ${this.horseID}`);
-        }
-
-        try {
-            // Double-check AudioSource is still valid
-            if (!this.audioSource || !this.audioSource.isValid) {
-                this.initializeAudioSource();
-                if (!this.audioSource || !this.audioSource.isValid) {
-                    Logger.error("HorseComponent", `Failed to initialize AudioSource for ${soundName} sound`);
-                    return;
-                }
-            }
-
-            // Ensure AudioSource volume is set
-            if (this.audioSource.volume === 0) {
-                this.audioSource.volume = 1.0;
-            }
-
-            // Ensure AudioSource is enabled
-            if (!this.audioSource.enabled) {
-                this.audioSource.enabled = true;
-            }
-
-            this.audioSource.playOneShot(soundClip, 1.0);
-            Logger.debug("HorseComponent", `Playing ${soundName} sound for horse ${this.horseID}`);
-        } catch (error) {
-            Logger.error("HorseComponent", `Error playing ${soundName} sound for horse ${this.horseID}: ${error}`);
-            // Try to re-initialize AudioSource on error
-            this.initializeAudioSource();
+        if (this.soundManager) {
+            this.soundManager.setSfxEnabled(enabled);
         }
     }
 
@@ -1634,28 +1509,36 @@ export class HorseComponent extends Component {
      * Play jump sound effect
      */
     private playJumpSound(): void {
-        this.playSoundEffect(this.jumpSound, "jump");
+        if (this.soundManager) {
+            this.soundManager.playSoundEffect(this.jumpSound, "jump");
+        }
     }
 
     /**
      * Play kick sound effect
      */
     private playKickSound(): void {
-        this.playSoundEffect(this.kickSound, "kick");
+        if (this.soundManager) {
+            this.soundManager.playSoundEffect(this.kickSound, "kick");
+        }
     }
 
     /**
      * Play spawn sound effect
      */
     private playSpawnSound(): void {
-        this.playSoundEffect(this.spawnSound, "spawn");
+        if (this.soundManager) {
+            this.soundManager.playSoundEffect(this.spawnSound, "spawn");
+        }
     }
 
     /**
      * Play movement sound effect
      */
     private playMoveSound(): void {
-        this.playSoundEffect(this.moveSound, "move");
+        if (this.soundManager) {
+            this.soundManager.playSoundEffect(this.moveSound, "move");
+        }
     }
 
     onDestroy() {
