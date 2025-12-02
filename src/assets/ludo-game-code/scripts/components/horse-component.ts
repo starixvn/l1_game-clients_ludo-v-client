@@ -19,10 +19,11 @@ import { CELL_DIMENSION } from "../global-constants";
 import { gameDataService } from "../services/game-data-service";
 import { PathfindingService } from "../services/pathfinding-service";
 import { AnimationManager } from "../services/animation-manager";
-import { CELL_CONFIG } from "../utils/cell-config";
 import { Logger } from "../utils/logger";
 import { BaseComponent } from "./base-component";
 import { HorseSoundManager } from "../utils/horse-sound-manager";
+import { HorseMovementManager } from "../utils/horse-movement-manager";
+import { HorseNodePositioning } from "../utils/horse-node-positioning";
 
 const { ccclass, property, menu } = _decorator;
 
@@ -110,17 +111,22 @@ export class HorseComponent extends Component {
     /** Pathfinding service instance */
     private pathfindingService: PathfindingService;
 
+    /** Movement manager for pathfinding logic */
+    private movementManager: HorseMovementManager;
+
+    /** Node positioning utility */
+    private nodePositioning: HorseNodePositioning;
+
     /** Animation manager instance */
     private animationManager: AnimationManager;
-
-    /** Cached top layer node (game-board-prefab) for reparenting */
-    private cachedTopLayer: Node = null;
 
     /** Sound manager for handling sound effects */
     private soundManager: HorseSoundManager = null;
 
     onLoad() {
         this.pathfindingService = new PathfindingService(gameDataService);
+        this.movementManager = new HorseMovementManager(this.pathfindingService);
+        this.nodePositioning = new HorseNodePositioning();
         this.animationManager = new AnimationManager();
         this.initializeHorse();
         // Initialize sound manager after horse is set up
@@ -619,43 +625,8 @@ export class HorseComponent extends Component {
         }
     }
 
-    private buildPathFromBase(horseData: Horse, spawnCell: Cell, targetCell: Cell): Cell[] {
-        if (spawnCell.cellID === targetCell.cellID) {
-            return [spawnCell];
-        }
-
-        const pathFromSpawn = this.pathfindingService.findPath(spawnCell.cellID, targetCell.cellID, horseData.baseID);
-        return pathFromSpawn.length > 0 ? pathFromSpawn : [spawnCell, targetCell];
-    }
-
-    private buildPathFromCurrentPosition(horseData: Horse, targetCell: Cell): Cell[] {
-        if (!horseData.cellID) {
-            return [];
-        }
-
-        const pathFromCurrent = this.pathfindingService.findPath(horseData.cellID, targetCell.cellID, horseData.baseID);
-
-        if (pathFromCurrent.length > 0) {
-            if (pathFromCurrent[0].cellID === horseData.cellID) {
-                return pathFromCurrent.slice(1);
-            }
-            return pathFromCurrent;
-        }
-
-        return this.buildPathStepByStep(horseData.cellID, targetCell.cellID, horseData.baseID);
-    }
-
     private buildMovementPath(horseData: Horse, targetCell: Cell): Cell[] {
-        if (!horseData.cellID || !horseData.isSpawned) {
-            const spawnCell = gameDataService.findSpawnCellForBase(horseData.baseID);
-            if (!spawnCell) {
-                Logger.warn("HorseComponent", `Spawn cell not found for base ${horseData.baseID}`);
-                return [];
-            }
-            return this.buildPathFromBase(horseData, spawnCell, targetCell);
-        }
-
-        return this.buildPathFromCurrentPosition(horseData, targetCell);
+        return this.movementManager.buildMovementPath(horseData, targetCell);
     }
 
     public moveToPositionIndex(positionIndex: number, onComplete?: () => void) {
@@ -723,54 +694,6 @@ export class HorseComponent extends Component {
         );
 
         this.moveThroughPath(path, 0, positionIndex, onComplete);
-    }
-
-    /**
-     * Build path step by step using findNextCell (fallback method)
-     */
-    private buildPathStepByStep(sourceCellID: string, targetCellID: string, baseID: string): Cell[] {
-        const path: Cell[] = [];
-        const visited = new Set<string>();
-        let currentCellID = sourceCellID;
-        const maxSteps = 200; // Prevent infinite loops
-        let steps = 0;
-
-        while (currentCellID !== targetCellID && steps < maxSteps) {
-            if (visited.has(currentCellID)) {
-                // Circular path detected
-                break;
-            }
-            visited.add(currentCellID);
-
-            const currentCell = gameDataService.getCell(currentCellID);
-            if (!currentCell) {
-                break;
-            }
-
-            // Don't add source cell to path
-            if (currentCellID !== sourceCellID) {
-                path.push(currentCell);
-            }
-
-            // Find next cell
-            const nextCell = this.pathfindingService.findNextCell(currentCellID, baseID);
-            if (!nextCell) {
-                break;
-            }
-
-            currentCellID = nextCell.cellID;
-            steps++;
-        }
-
-        // Add target cell if we reached it
-        if (currentCellID === targetCellID) {
-            const targetCell = gameDataService.getCell(targetCellID);
-            if (targetCell) {
-                path.push(targetCell);
-            }
-        }
-
-        return path;
     }
 
     /**
@@ -897,11 +820,11 @@ export class HorseComponent extends Component {
         const targetPosition = this.findCellNodePosition(targetCell.cellID);
         if (targetPosition) {
             // Reparent to top layer if needed
-            this.reparentToTopLayer();
-            this.ensureRenderOnTop();
+            this.nodePositioning.reparentToTopLayer(this.nodeHorseIcon, this.node.scene);
+            this.nodePositioning.ensureRenderOnTop(this.nodeHorseIcon);
 
             // Convert to local position and set directly
-            const localTargetPos = this.convertToLocalPosition(targetPosition);
+            const localTargetPos = this.nodePositioning.convertToLocalPosition(this.nodeHorseIcon, targetPosition);
             if (this.nodeHorseIcon) {
                 this.nodeHorseIcon.active = true;
                 this.nodeHorseIcon.setPosition(localTargetPos);
@@ -1379,120 +1302,15 @@ export class HorseComponent extends Component {
         this.nodeHorseIcon.active = true;
 
         this.animationManager.stopAnimation(this.nodeHorseIcon);
-        this.reparentToTopLayer();
-        this.ensureRenderOnTop();
+        this.nodePositioning.reparentToTopLayer(this.nodeHorseIcon, this.node.scene);
+        this.nodePositioning.ensureRenderOnTop(this.nodeHorseIcon);
 
         const startPos = new Vec3();
         this.nodeHorseIcon.getPosition(startPos);
 
-        const localTargetPos = this.convertToLocalPosition(targetPosition);
+        const localTargetPos = this.nodePositioning.convertToLocalPosition(this.nodeHorseIcon, targetPosition);
 
         this.animationManager.playMovementAnimation(this.nodeHorseIcon, startPos, localTargetPos, onComplete);
-    }
-
-    /**
-     * Recursively find a node by name in the scene tree
-     * @param parent Parent node to search from
-     * @param name Name of the node to find
-     * @returns Found node or null
-     */
-    private findNodeRecursive(parent: Node, name: string): Node | null {
-        if (!parent) {
-            return null;
-        }
-
-        // Check current node
-        if (parent.name === name) {
-            return parent;
-        }
-
-        // Search children recursively
-        for (const child of parent.children) {
-            const found = this.findNodeRecursive(child, name);
-            if (found) {
-                return found;
-            }
-        }
-
-        return null;
-    }
-
-    /**
-     * Get or find the top layer node (game-board-prefab)
-     * Caches the result for reuse
-     */
-    private getTopLayer(): Node | null {
-        // Return cached value if available
-        if (this.cachedTopLayer && this.cachedTopLayer.isValid) {
-            return this.cachedTopLayer;
-        }
-
-        // Find recursively if not cached
-        const scene = this.node.scene;
-        if (!scene) {
-            Logger.warn("HorseComponent", "Scene not available");
-            return null;
-        }
-
-        this.cachedTopLayer = this.findNodeRecursive(scene, "game-board-prefab");
-
-        if (!this.cachedTopLayer) {
-            Logger.warn("HorseComponent", "game-board-prefab not found in scene");
-            return null;
-        }
-
-        return this.cachedTopLayer;
-    }
-
-    /**
-     * Reparent HorseIcon to top layer for rendering on top
-     */
-    private reparentToTopLayer(): void {
-        if (!this.nodeHorseIcon) {
-            return;
-        }
-
-        const topLayer = this.getTopLayer();
-        if (!topLayer) {
-            return;
-        }
-
-        if (topLayer === this.nodeHorseIcon.parent) {
-            return;
-        }
-
-        const worldPos = new Vec3();
-        this.nodeHorseIcon.getWorldPosition(worldPos);
-
-        topLayer.addChild(this.nodeHorseIcon);
-
-        const localPos = new Vec3();
-        topLayer.inverseTransformPoint(localPos, worldPos);
-        localPos.z = CELL_CONFIG.TOP_LAYER_Z_INDEX;
-        this.nodeHorseIcon.setPosition(localPos);
-    }
-
-    /**
-     * Ensure HorseIcon renders on top by moving to end of parent's children
-     */
-    private ensureRenderOnTop(): void {
-        if (!this.nodeHorseIcon?.parent) {
-            return;
-        }
-
-        const parent = this.nodeHorseIcon.parent;
-        parent.removeChild(this.nodeHorseIcon);
-        parent.addChild(this.nodeHorseIcon);
-    }
-
-    /**
-     * Convert world position to local position relative to HorseIcon's parent
-     */
-    private convertToLocalPosition(worldPos: Vec3): Vec3 {
-        const localPos = new Vec3();
-        this.nodeHorseIcon.parent?.inverseTransformPoint(localPos, worldPos);
-        localPos.z = CELL_CONFIG.TOP_LAYER_Z_INDEX;
-        return localPos;
     }
 
     /**

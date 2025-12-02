@@ -10,8 +10,8 @@ import { Logger } from "./logger";
 export class HorseSoundManager {
     private audioSource: AudioSource = null;
     private sfxEnabled = true;
-    private node: Node;
-    private horseID: string;
+    private readonly node: Node;
+    private readonly horseID: string;
 
     constructor(node: Node, horseID: string) {
         this.node = node;
