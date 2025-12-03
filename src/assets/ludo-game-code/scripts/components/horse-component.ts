@@ -996,33 +996,67 @@ export class HorseComponent extends Component {
         }
     }
 
-    onDestroy() {
-        // Remove click event listener (only if debug mode is enabled, since event was only added in debug mode)
-        if (Logger.isDebugEnabled() && this.nodeHorseIcon && this.nodeHorseIcon.isValid) {
-            try {
-                const iconButton = this.nodeHorseIcon.getComponent(Button);
-                if (iconButton && iconButton.node && iconButton.node.isValid) {
-                    iconButton.node.off(Button.EventType.CLICK, this.onHorseIconClick, this);
-                }
-            } catch (error) {
-                // Node may be destroyed already, ignore error
-                Logger.debug("HorseComponent", `Error removing click listener during destroy: ${error}`);
-            }
+    /**
+     * Remove click event listener from horse icon (only in debug mode)
+     */
+    private removeClickEventListener(): void {
+        if (!Logger.isDebugEnabled() || !this.isNodeValid(this.nodeHorseIcon)) {
+            return;
         }
 
-        // Stop any running animations
-        if (this.animationHandler) {
-            try {
-                if (this.node && this.node.isValid) {
-                    this.animationHandler.stopAnimation(this.node);
-                }
-                if (this.nodeHorseIcon && this.nodeHorseIcon.isValid) {
-                    this.animationHandler.stopAnimation(this.nodeHorseIcon);
-                }
-            } catch (error) {
-                // Nodes may be destroyed already, ignore error
-                Logger.debug("HorseComponent", `Error stopping animations during destroy: ${error}`);
+        try {
+            const iconButton = this.nodeHorseIcon.getComponent(Button);
+            if (this.isButtonValid(iconButton)) {
+                iconButton.node.off(Button.EventType.CLICK, this.onHorseIconClick, this);
             }
+        } catch (error) {
+            // Node may be destroyed already, ignore error
+            Logger.debug("HorseComponent", `Error removing click listener during destroy: ${error}`);
         }
+    }
+
+    /**
+     * Stop animations on nodes
+     */
+    private stopAllAnimations(): void {
+        if (!this.animationHandler) {
+            return;
+        }
+
+        try {
+            this.stopAnimationIfValid(this.node);
+            this.stopAnimationIfValid(this.nodeHorseIcon);
+        } catch (error) {
+            // Nodes may be destroyed already, ignore error
+            Logger.debug("HorseComponent", `Error stopping animations during destroy: ${error}`);
+        }
+    }
+
+    /**
+     * Check if node is valid
+     */
+    private isNodeValid(node: Node | null): boolean {
+        return node !== null && node.isValid;
+    }
+
+    /**
+     * Check if button is valid
+     */
+    private isButtonValid(button: Button | null): boolean {
+        return button !== null && button.node !== null && button.node.isValid;
+    }
+
+    /**
+     * Stop animation on node if valid
+     */
+    private stopAnimationIfValid(node: Node | null): void {
+        if (this.isNodeValid(node)) {
+            this.animationHandler.stopAnimation(node);
+        }
+    }
+
+    onDestroy() {
+        this.removeClickEventListener();
+        this.stopAllAnimations();
     }
 }
