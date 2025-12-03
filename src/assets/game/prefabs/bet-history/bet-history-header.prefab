@@ -222,8 +222,8 @@
     "_string": "Time",
     "_horizontalAlign": 0,
     "_verticalAlign": 1,
-    "_actualFontSize": 55,
-    "_fontSize": 55,
+    "_actualFontSize": 50,
+    "_fontSize": 50,
     "_fontFamily": "Arial",
     "_lineHeight": 60,
     "_overflow": 0,
@@ -301,7 +301,7 @@
     },
     "_contentSize": {
       "__type__": "cc.Size",
-      "width": 140.8837890625,
+      "width": 128.076171875,
       "height": 75.6
     },
     "_anchorPoint": {
@@ -497,8 +497,8 @@
     "_string": "Round",
     "_horizontalAlign": 0,
     "_verticalAlign": 1,
-    "_actualFontSize": 55,
-    "_fontSize": 55,
+    "_actualFontSize": 50,
+    "_fontSize": 50,
     "_fontFamily": "Arial",
     "_lineHeight": 60,
     "_overflow": 0,
@@ -576,7 +576,7 @@
     },
     "_contentSize": {
       "__type__": "cc.Size",
-      "width": 181.650390625,
+      "width": 165.13671875,
       "height": 75.6
     },
     "_anchorPoint": {
@@ -772,8 +772,8 @@
     "_string": "Total Stake",
     "_horizontalAlign": 0,
     "_verticalAlign": 1,
-    "_actualFontSize": 55,
-    "_fontSize": 55,
+    "_actualFontSize": 50,
+    "_fontSize": 50,
     "_fontFamily": "Arial",
     "_lineHeight": 60,
     "_overflow": 0,
@@ -851,7 +851,7 @@
     },
     "_contentSize": {
       "__type__": "cc.Size",
-      "width": 309.56298828125,
+      "width": 281.4208984375,
       "height": 75.6
     },
     "_anchorPoint": {
@@ -1047,8 +1047,8 @@
     "_string": "Win",
     "_horizontalAlign": 0,
     "_verticalAlign": 1,
-    "_actualFontSize": 55,
-    "_fontSize": 55,
+    "_actualFontSize": 50,
+    "_fontSize": 50,
     "_fontFamily": "Arial",
     "_lineHeight": 60,
     "_overflow": 0,
@@ -1126,7 +1126,7 @@
     },
     "_contentSize": {
       "__type__": "cc.Size",
-      "width": 114.7265625,
+      "width": 104.296875,
       "height": 75.6
     },
     "_anchorPoint": {
