@@ -211,6 +211,54 @@ export class AnimationManager {
     }
 
     /**
+     * Play zoom in/out animation for base (repeating)
+     * @param node Node to animate
+     * @param minScale Minimum scale (default: 1.0)
+     * @param maxScale Maximum scale (default: 1.15)
+     * @param duration Duration for one complete cycle in seconds (default: 0.6)
+     */
+    playZoomAnimation(node: Node, minScale = 1.0, maxScale = 1.15, duration = 0.6): void {
+        this.stopAnimation(node);
+
+        if (!node?.isValid) {
+            Logger.warn("AnimationManager", "Cannot start zoom animation, node is invalid");
+            return;
+        }
+
+        const originalScale = new Vec3(minScale, minScale, 1);
+        const targetScale = new Vec3(maxScale, maxScale, 1);
+
+        // Reset to original scale first
+        node.setScale(originalScale);
+
+        // Create zoom in/out animation
+        const animationTween = tween(node)
+            .to(duration / 2, { scale: targetScale }, { easing: "sineInOut" })
+            .to(duration / 2, { scale: originalScale }, { easing: "sineInOut" })
+            .repeatForever()
+            .start();
+
+        this.activeTweens.set(node, animationTween);
+        Logger.debug("AnimationManager", `Started zoom animation for node: ${node.name}`);
+    }
+
+    /**
+     * Stop zoom animation and reset scale to normal
+     * @param node Node to stop animation for
+     * @param resetScale Scale to reset to (default: 1.0)
+     */
+    stopZoomAnimation(node: Node, resetScale = 1.0): void {
+        this.stopAnimation(node);
+
+        // Reset scale to normal
+        if (node?.isValid) {
+            node.setScale(resetScale, resetScale, 1);
+        }
+
+        Logger.debug("AnimationManager", `Stopped zoom animation for node: ${node.name}`);
+    }
+
+    /**
      * Play cell highlight animation with particle effects
      * @param node Cell node to animate
      * @param sprite Sprite component to highlight (optional, will be found if not provided)

@@ -14,8 +14,8 @@ import { WALKWAY_ROW_COUNT, CELL_DIMENSION, BaseID } from "../global-constants";
 import { HorsePlaceholderComponent } from "./horse-placeholder-component";
 import { gameDataService } from "../services/game-data-service";
 import { getBaseColor } from "../utils/color-utils";
-import { BorderLightHighlightComponent } from "./border-light-highlight-component";
 import { Logger } from "../utils/logger";
+import { AnimationManager } from "../services/animation-manager";
 
 const { ccclass, property, menu } = _decorator;
 
@@ -80,11 +80,18 @@ export class BaseComponent extends Component {
     /** Map of horse IDs to their placeholder component instances */
     private readonly horsePlaceholdersMap: Map<string, HorsePlaceholderComponent> = new Map();
 
-    /** Array of border light highlight components found recursively */
-    private readonly borderHighlightComponents: BorderLightHighlightComponent[] = [];
+    /** Animation manager for handling animations */
+    private animationManager: AnimationManager;
 
     /** Path to horse placeholder prefab resource */
     private readonly HORSE_PLACEHOLDER_PREFAB_PATH = "ludo-game-code/prefabs/horse-placeholder-prefab";
+
+    /** Zoom animation configuration */
+    private readonly ZOOM_CONFIG = {
+        MIN_SCALE: 1.0,
+        MAX_SCALE: 1.15,
+        DURATION: 0.6, // seconds for one zoom cycle (in + out)
+    };
 
     /** Player index mapping for bases */
     private readonly BASE_TO_PLAYER_MAP: { [key: string]: number } = {
@@ -95,6 +102,7 @@ export class BaseComponent extends Component {
     };
 
     onLoad() {
+        this.animationManager = new AnimationManager();
         this.initializeBase();
     }
 
@@ -132,9 +140,6 @@ export class BaseComponent extends Component {
 
         // Load and create horse placeholders
         this.loadAndCreateHorsePlaceholders();
-
-        // Find border highlight components recursively
-        this.findBorderHighlightComponents();
     }
 
     /**
@@ -454,57 +459,6 @@ export class BaseComponent extends Component {
     }
 
     /**
-     * Recursively find all border child nodes and get their BorderLightHighlightComponent
-     */
-    private findBorderHighlightComponents(): void {
-        this.borderHighlightComponents.length = 0;
-        this.searchBorderNodesRecursively(this.node);
-        Logger.debug("BaseComponent", `Found ${this.borderHighlightComponents.length} border highlight components for base ${this.baseID}`);
-    }
-
-    /**
-     * Recursively search for border nodes with highlight components
-     */
-    private searchBorderNodesRecursively(node: Node): void {
-        if (!this.isNodeValid(node)) {
-            return;
-        }
-
-        if (this.isBorderNode(node)) {
-            this.addBorderHighlightComponentIfExists(node);
-        }
-
-        node.children.forEach((child) => {
-            this.searchBorderNodesRecursively(child);
-        });
-    }
-
-    /**
-     * Check if node is valid
-     */
-    private isNodeValid(node: Node | null): boolean {
-        return node !== null && node.isValid;
-    }
-
-    /**
-     * Check if node name contains "border" (case insensitive)
-     */
-    private isBorderNode(node: Node): boolean {
-        return node.name.toLowerCase().includes("border");
-    }
-
-    /**
-     * Add border highlight component if it exists on the node
-     */
-    private addBorderHighlightComponentIfExists(node: Node): void {
-        const highlightComponent = node.getComponent(BorderLightHighlightComponent);
-        if (highlightComponent) {
-            this.borderHighlightComponents.push(highlightComponent);
-            Logger.debug("BaseComponent", `Found border highlight component on node: ${node.name} for base ${this.baseID}`);
-        }
-    }
-
-    /**
      * Get the player index for this base
      * @returns Player index (0-3) or -1 if not found
      */
@@ -513,7 +467,7 @@ export class BaseComponent extends Component {
     }
 
     /**
-     * Update border highlight based on next player
+     * Update border highlight based on next player (now uses zoom animation)
      * @param nextPlayer Player index (0-3) of the next player
      */
     public updateBorderHighlight(nextPlayer: number): void {
@@ -521,54 +475,45 @@ export class BaseComponent extends Component {
         const shouldHighlight = thisPlayerIndex === nextPlayer;
 
         if (shouldHighlight) {
-            this.startBorderHighlight();
+            this.startZoomAnimation();
         } else {
-            this.stopBorderHighlight();
+            this.stopZoomAnimation();
         }
     }
 
     /**
-     * Start border highlight for this base
+     * Start zoom in/out animation for this base
      */
-    private startBorderHighlight(): void {
-        this.borderHighlightComponents.forEach((component) => {
-            if (this.isComponentValidAndInactive(component)) {
-                component.startHighlight();
-                Logger.debug("BaseComponent", `Started border highlight for base ${this.baseID}`);
-            }
-        });
+    private startZoomAnimation(): void {
+        if (!this.animationManager) {
+            this.animationManager = new AnimationManager();
+        }
+        this.animationManager.playZoomAnimation(
+            this.node,
+            this.ZOOM_CONFIG.MIN_SCALE,
+            this.ZOOM_CONFIG.MAX_SCALE,
+            this.ZOOM_CONFIG.DURATION
+        );
+        Logger.debug("BaseComponent", `Started zoom animation for base ${this.baseID}`);
     }
 
     /**
-     * Stop border highlight for this base
+     * Stop zoom animation and reset scale to normal
      */
-    private stopBorderHighlight(): void {
-        this.borderHighlightComponents.forEach((component) => {
-            if (this.isComponentValidAndActive(component)) {
-                component.stopHighlight();
-                Logger.debug("BaseComponent", `Stopped border highlight for base ${this.baseID}`);
-            }
-        });
+    private stopZoomAnimation(): void {
+        if (!this.animationManager) {
+            this.animationManager = new AnimationManager();
+        }
+        this.animationManager.stopZoomAnimation(this.node, this.ZOOM_CONFIG.MIN_SCALE);
+        Logger.debug("BaseComponent", `Stopped zoom animation for base ${this.baseID}`);
     }
 
     /**
-     * Check if component is valid and inactive
+     * Cleanup on destroy
      */
-    private isComponentValidAndInactive(component: BorderLightHighlightComponent): boolean {
-        return component?.isValid && !component.getIsActive();
-    }
-
-    /**
-     * Check if component is valid and active
-     */
-    private isComponentValidAndActive(component: BorderLightHighlightComponent): boolean {
-        return component?.isValid && component.getIsActive();
-    }
-
-    /**
-     * Refresh border highlight components (call this if border nodes are added/removed dynamically)
-     */
-    public refreshBorderHighlightComponents(): void {
-        this.findBorderHighlightComponents();
+    onDestroy(): void {
+        if (this.animationManager) {
+            this.animationManager.stopZoomAnimation(this.node, this.ZOOM_CONFIG.MIN_SCALE);
+        }
     }
 }
