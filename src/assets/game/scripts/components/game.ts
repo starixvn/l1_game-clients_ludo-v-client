@@ -310,4 +310,14 @@ export default class Game extends GameComponent {
             this.gameRunnerComponent.setSfxEnabled(enable);
         }
     }
+
+    @handle(gc.Rounds.RoundRunningHandlers, (roundRunningHandlers) => roundRunningHandlers.stopRunner())
+    stopRoundCountdown() {
+        console.log("[Game] stopRoundCountdown");
+    }
+
+    @handle(gc.Rounds.RoundRunningHandlers, (roundRunningHandlers) => roundRunningHandlers.startRunner())
+    startRoundCountdown() {
+        console.log("[Game] startRoundCountdown");
+    }
 }
