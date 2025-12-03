@@ -14,7 +14,7 @@ export class Logger {
      * Check if debug mode is enabled
      * Reads from localStorage first (ludo:debug), falls back to DEFAULT_DEBUG_MODE
      */
-    private static isDebugEnabled(): boolean {
+    static isDebugEnabled(): boolean {
         try {
             // Check localStorage for debug flag
             const debugFlag = localStorage.getItem("ludo:debug");
