@@ -311,6 +311,12 @@ export default class Game extends GameComponent {
         }
     }
 
+    finishGame() {
+        if (this.gameRunnerComponent) {
+            this.gameRunnerComponent.finishGame(GameRunnerComponent.RESET_STATE, 1, 2);
+        }
+    }
+
     @handle(gc.Rounds.RoundRunningHandlers, (roundRunningHandlers) => roundRunningHandlers.stopRunner())
     stopRoundCountdown() {
         console.log("[Game] stopRoundCountdown");

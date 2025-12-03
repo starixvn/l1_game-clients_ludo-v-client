@@ -38,6 +38,14 @@ export class GameRunnerComponent extends Component {
     /** Map of baseID to BaseComponent for quick lookup */
     private readonly baseComponentsMap: Map<string, BaseComponent> = new Map();
 
+    /** Reset state constant - all horses at position 0 (in base) */
+    public static readonly RESET_STATE: { [key: string]: number[] } = {
+        "0": [0, 0, 0, 0], // Player 0: all 4 horses in base
+        "1": [0, 0, 0, 0], // Player 1: all 4 horses in base
+        "2": [0, 0, 0, 0], // Player 2: all 4 horses in base
+        "3": [0, 0, 0, 0], // Player 3: all 4 horses in base
+    };
+
     /** Initial game state to start from (optional) */
     private initialGameState: GameState | null = null;
 
@@ -46,6 +54,9 @@ export class GameRunnerComponent extends Component {
 
     /** Whether initial game state has been applied instantly */
     private initialGameStateApplied = false;
+
+    /** Current game state tracking - stores the current positions of all horses */
+    private currentGameState: { [key: string]: number[] } | null = null;
 
     start() {
         // Initialize horse components in start() to ensure scene is fully loaded
@@ -173,10 +184,14 @@ export class GameRunnerComponent extends Component {
         return true;
     }
 
-    private applyHorsePositionsForPlayer(playerIDStr: string, horsePositions: number[]): { positioned: number; notFound: number } {
+    private applyHorsePositionsForPlayer(
+        playerIDStr: string,
+        horsePositions: number[],
+        resetState: boolean = false,
+        currentPositions?: number[]
+    ): { positioned: number; notFound: number } {
         const playerID = parseInt(playerIDStr);
         const baseID = this.playerToBaseMap[playerID];
-
         if (!baseID) {
             Logger.warn("GameRunnerComponent", `No base mapping found for player ${playerID}`);
             return { positioned: 0, notFound: 0 };
@@ -188,34 +203,61 @@ export class GameRunnerComponent extends Component {
             return { positioned: 0, notFound: 0 };
         }
 
-        Logger.debug(
-            "GameRunnerComponent",
-            `Applying initial state - Player ${playerID} (${baseID}): positions [${horsePositions.join(", ")}]`
-        );
-
         let positioned = 0;
         let notFound = 0;
 
         for (let horseIndex = 0; horseIndex < horsePositions.length; horseIndex++) {
             const positionIndex = horsePositions[horseIndex];
             const horseID = base.horseIDs[horseIndex];
+            if (!horseID) continue;
 
-            if (!horseID) {
+            const horseComponent = this.horseComponentsMap.get(horseID);
+            if (!horseComponent) {
+                Logger.warn("GameRunnerComponent", `Horse component not found: ${horseID}`);
+                notFound++;
                 continue;
             }
 
-            const horseComponent = this.horseComponentsMap.get(horseID);
-            if (horseComponent) {
-                Logger.debug("GameRunnerComponent", `Positioning horse ${horseID} to position ${positionIndex} instantly`);
-                horseComponent.setPositionIndexInstantly(positionIndex);
-                positioned++;
-            } else {
-                Logger.warn("GameRunnerComponent", `Horse component not found: ${horseID} (player ${playerID}, horse ${horseIndex})`);
-                notFound++;
+            horseComponent.setPositionIndexInstantly(positionIndex);
+
+            // Animate horse flying to base if resetting from walkway to base
+            if (resetState && this.shouldAnimateToBase(currentPositions?.[horseIndex], positionIndex)) {
+                this.animateHorseToBase(horseComponent, horseID, baseID, horseIndex);
             }
+
+            positioned++;
         }
 
         return { positioned, notFound };
+    }
+
+    /**
+     * Check if horse should animate to base (moving from walkway to base)
+     */
+    private shouldAnimateToBase(currentPosition: number | undefined, targetPosition: number): boolean {
+        return currentPosition !== undefined && currentPosition > 0 && targetPosition === 0;
+    }
+
+    /**
+     * Animate horse flying back to base
+     */
+    private animateHorseToBase(horseComponent: HorseComponent, horseID: string, baseID: string, horseIndex: number): void {
+        const delay = horseIndex * 0.1;
+        this.scheduleOnce(() => {
+            if (!horseComponent.node?.scene) {
+                Logger.warn("GameRunnerComponent", `Cannot animate horse ${horseID}: node or scene not available`);
+                return;
+            }
+
+            // Ensure horse data has correct baseID
+            const horseData = gameDataService.getHorse(horseID);
+            if (horseData && horseData.baseID !== baseID) {
+                horseData.baseID = baseID;
+            }
+
+            horseComponent.node.active = true;
+            horseComponent.kickToBase();
+        }, delay);
     }
 
     public applyInitialGameState(): void {
@@ -238,7 +280,7 @@ export class GameRunnerComponent extends Component {
 
         for (const playerIDStr in this.initialGameState.board) {
             const horsePositions = this.initialGameState.board[playerIDStr];
-            const result = this.applyHorsePositionsForPlayer(playerIDStr, horsePositions);
+            const result = this.applyHorsePositionsForPlayer(playerIDStr, horsePositions, false); // No jump animation for initial state
             horsesPositioned += result.positioned;
             horsesNotFound += result.notFound;
         }
@@ -247,6 +289,9 @@ export class GameRunnerComponent extends Component {
             "GameRunnerComponent",
             `Initial game state applied: ${horsesPositioned} horses positioned, ${horsesNotFound} not found`
         );
+
+        // Update current game state tracking after initial state is applied
+        this.currentGameState = { ...this.initialGameState.board };
 
         this.initialGameStateApplied = true;
     }
@@ -277,11 +322,164 @@ export class GameRunnerComponent extends Component {
             return;
         }
 
+        // Update current game state tracking
+        this.currentGameState = { ...finishBoardState.board };
+
         // Convert external format to internal GameState format
         const gameState = this.convertFinishBoardStateToGameState(finishBoardState);
 
         // Apply state immediately
         this.applyGameStateAndWait(gameState);
+    }
+
+    /**
+     * Finish game with celebration, board cleanup, and next match setup
+     * @param boardState Board state with horse positions (defaults to RESET_STATE - all horses in base)
+     * @param winningPlayer Optional player index (0-3) who won the game
+     * @param nextMatchPlayer Optional player index (0-3) who will start the next match
+     * @param durationTime Duration for each phase in seconds (default: 4s for celebration, 3s for cleanup, 3s for next match)
+     */
+    public finishGame(
+        boardState: { [key: string]: number[] } = GameRunnerComponent.RESET_STATE,
+        winningPlayer?: number,
+        nextMatchPlayer?: number,
+        durationTime: { celebration?: number; cleanup?: number; nextMatch?: number } = {}
+    ): void {
+        const celebrationDuration = durationTime.celebration ?? 4;
+        const cleanupDuration = durationTime.cleanup ?? 3;
+        const nextMatchDuration = durationTime.nextMatch ?? 3;
+
+        Logger.debug(
+            "GameRunnerComponent",
+            `Finishing game - Winner: ${winningPlayer ?? "none"}, Next match: ${nextMatchPlayer ?? "none"}`
+        );
+
+        let currentDelay = 0;
+
+        // Phase 1: Celebrate team win (if winningPlayer provided)
+        if (winningPlayer !== undefined && winningPlayer !== null) {
+            this.celebrateWin(winningPlayer);
+            currentDelay += celebrationDuration;
+        }
+
+        // Phase 2: Clean the board - move horses to base
+        this.scheduleOnce(() => {
+            this.cleanBoard(boardState);
+        }, currentDelay);
+        currentDelay += cleanupDuration;
+
+        // Phase 3: Decide first team for next match (if nextMatchPlayer provided)
+        if (nextMatchPlayer !== undefined && nextMatchPlayer !== null) {
+            this.scheduleOnce(() => {
+                this.setupNextMatch(nextMatchPlayer);
+            }, currentDelay);
+        }
+    }
+
+    /**
+     * Celebrate winning team
+     * @param winningPlayer Player index (0-3) who won
+     */
+    private celebrateWin(winningPlayer: number): void {
+        Logger.debug("GameRunnerComponent", `Celebrating win for player ${winningPlayer}`);
+        const baseID = this.playerToBaseMap[winningPlayer];
+        if (!baseID) {
+            Logger.warn("GameRunnerComponent", `No base mapping found for winning player ${winningPlayer}`);
+            return;
+        }
+
+        const baseComponent = this.findBaseComponent(baseID);
+        if (baseComponent) {
+            // Highlight winning base
+            baseComponent.updateBorderHighlight(winningPlayer);
+            // TODO: Add celebration animation/effects here
+        }
+    }
+
+    /**
+     * Clean board - move all horses to base
+     * @param boardState Target board state (usually all horses at position 0)
+     */
+    private cleanBoard(boardState: { [key: string]: number[] }): void {
+        Logger.debug("GameRunnerComponent", "Cleaning board - moving horses to base");
+
+        this.clearPossibleMoveHighlights();
+
+        if (this.horseComponentsMap.size === 0) {
+            this.initializeHorseComponents();
+        }
+
+        if (this.horseComponentsMap.size === 0) {
+            Logger.error("GameRunnerComponent", "No horse components found! Cannot clean board.");
+            return;
+        }
+
+        const currentState = this.getCurrentStateFromHorses();
+        let horsesPositioned = 0;
+        let horsesNotFound = 0;
+
+        for (const playerIDStr in boardState) {
+            const result = this.applyHorsePositionsForPlayer(
+                playerIDStr,
+                boardState[playerIDStr],
+                true, // Enable animation for reset state
+                currentState[playerIDStr] || [0, 0, 0, 0]
+            );
+            horsesPositioned += result.positioned;
+            horsesNotFound += result.notFound;
+        }
+
+        this.currentGameState = { ...boardState };
+        Logger.debug("GameRunnerComponent", `Board cleaned: ${horsesPositioned} horses positioned, ${horsesNotFound} not found`);
+    }
+
+    /**
+     * Setup next match - highlight first player
+     * @param nextMatchPlayer Player index (0-3) who will start the next match
+     */
+    private setupNextMatch(nextMatchPlayer: number): void {
+        Logger.debug("GameRunnerComponent", `Setting up next match - first player: ${nextMatchPlayer}`);
+        this.updateBaseBorderHighlights(nextMatchPlayer);
+        // TODO: Add next match setup animation/effects here
+    }
+
+    /**
+     * Reset game state to a provided state (kept for backward compatibility)
+     * @deprecated Use finishGame instead
+     * @param boardState Board state with horse positions (defaults to RESET_STATE - all horses in base)
+     */
+    public resetGameState(boardState: { [key: string]: number[] } = GameRunnerComponent.RESET_STATE): void {
+        Logger.warn("GameRunnerComponent", "resetGameState is deprecated, use finishGame instead");
+        this.cleanBoard(boardState);
+    }
+
+    /**
+     * Get current state from horse data (fallback if currentGameState is not available)
+     */
+    private getCurrentStateFromHorses(): { [key: string]: number[] } {
+        // Use tracked state if available
+        if (this.currentGameState) {
+            return this.currentGameState;
+        }
+
+        // Fallback: read from horse data
+        const state: { [key: string]: number[] } = {};
+        for (let playerID = 0; playerID < 4; playerID++) {
+            const baseID = this.playerToBaseMap[playerID];
+            if (!baseID) continue;
+
+            const base = gameDataService.getBase(baseID);
+            if (!base) continue;
+
+            const positions = base.horseIDs.map((horseID) => {
+                const horseData = gameDataService.getHorse(horseID);
+                return horseData?.steps || 0;
+            });
+
+            state[playerID.toString()] = positions;
+        }
+
+        return state;
     }
 
     /**
@@ -394,13 +592,18 @@ export class GameRunnerComponent extends Component {
             Promise.all(movementPromises)
                 .then(() => {
                     Logger.debug("GameRunnerComponent", "All horse movements completed");
+                    // Update current game state tracking after movements complete
+                    this.currentGameState = { ...gameState.board };
                 })
                 .catch((error) => {
                     Logger.error("GameRunnerComponent", `Error waiting for horse movements: ${error}`);
+                    // Still update state even if there was an error
+                    this.currentGameState = { ...gameState.board };
                 });
         } else {
-            // No horses to move
+            // No horses to move, but still update state
             Logger.debug("GameRunnerComponent", "No horses to move");
+            this.currentGameState = { ...gameState.board };
         }
     }
 
@@ -413,6 +616,9 @@ export class GameRunnerComponent extends Component {
             Logger.warn("GameRunnerComponent", "NextState does not contain valid nextAction or possibleActions");
             return;
         }
+
+        // Note: NextState doesn't contain board state, so we don't update currentGameState here
+        // The current state should already be tracked from the last applyGameState call
 
         // Clear previous highlights first
         this.clearPossibleMoveHighlights();
@@ -448,9 +654,6 @@ export class GameRunnerComponent extends Component {
         for (const positionIndex of horsePositionsToHighlight) {
             this.highlightHorseByPositionIndex(positionIndex, nextPlayer);
         }
-
-        // Update base border highlights based on next player
-        this.updateBaseBorderHighlights(nextPlayer);
 
         // Update base border highlights based on next player
         this.updateBaseBorderHighlights(nextPlayer);
