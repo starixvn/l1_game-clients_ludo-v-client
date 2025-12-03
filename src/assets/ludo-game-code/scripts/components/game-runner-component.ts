@@ -309,8 +309,9 @@ export class GameRunnerComponent extends Component {
     /**
      * Apply game state from external FinishBoardState message
      * @param finishBoardState External game state from FinishBoardState message
+     * @returns Promise that resolves when all horse movements are complete
      */
-    public applyGameState(finishBoardState: GameServiceMessage.BoardState): void {
+    public applyGameState(finishBoardState: GameServiceMessage.BoardState): Promise<void> {
         // Clear any existing highlights when applying new game state
         this.clearPossibleMoveHighlights();
 
@@ -321,7 +322,7 @@ export class GameRunnerComponent extends Component {
 
         if (this.horseComponentsMap.size === 0) {
             Logger.error("GameRunnerComponent", "No horse components found! Cannot apply game state.");
-            return;
+            return Promise.resolve();
         }
 
         // Update current game state tracking
@@ -330,8 +331,8 @@ export class GameRunnerComponent extends Component {
         // Convert external format to internal GameState format
         const gameState = this.convertFinishBoardStateToGameState(finishBoardState);
 
-        // Apply state immediately
-        this.applyGameStateAndWait(gameState);
+        // Apply state immediately and return the promise
+        return this.applyGameStateAndWait(gameState);
     }
 
     /**
@@ -559,7 +560,7 @@ export class GameRunnerComponent extends Component {
         return { updated, notFound };
     }
 
-    private applyGameStateAndWait(gameState: GameState): void {
+    private applyGameStateAndWait(gameState: GameState): Promise<void> {
         Logger.debug("GameRunnerComponent", `Applying state, currentPlayer: ${gameState.currentPlayer}`);
 
         const movementPromises: Array<Promise<void>> = [];
@@ -594,7 +595,7 @@ export class GameRunnerComponent extends Component {
 
         // Wait for all horse movements to complete
         if (movementPromises.length > 0) {
-            Promise.all(movementPromises)
+            return Promise.all(movementPromises)
                 .then(() => {
                     Logger.debug("GameRunnerComponent", "All horse movements completed");
                     // Update current game state tracking after movements complete
@@ -604,11 +605,13 @@ export class GameRunnerComponent extends Component {
                     Logger.error("GameRunnerComponent", `Error waiting for horse movements: ${error}`);
                     // Still update state even if there was an error
                     this.currentGameState = { ...gameState.board };
+                    throw error; // Re-throw to maintain promise rejection behavior
                 });
         } else {
             // No horses to move, but still update state
             Logger.debug("GameRunnerComponent", "No horses to move");
             this.currentGameState = { ...gameState.board };
+            return Promise.resolve();
         }
     }
 

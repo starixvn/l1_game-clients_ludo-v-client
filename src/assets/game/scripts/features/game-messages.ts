@@ -5,6 +5,7 @@ export namespace GameServiceMessage {
         action: { oldPosition: number; newPosition: number; player: number; playerColor: number };
         nextPlayer?: number;
         possibleActions?: Array<{ oldPosition: number; newPosition: number }>;
+        winner?: number;
 
         static eventName = "gameState";
     }
