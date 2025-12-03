@@ -187,7 +187,7 @@ export class GameRunnerComponent extends Component {
     private applyHorsePositionsForPlayer(
         playerIDStr: string,
         horsePositions: number[],
-        resetState: boolean = false,
+        resetState = false,
         currentPositions?: number[]
     ): { positioned: number; notFound: number } {
         const playerID = parseInt(playerIDStr);
@@ -209,7 +209,9 @@ export class GameRunnerComponent extends Component {
         for (let horseIndex = 0; horseIndex < horsePositions.length; horseIndex++) {
             const positionIndex = horsePositions[horseIndex];
             const horseID = base.horseIDs[horseIndex];
-            if (!horseID) continue;
+            if (!horseID) {
+                continue;
+            }
 
             const horseComponent = this.horseComponentsMap.get(horseID);
             if (!horseComponent) {
@@ -347,7 +349,6 @@ export class GameRunnerComponent extends Component {
     ): void {
         const celebrationDuration = durationTime.celebration ?? 4;
         const cleanupDuration = durationTime.cleanup ?? 3;
-        const nextMatchDuration = durationTime.nextMatch ?? 3;
 
         Logger.debug(
             "GameRunnerComponent",
@@ -392,7 +393,7 @@ export class GameRunnerComponent extends Component {
         if (baseComponent) {
             // Highlight winning base
             baseComponent.updateBorderHighlight(winningPlayer);
-            // TODO: Add celebration animation/effects here
+            // Add celebration animation/effects here
         }
     }
 
@@ -440,7 +441,7 @@ export class GameRunnerComponent extends Component {
     private setupNextMatch(nextMatchPlayer: number): void {
         Logger.debug("GameRunnerComponent", `Setting up next match - first player: ${nextMatchPlayer}`);
         this.updateBaseBorderHighlights(nextMatchPlayer);
-        // TODO: Add next match setup animation/effects here
+        // Add next match setup animation/effects here
     }
 
     /**
@@ -466,10 +467,14 @@ export class GameRunnerComponent extends Component {
         const state: { [key: string]: number[] } = {};
         for (let playerID = 0; playerID < 4; playerID++) {
             const baseID = this.playerToBaseMap[playerID];
-            if (!baseID) continue;
+            if (!baseID) {
+                continue;
+            }
 
             const base = gameDataService.getBase(baseID);
-            if (!base) continue;
+            if (!base) {
+                continue;
+            }
 
             const positions = base.horseIDs.map((horseID) => {
                 const horseData = gameDataService.getHorse(horseID);
