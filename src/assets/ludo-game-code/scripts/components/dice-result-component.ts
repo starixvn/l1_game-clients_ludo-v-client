@@ -10,6 +10,7 @@ import { ObserverComponent } from "db://shared-components/shared/common-componen
 import { DiceResultStore } from "../../../game/scripts/stores/dice-result-store";
 import { gameDataService } from "../services/game-data-service";
 import { getBaseColor } from "../utils/color-utils";
+import { Logger } from "../utils/logger";
 
 const { ccclass, property, menu } = _decorator;
 const { render } = Observer;
@@ -30,7 +31,7 @@ export class DiceResultComponent extends ObserverComponent {
     onLoad() {
         super.onLoad();
         if (!this.diceLabel) {
-            console.warn("DiceResultComponent: diceLabel is not assigned");
+            Logger.warn("DiceResultComponent", "diceLabel is not assigned");
         }
     }
 

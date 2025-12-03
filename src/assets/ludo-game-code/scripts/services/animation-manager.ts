@@ -7,6 +7,7 @@
 
 import { tween, Vec3, Node, Sprite, Color, UITransform, instantiate } from "cc";
 import { ANIMATION_CONFIG } from "../utils/cell-config";
+import { Logger } from "../utils/logger";
 
 /**
  * Constants for border light animation
@@ -352,7 +353,7 @@ export class AnimationManager {
             this.activeBorderLights.set(parentNode, lightNodes);
             this.animateBorderLights(lightNodes, radius);
         } catch (error) {
-            console.error("AnimationManager: Failed to create border light effect:", error);
+            Logger.error("AnimationManager", "Failed to create border light effect:", error);
         }
     }
 
@@ -493,7 +494,7 @@ export class AnimationManager {
         if (sprite?.spriteFrame) {
             lightSprite.spriteFrame = sprite.spriteFrame;
         } else {
-            console.warn("AnimationManager: No SpriteFrame available for default border light. Light may not be visible.");
+            Logger.warn("AnimationManager", "No SpriteFrame available for default border light. Light may not be visible.");
         }
     }
 

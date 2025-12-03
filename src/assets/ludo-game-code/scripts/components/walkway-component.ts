@@ -452,7 +452,7 @@ export class WalkwayComponent extends Component {
      * Create a cell node for the given cell data
      */
     private createCellNode(cell: Cell): Node | null {
-        console.log(`[WalkwayComponent] createCellNode - Creating cell node for ${cell.cellID}`);
+        Logger.debug("WalkwayComponent", `createCellNode - Creating cell node for ${cell.cellID}`);
 
         // Handle empty placeholder cell (for HOME walkway)
         if (cell.cellID === GAME_CONSTANTS.HOME_EMPTY_CELL_ID) {
@@ -463,7 +463,7 @@ export class WalkwayComponent extends Component {
 
         // Use prefab if available, otherwise create node programmatically
         if (this.cellPrefab) {
-            console.log(`[WalkwayComponent] createCellNode - Using prefab for ${cell.cellID}`);
+            Logger.debug("WalkwayComponent", `createCellNode - Using prefab for ${cell.cellID}`);
             cellNode = instantiate(this.cellPrefab);
 
             // Ensure cell node has proper UITransform for grid layout
@@ -473,16 +473,16 @@ export class WalkwayComponent extends Component {
                 const { width, height } = this.calculateCellSize(cell);
                 cellTransform.setContentSize(width, height);
                 cellTransform.setAnchorPoint(ANCHOR_POINT_CENTER, ANCHOR_POINT_CENTER);
-                console.log(`[WalkwayComponent] createCellNode - Updated prefab UITransform: ${width}x${height}`);
+                Logger.debug("WalkwayComponent", `createCellNode - Updated prefab UITransform: ${width}x${height}`);
             } else {
-                console.warn(`[WalkwayComponent] createCellNode - Prefab missing UITransform, adding one`);
+                Logger.warn("WalkwayComponent", `createCellNode - Prefab missing UITransform, adding one`);
                 cellTransform = cellNode.addComponent(UITransform);
                 const { width, height } = this.calculateCellSize(cell);
                 cellTransform.setContentSize(width, height);
                 cellTransform.setAnchorPoint(ANCHOR_POINT_CENTER, ANCHOR_POINT_CENTER);
             }
         } else {
-            console.log(`[WalkwayComponent] createCellNode - Creating node programmatically for ${cell.cellID}`);
+            Logger.debug("WalkwayComponent", `createCellNode - Creating node programmatically for ${cell.cellID}`);
             cellNode = new Node(`Cell_${cell.cellID}`);
 
             // Add UITransform
@@ -490,11 +490,11 @@ export class WalkwayComponent extends Component {
             const { width, height } = this.calculateCellSize(cell);
             transform.setContentSize(width, height);
             transform.setAnchorPoint(ANCHOR_POINT_CENTER, ANCHOR_POINT_CENTER);
-            console.log(`[WalkwayComponent] createCellNode - Added UITransform: ${width}x${height}`);
+            Logger.debug("WalkwayComponent", `createCellNode - Added UITransform: ${width}x${height}`);
 
             // Add Sprite for visual representation (basic fallback)
             cellNode.addComponent(Sprite);
-            console.log(`[WalkwayComponent] createCellNode - Added Sprite component`);
+            Logger.debug("WalkwayComponent", `createCellNode - Added Sprite component`);
         }
 
         // Set cell name
@@ -505,15 +505,16 @@ export class WalkwayComponent extends Component {
         (cellNode as any).cellRow = cell.row;
         (cellNode as any).cellColumn = cell.column;
 
-        console.log(
-            `[WalkwayComponent] createCellNode - Cell row: ${cell.row}, column: ${cell.column} (position will be set by grid layout)`
+        Logger.debug(
+            "WalkwayComponent",
+            `createCellNode - Cell row: ${cell.row}, column: ${cell.column} (position will be set by grid layout)`
         );
 
         // Add CellComponent to the cell node
-        console.log(`[WalkwayComponent] createCellNode - Adding CellComponent to ${cell.cellID}`);
+        Logger.debug("WalkwayComponent", `createCellNode - Adding CellComponent to ${cell.cellID}`);
         let cellComponent = cellNode.getComponent(CellComponent);
         if (!cellComponent) {
-            console.log(`[WalkwayComponent] createCellNode - Creating new CellComponent`);
+            Logger.debug("WalkwayComponent", `createCellNode - Creating new CellComponent`);
             cellComponent = cellNode.addComponent(CellComponent);
         }
 
@@ -613,7 +614,7 @@ export class WalkwayComponent extends Component {
         }
 
         emptyNode.name = `EmptyCell_${GAME_CONSTANTS.HOME_EMPTY_CELL_ID}`;
-        console.log(`[WalkwayComponent] createEmptyCellNode - Empty cell node created: ${width}x${height}`);
+        Logger.debug("WalkwayComponent", `createEmptyCellNode - Empty cell node created: ${width}x${height}`);
 
         return emptyNode;
     }
@@ -622,15 +623,16 @@ export class WalkwayComponent extends Component {
      * Get color for a cell based on its type and base
      */
     private getCellColor(cell: Cell): Color {
-        console.log(
-            `[WalkwayComponent] getCellColor - Getting color for cell ${cell.cellID}, type: ${cell.cellType}, baseID: ${cell.baseID}`
+        Logger.debug(
+            "WalkwayComponent",
+            `getCellColor - Getting color for cell ${cell.cellID}, type: ${cell.cellType}, baseID: ${cell.baseID}`
         );
 
         // Find base for this cell using service
         const base = gameDataService.getBase(cell.baseID);
         const baseColor = base ? base.color : null;
 
-        console.log(`[WalkwayComponent] getCellColor - Found base: ${base ? base.ID : "null"}, baseColor: ${baseColor}`);
+        Logger.debug("WalkwayComponent", `getCellColor - Found base: ${base ? base.ID : "null"}, baseColor: ${baseColor}`);
 
         // Determine cell color based on type
         switch (cell.cellType) {
@@ -640,16 +642,16 @@ export class WalkwayComponent extends Component {
                 if (baseColor) {
                     const color = getBaseColor(baseColor);
                     if (color) {
-                        console.log(`[WalkwayComponent] getCellColor - Using base color: (${color.r}, ${color.g}, ${color.b})`);
+                        Logger.debug("WalkwayComponent", `getCellColor - Using base color: (${color.r}, ${color.g}, ${color.b})`);
                         return color;
                     }
                 }
-                console.log(`[WalkwayComponent] getCellColor - No base color found, using default`);
+                Logger.debug("WalkwayComponent", `getCellColor - No base color found, using default`);
                 break;
         }
 
         // Default color (gray)
-        console.log(`[WalkwayComponent] getCellColor - Returning default gray color`);
+        Logger.debug("WalkwayComponent", `getCellColor - Returning default gray color`);
         return new Color(COLOR_GRAY_R, COLOR_GRAY_G, COLOR_GRAY_B, COLOR_GRAY_A);
     }
 
@@ -795,12 +797,12 @@ export class WalkwayComponent extends Component {
      * Call this when cell data changes
      */
     public refreshWalkway() {
-        console.log(`[WalkwayComponent] refreshWalkway - Refreshing walkway ${this.walkwayID}`);
+        Logger.debug("WalkwayComponent", `refreshWalkway - Refreshing walkway ${this.walkwayID}`);
 
         // Rebuild cells
         this.buildCells();
 
-        console.log(`[WalkwayComponent] refreshWalkway - Refresh complete`);
+        Logger.debug("WalkwayComponent", `refreshWalkway - Refresh complete`);
     }
 
     /**

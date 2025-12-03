@@ -103,7 +103,7 @@ export class BaseComponent extends Component {
      */
     private initializeBase() {
         if (!this.baseID) {
-            console.warn("BaseComponent: baseID is not set");
+            Logger.warn("BaseComponent", "baseID is not set");
             return;
         }
 
@@ -111,7 +111,7 @@ export class BaseComponent extends Component {
         this.baseData = gameDataService.getBase(this.baseID);
 
         if (!this.baseData) {
-            console.warn(`BaseComponent: Base data not found for ${this.baseID}`);
+            Logger.warn("BaseComponent", `Base data not found for ${this.baseID}`);
             return;
         }
 
@@ -119,7 +119,7 @@ export class BaseComponent extends Component {
         const horses = gameDataService.getHorsesForBase(this.baseID);
         horses.forEach((horse) => {
             this.horsesMap.set(horse.horseID, horse);
-            console.log(`BaseComponent: Added horse ${horse.horseID} to base ${this.baseID}`);
+            Logger.debug("BaseComponent", `Added horse ${horse.horseID} to base ${this.baseID}`);
         });
 
         // Get sprite component for outer container
@@ -143,14 +143,14 @@ export class BaseComponent extends Component {
     private updateBaseNodeSize() {
         const transform = this.node.getComponent(UITransform);
         if (!transform) {
-            console.warn(`BaseComponent: No UITransform found on base node ${this.baseID}`);
+            Logger.warn("BaseComponent", `No UITransform found on base node ${this.baseID}`);
             return;
         }
 
         // Calculate base size: (WALKWAY_ROW_COUNT - 1) * CELL_DIMENSION
         const baseSize = (WALKWAY_ROW_COUNT - 1) * CELL_DIMENSION;
         transform.setContentSize(baseSize, baseSize);
-        console.log(`BaseComponent: Updated base node size to ${baseSize}x${baseSize} for ${this.baseID}`);
+        Logger.debug("BaseComponent", `Updated base node size to ${baseSize}x${baseSize} for ${this.baseID}`);
     }
 
     /**
@@ -214,26 +214,27 @@ export class BaseComponent extends Component {
         const container = this.horsePlaceholdersContainer || this.nodeInnerContainer || this.node;
 
         if (!container) {
-            console.warn(`BaseComponent: No container available for horse placeholders`);
+            Logger.warn("BaseComponent", `No container available for horse placeholders`);
             return;
         }
 
         // Try to load prefab if not assigned
         if (!this.horsePlaceholderPrefab) {
-            console.log(`BaseComponent: Horse placeholder prefab not assigned, attempting to load from resources`);
+            Logger.debug("BaseComponent", `Horse placeholder prefab not assigned, attempting to load from resources`);
             resources.load(this.HORSE_PLACEHOLDER_PREFAB_PATH, Prefab, (err, prefab) => {
                 if (err) {
-                    console.warn(
-                        `BaseComponent: Failed to load horse placeholder prefab from ${this.HORSE_PLACEHOLDER_PREFAB_PATH}: ${err.message}`
+                    Logger.warn(
+                        "BaseComponent",
+                        `Failed to load horse placeholder prefab from ${this.HORSE_PLACEHOLDER_PREFAB_PATH}: ${err.message}`
                     );
-                    console.log(`BaseComponent: Will create placeholders programmatically instead`);
+                    Logger.debug("BaseComponent", `Will create placeholders programmatically instead`);
                     this.createHorsePlaceholders(container);
                     return;
                 }
 
                 if (prefab) {
                     this.horsePlaceholderPrefab = prefab;
-                    console.log(`BaseComponent: Successfully loaded horse placeholder prefab`);
+                    Logger.debug("BaseComponent", `Successfully loaded horse placeholder prefab`);
                 }
 
                 this.createHorsePlaceholders(container);
@@ -248,11 +249,11 @@ export class BaseComponent extends Component {
      */
     private createHorsePlaceholders(container: Node) {
         if (!this.baseData) {
-            console.warn(`BaseComponent: Cannot create placeholders, base data not available`);
+            Logger.warn("BaseComponent", `Cannot create placeholders, base data not available`);
             return;
         }
 
-        console.log(`BaseComponent: Creating ${this.baseData.horseIDs.length} horse placeholders for base ${this.baseID}`);
+        Logger.debug("BaseComponent", `Creating ${this.baseData.horseIDs.length} horse placeholders for base ${this.baseID}`);
 
         // Clear existing placeholders
         this.horsePlaceholdersMap.clear();
@@ -262,7 +263,7 @@ export class BaseComponent extends Component {
         this.baseData.horseIDs.forEach((horseID, index) => {
             const horse = this.horsesMap.get(horseID);
             if (!horse) {
-                console.warn(`BaseComponent: Horse data not found for ${horseID}`);
+                Logger.warn("BaseComponent", `Horse data not found for ${horseID}`);
                 return;
             }
 
@@ -271,10 +272,10 @@ export class BaseComponent extends Component {
             // Instantiate from prefab if available
             if (this.horsePlaceholderPrefab) {
                 placeholderNode = instantiate(this.horsePlaceholderPrefab);
-                console.log(`BaseComponent: Instantiated placeholder prefab for ${horseID}`);
+                Logger.debug("BaseComponent", `Instantiated placeholder prefab for ${horseID}`);
             } else {
                 // Create programmatically as fallback
-                console.log(`BaseComponent: Creating placeholder programmatically for ${horseID} (no prefab available)`);
+                Logger.debug("BaseComponent", `Creating placeholder programmatically for ${horseID} (no prefab available)`);
                 placeholderNode = new Node(`HorsePlaceholder_${horseID}`);
                 const placeholderComponent = placeholderNode.addComponent(HorsePlaceholderComponent);
                 placeholderComponent.baseColor = this.baseData.color;
@@ -321,12 +322,12 @@ export class BaseComponent extends Component {
             const horse = this.horsesMap.get(horseID);
 
             if (!placeholderComponent) {
-                console.warn(`BaseComponent: Placeholder component not found for ${horseID}`);
+                Logger.warn("BaseComponent", `Placeholder component not found for ${horseID}`);
                 return;
             }
 
             if (!horse) {
-                console.warn(`BaseComponent: Horse data not found for ${horseID}`);
+                Logger.warn("BaseComponent", `Horse data not found for ${horseID}`);
                 return;
             }
 
@@ -345,7 +346,7 @@ export class BaseComponent extends Component {
             // Update visual state to apply changes
             placeholderComponent.updateVisualState();
 
-            console.log(`BaseComponent: Updated placeholder for ${horseID}: hidden=${isHorseHidden}, baseColor=${this.baseData.color}`);
+            Logger.debug("BaseComponent", `Updated placeholder for ${horseID}: hidden=${isHorseHidden}, baseColor=${this.baseData.color}`);
         });
     }
 
