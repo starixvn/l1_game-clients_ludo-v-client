@@ -250,6 +250,10 @@ export default class Game extends GameComponent {
 
             // Apply initial state instantly (horses positioned without animation)
             this.gameRunnerComponent.applyInitialGameState();
+
+            if (this.gameRunnerComponent && this.resultNode) {
+               this.gameRunnerComponent.moveDiceResultForFinishState(boardStateJS, this.resultNode);
+            }
         }
     }
 

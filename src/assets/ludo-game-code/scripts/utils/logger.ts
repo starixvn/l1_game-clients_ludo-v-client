@@ -31,12 +31,12 @@ export class Logger {
 
     static debug(component: string, message: string, ...args: any[]): void {
         if (this.isDebugEnabled()) {
-            console.log(`[${component}] ${message}`, ...args);
+            //console.log(`[${component}] ${message}`, ...args);
         }
     }
 
     static warn(component: string, message: string, ...args: any[]): void {
-        console.warn(`[${component}] ${message}`, ...args);
+        //console.warn(`[${component}] ${message}`, ...args);
     }
 
     static error(component: string, message: string, ...args: any[]): void {
