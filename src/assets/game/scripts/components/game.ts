@@ -253,7 +253,6 @@ export default class Game extends GameComponent {
 
             if (this.gameRunnerComponent && this.resultNode) {
                 boardStateJS.nextPlayer = boardStateJS.nextPlayer + 1;
-                console.log("[Game] boardState", boardStateJS);
                this.gameRunnerComponent.moveDiceResultForFinishState(boardStateJS, this.resultNode);
             }
         }
