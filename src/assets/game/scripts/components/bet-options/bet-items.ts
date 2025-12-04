@@ -5,20 +5,12 @@ import { OddsStore, OddsWithConfig } from "../../features/dynamic-odds/odds-stor
 import BetItemCustomize from "./bet-item-customize";
 import { GameBoardStore } from "../../features/game-board-state/game-board-store";
 import { GameServiceMessage } from "../../features/game-messages";
-import { ComponentUtils } from "db://shared-components/shared/utils";
 
 const { ccclass, property } = _decorator;
 const { render } = observer;
 
 @ccclass
 export class BetItems extends BetItemsPolygonBase {
-    mappingColor = {
-        0: "#BF9611",
-        1: "#282E9A",
-        2: "#9A2B28",
-        3: "#189911",
-    };
-
     /**
      * Update bet item background colors based on player index
      * @param playerIndex The player index to get color from mappingColor
@@ -28,17 +20,8 @@ export class BetItems extends BetItemsPolygonBase {
             return;
         }
 
-        const color = this.mappingColor[playerIndex];
-        if (!color) {
-            return;
-        }
-
-        this.betItemComponents.forEach((betItem) => {
-            betItem.node.children.forEach((child) => {
-                if (child.name === "bg") {
-                    ComponentUtils.setNodeColor(child, color);
-                }
-            });
+        this.betItemComponents.forEach((betItem: BetItemCustomize) => {
+            betItem.updateBetItemColors(playerIndex);
         });
     }
 

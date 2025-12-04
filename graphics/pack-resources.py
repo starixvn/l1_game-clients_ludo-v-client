@@ -30,3 +30,17 @@ if __name__ == '__main__':
         outputPath
     ]).wait()
 
+    # Copy packed images to assets/game/images
+    assets_images_dir = os.path.join(project_dir, '..', 'src', 'assets', 'game', 'images')
+    assets_images_dir = os.path.normpath(assets_images_dir)
+    
+    if os.path.exists(outputPath):
+        # Copy all files from packed directory to assets/game/images
+        for filename in os.listdir(outputPath):
+            src_file = os.path.join(outputPath, filename)
+            dst_file = os.path.join(assets_images_dir, filename)
+            
+            if os.path.isfile(src_file):
+                shutil.copy2(src_file, dst_file)
+                print(f"Copied {filename} to {assets_images_dir}")
+

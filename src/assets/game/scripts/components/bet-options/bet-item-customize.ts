@@ -7,6 +7,10 @@ const { property, ccclass } = _decorator;
 
 @ccclass
 export default class BetItemCustomize extends BetItem {
+
+    @property([Node])
+    bgNodes: Node[] = [];
+
     @property(Node)
     increaseOdd: Node = null;
 
@@ -49,8 +53,8 @@ export default class BetItemCustomize extends BetItem {
         if (deltaOdd === 0) {
             this.hideOddsIndicators();
         } else {
-            AnimationUtils.setOpacityNode(this.increaseOdd, isIncrease ? 255 : 1);
-            AnimationUtils.setOpacityNode(this.decreaseOdd, isIncrease ? 1 : 255);
+            AnimationUtils.setOpacityNode(this.increaseOdd, isIncrease ? 255 : 20);
+            AnimationUtils.setOpacityNode(this.decreaseOdd, isIncrease ? 20 : 255);
         }
         this.setBlockIconVisibility(false);
         this.setDisabledVisibility(false);
@@ -73,5 +77,16 @@ export default class BetItemCustomize extends BetItem {
 
     updateStatusLabelOdds(status: boolean) {
         this.lblOdds.node.active = status;
+    }
+
+    updateBetItemColors(playerIndex: number) {
+        if (playerIndex === undefined || playerIndex === null) {
+            return;
+        }
+
+        //enable node bg at index playerIndex, disable other nodes
+        this.bgNodes.forEach((node, index) => {
+            node.active = index === playerIndex;
+        });
     }
 }
