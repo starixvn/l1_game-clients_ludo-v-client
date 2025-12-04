@@ -1065,7 +1065,8 @@
     "instance": {
       "__id__": 32
     },
-    "targetOverrides": null
+    "targetOverrides": null,
+    "nestedPrefabInstanceRoots": null
   },
   {
     "__type__": "cc.PrefabInstance",
@@ -3127,7 +3128,7 @@
     "_lpos": {
       "__type__": "cc.Vec3",
       "x": 20.575,
-      "y": -550.115,
+      "y": -554.6041417761847,
       "z": 0
     },
     "_lrot": {
@@ -3190,7 +3191,7 @@
     "_left": 0,
     "_right": 0,
     "_top": 1154.971182795699,
-    "_bottom": 102.48914177618474,
+    "_bottom": 98,
     "_horizontalCenter": 0,
     "_verticalCenter": 0,
     "_isAbsLeft": true,

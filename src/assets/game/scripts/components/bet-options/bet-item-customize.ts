@@ -53,8 +53,8 @@ export default class BetItemCustomize extends BetItem {
         if (deltaOdd === 0) {
             this.hideOddsIndicators();
         } else {
-            AnimationUtils.setOpacityNode(this.increaseOdd, isIncrease ? 255 : 20);
-            AnimationUtils.setOpacityNode(this.decreaseOdd, isIncrease ? 20 : 255);
+            AnimationUtils.setOpacityNode(this.increaseOdd, isIncrease ? 255 : 50);
+            AnimationUtils.setOpacityNode(this.decreaseOdd, isIncrease ? 50 : 255);
         }
         this.setBlockIconVisibility(false);
         this.setDisabledVisibility(false);
