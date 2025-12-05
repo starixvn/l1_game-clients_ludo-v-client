@@ -1375,7 +1375,7 @@
         "__id__": 52
       }
     ],
-    "_active": true,
+    "_active": false,
     "_components": [
       {
         "__id__": 58
@@ -2276,7 +2276,7 @@
     },
     "_contentSize": {
       "__type__": "cc.Size",
-      "width": 98.25,
+      "width": 87.734375,
       "height": 50.4
     },
     "_anchorPoint": {
@@ -2312,7 +2312,7 @@
       "b": 255,
       "a": 255
     },
-    "_string": "MOVE",
+    "_string": "Move",
     "_horizontalAlign": 1,
     "_verticalAlign": 1,
     "_actualFontSize": 32,
@@ -2374,7 +2374,7 @@
       "__id__": 95
     },
     "key": "VNLudo.glossary_move",
-    "format": 1,
+    "format": 0,
     "prefix": "",
     "suffix": "",
     "_id": ""
@@ -5368,7 +5368,7 @@
     },
     "_contentSize": {
       "__type__": "cc.Size",
-      "width": 81.109375,
+      "width": 68.765625,
       "height": 50.4
     },
     "_anchorPoint": {
@@ -5404,7 +5404,7 @@
       "b": 255,
       "a": 255
     },
-    "_string": "STAY",
+    "_string": "Stay",
     "_horizontalAlign": 1,
     "_verticalAlign": 1,
     "_actualFontSize": 32,
@@ -5466,7 +5466,7 @@
       "__id__": 227
     },
     "key": "VNLudo.glossary_no_move",
-    "format": 1,
+    "format": 0,
     "prefix": "",
     "suffix": "",
     "_id": ""
@@ -8421,7 +8421,7 @@
     },
     "_contentSize": {
       "__type__": "cc.Size",
-      "width": 81.171875,
+      "width": 71.96875,
       "height": 50.4
     },
     "_anchorPoint": {
@@ -8457,7 +8457,7 @@
       "b": 255,
       "a": 255
     },
-    "_string": "KICK",
+    "_string": "Kick",
     "_horizontalAlign": 1,
     "_verticalAlign": 1,
     "_actualFontSize": 32,
@@ -8519,7 +8519,7 @@
       "__id__": 357
     },
     "key": "VNLudo.glossary_kick",
-    "format": 1,
+    "format": 0,
     "prefix": "",
     "suffix": "",
     "_id": ""
@@ -10755,7 +10755,7 @@
       "__expectedType__": "sp.SkeletonData"
     },
     "defaultSkin": "default",
-    "defaultAnimation": "",
+    "defaultAnimation": "show",
     "_premultipliedAlpha": false,
     "_timeScale": 1,
     "_preCacheMode": 0,
@@ -11513,7 +11513,7 @@
     },
     "_contentSize": {
       "__type__": "cc.Size",
-      "width": 77.1875,
+      "width": 65.765625,
       "height": 50.4
     },
     "_anchorPoint": {
@@ -11549,7 +11549,7 @@
       "b": 255,
       "a": 255
     },
-    "_string": "FAIR",
+    "_string": "Fair",
     "_horizontalAlign": 1,
     "_verticalAlign": 1,
     "_actualFontSize": 32,
@@ -11611,7 +11611,7 @@
       "__id__": 489
     },
     "key": "VNLudo.glossary_no_kick",
-    "format": 1,
+    "format": 0,
     "prefix": "",
     "suffix": "",
     "_id": ""
@@ -14770,7 +14770,7 @@
     },
     "_contentSize": {
       "__type__": "cc.Size",
-      "width": 490.796875,
+      "width": 200,
       "height": 50.4
     },
     "_anchorPoint": {
@@ -14806,7 +14806,7 @@
       "b": 255,
       "a": 255
     },
-    "_string": "RELEASE",
+    "_string": "Release",
     "_horizontalAlign": 1,
     "_verticalAlign": 1,
     "_actualFontSize": 33,
@@ -14868,7 +14868,7 @@
       "__id__": 629
     },
     "key": "VNLudo.glossary_release",
-    "format": 1,
+    "format": 0,
     "prefix": "",
     "suffix": "",
     "_id": ""
@@ -17862,7 +17862,7 @@
     },
     "_contentSize": {
       "__type__": "cc.Size",
-      "width": 107.765625,
+      "width": 90.265625,
       "height": 50.4
     },
     "_anchorPoint": {
@@ -17898,7 +17898,7 @@
       "b": 255,
       "a": 255
     },
-    "_string": "STUCK",
+    "_string": "Stuck",
     "_horizontalAlign": 1,
     "_verticalAlign": 1,
     "_actualFontSize": 32,
@@ -17960,7 +17960,7 @@
       "__id__": 761
     },
     "key": "VNLudo.glossary_no_release",
-    "format": 1,
+    "format": 0,
     "prefix": "",
     "suffix": "",
     "_id": ""
@@ -20954,7 +20954,7 @@
     },
     "_contentSize": {
       "__type__": "cc.Size",
-      "width": 115.703125,
+      "width": 100.703125,
       "height": 50.4
     },
     "_anchorPoint": {
@@ -20990,7 +20990,7 @@
       "b": 255,
       "a": 255
     },
-    "_string": "FINISH",
+    "_string": "Finish",
     "_horizontalAlign": 1,
     "_verticalAlign": 1,
     "_actualFontSize": 32,
@@ -21052,7 +21052,7 @@
       "__id__": 893
     },
     "key": "VNLudo.glossary_stable",
-    "format": 1,
+    "format": 0,
     "prefix": "",
     "suffix": "",
     "_id": ""
@@ -24046,7 +24046,7 @@
     },
     "_contentSize": {
       "__type__": "cc.Size",
-      "width": 80.796875,
+      "width": 72.953125,
       "height": 50.4
     },
     "_anchorPoint": {
@@ -24082,7 +24082,7 @@
       "b": 255,
       "a": 255
     },
-    "_string": "MISS",
+    "_string": "Miss",
     "_horizontalAlign": 1,
     "_verticalAlign": 1,
     "_actualFontSize": 32,
@@ -24144,7 +24144,7 @@
       "__id__": 1025
     },
     "key": "VNLudo.glossary_no_stable",
-    "format": 1,
+    "format": 0,
     "prefix": "",
     "suffix": "",
     "_id": ""
@@ -27469,7 +27469,7 @@
     },
     "_contentSize": {
       "__type__": "cc.Size",
-      "width": 74.28125,
+      "width": 66.71875,
       "height": 44.1
     },
     "_anchorPoint": {
@@ -27505,7 +27505,7 @@
       "b": 255,
       "a": 255
     },
-    "_string": "ODD",
+    "_string": "Odd",
     "_horizontalAlign": 1,
     "_verticalAlign": 1,
     "_actualFontSize": 32,
@@ -27567,7 +27567,7 @@
       "__id__": 1173
     },
     "key": "VNLudo.glossary_odd",
-    "format": 1,
+    "format": 0,
     "prefix": "",
     "suffix": "",
     "_id": ""
@@ -30417,7 +30417,7 @@
     },
     "_contentSize": {
       "__type__": "cc.Size",
-      "width": 88.703125,
+      "width": 79.890625,
       "height": 44.1
     },
     "_anchorPoint": {
@@ -30453,7 +30453,7 @@
       "b": 255,
       "a": 255
     },
-    "_string": "EVEN",
+    "_string": "Even",
     "_horizontalAlign": 1,
     "_verticalAlign": 1,
     "_actualFontSize": 32,
@@ -30515,7 +30515,7 @@
       "__id__": 1299
     },
     "key": "VNLudo.glossary_even",
-    "format": 1,
+    "format": 0,
     "prefix": "",
     "suffix": "",
     "_id": ""
@@ -33365,7 +33365,7 @@
     },
     "_contentSize": {
       "__type__": "cc.Size",
-      "width": 58.9375,
+      "width": 50.6875,
       "height": 44.1
     },
     "_anchorPoint": {
@@ -33401,7 +33401,7 @@
       "b": 255,
       "a": 255
     },
-    "_string": "BIG",
+    "_string": "Big",
     "_horizontalAlign": 1,
     "_verticalAlign": 1,
     "_actualFontSize": 32,
@@ -33463,7 +33463,7 @@
       "__id__": 1425
     },
     "key": "VNLudo.glossary_big",
-    "format": 1,
+    "format": 0,
     "prefix": "",
     "suffix": "",
     "_id": ""
@@ -36313,7 +36313,7 @@
     },
     "_contentSize": {
       "__type__": "cc.Size",
-      "width": 115.15625,
+      "width": 92,
       "height": 44.1
     },
     "_anchorPoint": {
@@ -36349,7 +36349,7 @@
       "b": 255,
       "a": 255
     },
-    "_string": "SMALL",
+    "_string": "Small",
     "_horizontalAlign": 1,
     "_verticalAlign": 1,
     "_actualFontSize": 32,
@@ -36411,7 +36411,7 @@
       "__id__": 1551
     },
     "key": "VNLudo.glossary_small",
-    "format": 1,
+    "format": 0,
     "prefix": "",
     "suffix": "",
     "_id": ""
