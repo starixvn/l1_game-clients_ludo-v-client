@@ -1529,7 +1529,7 @@
     "_debugBones": false,
     "_debugSlots": false,
     "_enableBatch": false,
-    "loop": false,
+    "loop": true,
     "_id": ""
   },
   {
