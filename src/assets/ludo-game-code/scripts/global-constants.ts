@@ -62,10 +62,10 @@ export const BASE_COLORS: Record<BaseColor, string> = {
 };
 
 export const CELL_COLORS: Record<BaseColor, string> = {
-    RED: "#C00000",
-    GREEN: "#00B050",
+    RED: "#EA361E",
+    GREEN: "#A7C901",
     BLUE: "#4B8ECD",
-    YELLOW: "#FFD901",
+    YELLOW: "#F8B201",
 };
 
 // Timeout and delay constants (in milliseconds)

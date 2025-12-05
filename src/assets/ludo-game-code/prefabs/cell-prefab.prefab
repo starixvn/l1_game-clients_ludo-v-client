@@ -241,7 +241,7 @@
     },
     "_type": 0,
     "_fillType": 0,
-    "_sizeMode": 1,
+    "_sizeMode": 0,
     "_fillCenter": {
       "__type__": "cc.Vec2",
       "x": 0,
@@ -1679,7 +1679,7 @@
     "fileId": "4bBRBDIJlC+K0tFezgEPuI"
   },
   {
-    "__type__": "d4810VkXhdDhpC0vE8SKIDR",
+    "__type__": "fdd60nG2gpFY6hQBHY1TEyp",
     "_name": "",
     "_objFlags": 0,
     "__editorExtras__": {},
@@ -1690,9 +1690,23 @@
     "__prefab": {
       "__id__": 72
     },
-    "cellSprites": [
+    "base1Sprites": [
+      {
+        "__uuid__": "2d67d332-0b65-4c26-aacf-03f54c9217cc@13b50",
+        "__expectedType__": "cc.SpriteFrame"
+      },
       {
         "__uuid__": "2d67d332-0b65-4c26-aacf-03f54c9217cc@47140",
+        "__expectedType__": "cc.SpriteFrame"
+      },
+      {
+        "__uuid__": "2d67d332-0b65-4c26-aacf-03f54c9217cc@4543b",
+        "__expectedType__": "cc.SpriteFrame"
+      }
+    ],
+    "base2Sprites": [
+      {
+        "__uuid__": "2d67d332-0b65-4c26-aacf-03f54c9217cc@aaad0",
         "__expectedType__": "cc.SpriteFrame"
       },
       {
@@ -1700,20 +1714,43 @@
         "__expectedType__": "cc.SpriteFrame"
       },
       {
+        "__uuid__": "2d67d332-0b65-4c26-aacf-03f54c9217cc@7153e",
+        "__expectedType__": "cc.SpriteFrame"
+      }
+    ],
+    "base3Sprites": [
+      {
+        "__uuid__": "2d67d332-0b65-4c26-aacf-03f54c9217cc@be268",
+        "__expectedType__": "cc.SpriteFrame"
+      },
+      {
         "__uuid__": "2d67d332-0b65-4c26-aacf-03f54c9217cc@687ab",
+        "__expectedType__": "cc.SpriteFrame"
+      },
+      {
+        "__uuid__": "2d67d332-0b65-4c26-aacf-03f54c9217cc@059c9",
+        "__expectedType__": "cc.SpriteFrame"
+      }
+    ],
+    "base4Sprites": [
+      {
+        "__uuid__": "2d67d332-0b65-4c26-aacf-03f54c9217cc@e82eb",
         "__expectedType__": "cc.SpriteFrame"
       },
       {
         "__uuid__": "2d67d332-0b65-4c26-aacf-03f54c9217cc@ba7e9",
         "__expectedType__": "cc.SpriteFrame"
+      },
+      {
+        "__uuid__": "2d67d332-0b65-4c26-aacf-03f54c9217cc@1eab2",
+        "__expectedType__": "cc.SpriteFrame"
       }
     ],
-    "cellID": "",
     "_id": ""
   },
   {
     "__type__": "cc.CompPrefabInfo",
-    "fileId": "afkgBcx49LaqEYGlfJFAAn"
+    "fileId": "a6pmlvVChDS6KZTEAM5BWD"
   },
   {
     "__type__": "cc.PrefabInfo",
