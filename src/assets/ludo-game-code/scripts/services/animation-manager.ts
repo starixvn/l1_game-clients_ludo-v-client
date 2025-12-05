@@ -216,8 +216,17 @@ export class AnimationManager {
      * @param minScale Minimum scale (default: 1.0)
      * @param maxScale Maximum scale (default: 1.15)
      * @param duration Duration for one complete cycle in seconds (default: 0.6)
+     * @param forceRestart If true, restart animation even if one is already running (default: false)
      */
-    playZoomAnimation(node: Node, minScale = 1.0, maxScale = 1.15, duration = 0.6): void {
+    playZoomAnimation(node: Node, minScale = 1.0, maxScale = 1.15, duration = 0.6, forceRestart = false): void {
+        // Check if animation is already running
+        const existingTween = this.activeTweens.get(node);
+        if (existingTween && !forceRestart) {
+            // Animation already running, don't restart it
+            Logger.debug("AnimationManager", `Zoom animation already running for node: ${node.name}, skipping restart`);
+            return;
+        }
+
         this.stopAnimation(node);
 
         if (!node?.isValid) {
@@ -297,7 +306,8 @@ export class AnimationManager {
         repeatCount = 3,
         onComplete?: () => void,
         lightNode?: Node,
-        showParticles = false
+        showParticles = false,
+        animateScale = true
     ): void {
         this.stopAnimation(node);
 
@@ -325,19 +335,27 @@ export class AnimationManager {
             b: originalColor ? originalColor.b : 0,
         };
 
-        // Create highlight sequence that updates both scale and color
+        // Store original scale to preserve it when not animating scale
+        const originalScale = node.getScale();
+
+        // Create highlight sequence that updates color and optionally scale
         const highlightSequence = tween(animObj)
             .to(
                 duration,
                 {
-                    scale: 1.1,
+                    scale: animateScale ? 1.1 : 1.0,
                     r: highlightColor ? highlightColor.r : animObj.r,
                     g: highlightColor ? highlightColor.g : animObj.g,
                     b: highlightColor ? highlightColor.b : animObj.b,
                 },
                 {
                     onUpdate: () => {
-                        node.setScale(animObj.scale, animObj.scale, 1);
+                        // Only update scale if animateScale is true, otherwise preserve original scale
+                        if (animateScale) {
+                            node.setScale(animObj.scale, animObj.scale, 1);
+                        } else {
+                            node.setScale(originalScale.x, originalScale.y, originalScale.z);
+                        }
                         if (sprite && originalColor) {
                             sprite.color = new Color(animObj.r, animObj.g, animObj.b, originalColor.a);
                         }
@@ -348,14 +366,19 @@ export class AnimationManager {
             .to(
                 duration,
                 {
-                    scale: 1.0,
+                    scale: animateScale ? 1.0 : 1.0,
                     r: originalColor ? originalColor.r : animObj.r,
                     g: originalColor ? originalColor.g : animObj.g,
                     b: originalColor ? originalColor.b : animObj.b,
                 },
                 {
                     onUpdate: () => {
-                        node.setScale(animObj.scale, animObj.scale, 1);
+                        // Only update scale if animateScale is true, otherwise preserve original scale
+                        if (animateScale) {
+                            node.setScale(animObj.scale, animObj.scale, 1);
+                        } else {
+                            node.setScale(originalScale.x, originalScale.y, originalScale.z);
+                        }
                         if (sprite && originalColor) {
                             sprite.color = new Color(animObj.r, animObj.g, animObj.b, originalColor.a);
                         }
@@ -368,8 +391,12 @@ export class AnimationManager {
         const animationTween = tween(animObj)
             .repeat(repeatCount, highlightSequence)
             .call(() => {
-                // Reset to original state
-                node.setScale(1, 1, 1);
+                // Reset to original state - preserve scale if not animating it
+                if (animateScale) {
+                    node.setScale(1, 1, 1);
+                } else {
+                    node.setScale(originalScale.x, originalScale.y, originalScale.z);
+                }
                 if (sprite && originalColor) {
                     sprite.color = originalColor;
                 }

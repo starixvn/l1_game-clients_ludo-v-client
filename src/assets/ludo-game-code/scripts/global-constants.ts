@@ -68,6 +68,11 @@ export const CELL_COLORS: Record<BaseColor, string> = {
     YELLOW: "#F8B201",
 };
 
+// Horse scale constants (based on cell type)
+export const HORSE_SCALE_WALKWAY = 1.3; // Scale for horses on walkway cells (NORMAL cell type)
+export const HORSE_SCALE_HOME_PATH = 0.8; // Scale for horses on home path cells (HOMEPATH cell type)
+export const HORSE_SCALE_DEFAULT = 1.0; // Default scale for horses (base, spawn, or other cell types)
+
 // Timeout and delay constants (in milliseconds)
 export const DICE_AUTO_ROLL_TIMEOUT = 200; // Auto-roll timer delay when die becomes rollable (200ms)
 export const DICE_BONUS_TURN_DELAY = 500; // Delay before auto-rolling for bonus turns (500ms)

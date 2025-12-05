@@ -1,6 +1,6 @@
 /**
  * Horse Animation Handler
- * 
+ *
  * Utility class for managing horse animations and highlighting
  */
 
@@ -130,11 +130,7 @@ export class HorseAnimationHandler {
             this.animationManager.stopAnimation(targetNode);
 
             if (this.originalHorseIconScale) {
-                targetNode.setScale(
-                    this.originalHorseIconScale.x,
-                    this.originalHorseIconScale.y,
-                    this.originalHorseIconScale.z
-                );
+                targetNode.setScale(this.originalHorseIconScale.x, this.originalHorseIconScale.y, this.originalHorseIconScale.z);
                 Logger.debug(
                     "HorseAnimationHandler",
                     `Restored original scale for horse ${horseID}: (${this.originalHorseIconScale.x}, ${this.originalHorseIconScale.y}, ${this.originalHorseIconScale.z})`
@@ -151,12 +147,7 @@ export class HorseAnimationHandler {
     /**
      * Highlight this horse as a possible move candidate
      */
-    highlightAsPossibleMove(
-        mainNode: Node,
-        nodeHorseIcon: Node,
-        horseID: string,
-        onHighlighted?: () => void
-    ): boolean {
+    highlightAsPossibleMove(mainNode: Node, nodeHorseIcon: Node, horseID: string, onHighlighted?: () => void): boolean {
         if (!mainNode?.isValid) {
             Logger.warn("HorseAnimationHandler", `Cannot highlight: node is invalid for horse ${horseID}`);
             return false;
@@ -172,38 +163,49 @@ export class HorseAnimationHandler {
             return false;
         }
 
-        this.storeOriginalScale(targetNode, horseID);
+        // Don't store original scale - we want to preserve cell-type-based scaling
+        // Scale is managed by HorseComponent.updateHorseScale() based on cell type
 
         try {
-            this.animationManager.playCellHighlightAnimation(targetNode, sprite, 0.5, 9999);
-            Logger.debug("HorseAnimationHandler", `Started highlight animation for horse ${horseID} on node ${targetNode.name}`);
+            // Disable scale animation completely - only animate color
+            // Preserve the scale set by cell type (walkway = 1.3, home path = 0.8)
+            this.animationManager.playCellHighlightAnimation(targetNode, sprite, 0.5, 9999, undefined, undefined, false, false);
+            Logger.debug(
+                "HorseAnimationHandler",
+                `Started highlight animation (color only, no scale) for horse ${horseID} on node ${targetNode.name}`
+            );
             if (onHighlighted) {
                 onHighlighted();
             }
             return true;
         } catch (error) {
             Logger.error("HorseAnimationHandler", `Error playing highlight animation: ${error}`);
-            this.originalHorseIconScale = null;
             return false;
         }
     }
 
     /**
      * Clear highlight animation
+     * Note: Scale restoration is handled by HorseComponent.updateHorseScale() based on cell type
      */
     clearHighlight(mainNode: Node, nodeHorseIcon: Node, horseID: string): void {
         this.stopAllHorseAnimations(mainNode, nodeHorseIcon);
 
         const targetNode = this.getAnimationTargetNode(mainNode, nodeHorseIcon);
         if (targetNode) {
-            this.restoreOriginalScale(targetNode, horseID);
+            // Don't restore original scale here - let HorseComponent.updateHorseScale() handle it
+            // based on the cell type (walkway = 1.3, home path = 0.8)
+            // This ensures the scale matches the cell type after highlight is cleared
+            this.originalHorseIconScale = null;
         }
 
-        Logger.debug("HorseAnimationHandler", `Cleared highlight animation for horse ${horseID}`);
+        Logger.debug("HorseAnimationHandler", `Cleared highlight animation for horse ${horseID} (scale will be updated by cell type)`);
     }
 
     /**
      * Update animations based on state
+     * Note: Scale is managed by HorseComponent.updateHorseScale() based on cell type
+     * We don't reset scale here to avoid conflicts with cell-type-based scaling
      */
     updateAnimations(
         mainNode: Node,
@@ -227,9 +229,9 @@ export class HorseAnimationHandler {
             this.animationManager.playJumpingAnimation(mainNode);
         } else if (isHovered) {
             this.animationManager.playHoveredAnimation(mainNode);
-        } else {
-            this.animationManager.resetScale(mainNode);
         }
+        // Don't reset scale here - it's managed by HorseComponent.updateHorseScale() based on cell type
+        // This prevents conflicts with cell-type-based scaling (walkway = 1.3, home path = 0.8)
     }
 
     /**
@@ -247,4 +249,3 @@ export class HorseAnimationHandler {
         this.animationManager.stopAnimation(node);
     }
 }
-

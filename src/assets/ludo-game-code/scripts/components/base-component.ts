@@ -68,7 +68,7 @@ export class BaseComponent extends Component {
     @property({ type: Node, tooltip: "Container node for horse placeholders (if null, uses nodeInnerContainer)" })
     horsePlaceholdersContainer: Node = null;
 
-    @property({ type: Node})
+    @property({ type: Node })
     diceContainerNode: Node = null;
 
     /** Sprite component for the outer container (for color) */
@@ -235,8 +235,6 @@ export class BaseComponent extends Component {
                         "BaseComponent",
                         `Failed to load horse placeholder prefab from ${this.HORSE_PLACEHOLDER_PREFAB_PATH}: ${err.message}`
                     );
-                    Logger.debug("BaseComponent", `Will create placeholders programmatically instead`);
-                    this.createHorsePlaceholders(container);
                     return;
                 }
 
@@ -275,41 +273,49 @@ export class BaseComponent extends Component {
                 return;
             }
 
-            let placeholderNode: Node;
+            // Find the horse_{index} node in the container (horse_1, horse_2, horse_3, horse_4)
+            const horseNodeName = `horse_${index + 1}`;
+            let horseContainerNode = container.getChildByName(horseNodeName);
 
-            // Instantiate from prefab if available
-            if (this.horsePlaceholderPrefab) {
-                placeholderNode = instantiate(this.horsePlaceholderPrefab);
-                Logger.debug("BaseComponent", `Instantiated placeholder prefab for ${horseID}`);
+            if (!horseContainerNode) {
+                // If node doesn't exist, create it
+                Logger.debug("BaseComponent", `Node ${horseNodeName} not found in container, creating it dynamically`);
+                horseContainerNode = new Node(horseNodeName);
+                container.addChild(horseContainerNode);
             } else {
-                // Create programmatically as fallback
-                Logger.debug("BaseComponent", `Creating placeholder programmatically for ${horseID} (no prefab available)`);
-                placeholderNode = new Node(`HorsePlaceholder_${horseID}`);
-                const placeholderComponent = placeholderNode.addComponent(HorsePlaceholderComponent);
-                placeholderComponent.baseColor = this.baseData.color;
-                placeholderComponent.horseID = horseID;
+                Logger.debug("BaseComponent", `Found existing node ${horseNodeName} for ${horseID}`);
             }
 
-            // Get or add HorsePlaceholderComponent
-            let placeholderComponent = placeholderNode.getComponent(HorsePlaceholderComponent);
+            // Instantiate from prefab (required)
+            if (!this.horsePlaceholderPrefab) {
+                Logger.warn("BaseComponent", `horsePlaceholderPrefab is not assigned. Please assign the prefab in the editor.`);
+                return;
+            }
+
+            const placeholderNode = instantiate(this.horsePlaceholderPrefab);
+            placeholderNode.name = "horse-placeholder";
+            Logger.debug("BaseComponent", `Instantiated placeholder prefab for ${horseID}`);
+
+            // Get HorsePlaceholderComponent (should exist on prefab)
+            const placeholderComponent = placeholderNode.getComponent(HorsePlaceholderComponent);
             if (!placeholderComponent) {
-                placeholderComponent = placeholderNode.addComponent(HorsePlaceholderComponent);
+                Logger.warn("BaseComponent", `HorsePlaceholderComponent not found on prefab. Please add it to the prefab.`);
+                return;
             }
 
             // Configure the placeholder component
-            if (placeholderComponent) {
-                // Set base color from base data
-                placeholderComponent.setBaseColor(this.baseData.color);
+            // Set base color from base data
+            placeholderComponent.setBaseColor(this.baseData.color);
 
-                // Set horse ID
-                placeholderComponent.setHorseID(horseID);
+            // Set horse ID
+            placeholderComponent.setHorseID(horseID);
 
-                // Store reference
-                this.horsePlaceholdersMap.set(horseID, placeholderComponent);
-            }
+            // Store reference
+            this.horsePlaceholdersMap.set(horseID, placeholderComponent);
 
-            // Add to container
-            container.addChild(placeholderNode);
+            // Add placeholder to horse_{index} node instead of directly to container
+            horseContainerNode.addChild(placeholderNode);
+            Logger.debug("BaseComponent", `Added placeholder to ${horseNodeName} for ${horseID}`);
         });
 
         // Update visual state after creating all placeholders
@@ -469,6 +475,9 @@ export class BaseComponent extends Component {
         return this.BASE_TO_PLAYER_MAP[this.baseID] ?? -1;
     }
 
+    /** Track if zoom animation is currently active */
+    private isZoomAnimationActive = false;
+
     /**
      * Update border highlight based on next player (now uses zoom animation)
      * @param nextPlayer Player index (0-3) of the next player
@@ -477,10 +486,13 @@ export class BaseComponent extends Component {
         const thisPlayerIndex = this.getPlayerIndex();
         const shouldHighlight = thisPlayerIndex === nextPlayer;
 
-        if (shouldHighlight) {
+        // Only update if the state has changed to avoid unnecessary resets
+        if (shouldHighlight && !this.isZoomAnimationActive) {
             this.startZoomAnimation();
-        } else {
+            this.isZoomAnimationActive = true;
+        } else if (!shouldHighlight && this.isZoomAnimationActive) {
             this.stopZoomAnimation();
+            this.isZoomAnimationActive = false;
         }
     }
 
@@ -491,13 +503,17 @@ export class BaseComponent extends Component {
         if (!this.animationManager) {
             this.animationManager = new AnimationManager();
         }
-        this.animationManager.playZoomAnimation(
-            this.node,
-            this.ZOOM_CONFIG.MIN_SCALE,
-            this.ZOOM_CONFIG.MAX_SCALE,
-            this.ZOOM_CONFIG.DURATION
-        );
-        Logger.debug("BaseComponent", `Started zoom animation for base ${this.baseID}`);
+        // Only start if not already active to avoid resetting
+        if (!this.isZoomAnimationActive) {
+            this.animationManager.playZoomAnimation(
+                this.node,
+                this.ZOOM_CONFIG.MIN_SCALE,
+                this.ZOOM_CONFIG.MAX_SCALE,
+                this.ZOOM_CONFIG.DURATION
+            );
+            this.isZoomAnimationActive = true;
+            Logger.debug("BaseComponent", `Started zoom animation for base ${this.baseID}`);
+        }
     }
 
     /**
@@ -507,8 +523,12 @@ export class BaseComponent extends Component {
         if (!this.animationManager) {
             this.animationManager = new AnimationManager();
         }
-        this.animationManager.stopZoomAnimation(this.node, this.ZOOM_CONFIG.MIN_SCALE);
-        Logger.debug("BaseComponent", `Stopped zoom animation for base ${this.baseID}`);
+        // Only stop if currently active to avoid unnecessary resets
+        if (this.isZoomAnimationActive) {
+            this.animationManager.stopZoomAnimation(this.node, this.ZOOM_CONFIG.MIN_SCALE);
+            this.isZoomAnimationActive = false;
+            Logger.debug("BaseComponent", `Stopped zoom animation for base ${this.baseID}`);
+        }
     }
 
     /**

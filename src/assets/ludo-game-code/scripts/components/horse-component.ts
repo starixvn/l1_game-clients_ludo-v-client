@@ -12,8 +12,8 @@
  */
 
 import { _decorator, Component, Node, Label, Vec3, Button, SpriteFrame, AudioClip, sp } from "cc";
-import { BaseColor, Cell, Horse } from "../game-board-data";
-import { CELL_DIMENSION } from "../global-constants";
+import { BaseColor, Cell, Horse, GAME_CONSTANTS } from "../game-board-data";
+import { CELL_DIMENSION, HORSE_SCALE_WALKWAY, HORSE_SCALE_HOME_PATH, HORSE_SCALE_DEFAULT } from "../global-constants";
 import { gameDataService } from "../services/game-data-service";
 import { PathfindingService } from "../services/pathfinding-service";
 import { AnimationManager } from "../services/animation-manager";
@@ -243,6 +243,9 @@ export class HorseComponent extends Component {
 
         // Update animations
         this.updateAnimations();
+
+        // Update horse scale based on cell type
+        this.updateHorseScale();
     }
 
     /**
@@ -299,6 +302,12 @@ export class HorseComponent extends Component {
      * Update animations based on state
      */
     private updateAnimations() {
+        // Don't update animations if horse is highlighted - preserve highlight state
+        // Also don't reset scale - it's managed by updateHorseScale() based on cell type
+        if (this.isHighlightedAsPossibleMove) {
+            return;
+        }
+
         this.animationHandler.updateAnimations(
             this.node,
             this.isFlyingToBase,
@@ -307,6 +316,48 @@ export class HorseComponent extends Component {
             this.isHighlightedAsPossibleMove,
             () => this.playJumpSound()
         );
+    }
+
+    /**
+     * Update horse scale based on cell type
+     * - Walkway cells (NORMAL) and spawn cells (SPAWN): scale 1.3
+     * - Home path cells (HOMEPATH): scale 0.8
+     */
+    private updateHorseScale() {
+        if (!this.nodeHorseIcon) {
+            return;
+        }
+
+        // Get horse data
+        const horseData = gameDataService.getHorse(this.horseID);
+        if (!horseData || !horseData.cellID) {
+            // Horse not on a cell, use default scale
+            this.nodeHorseIcon.setScale(HORSE_SCALE_DEFAULT, HORSE_SCALE_DEFAULT, 1);
+            return;
+        }
+
+        // Get cell data
+        const cellData = gameDataService.getCell(horseData.cellID);
+        if (!cellData) {
+            Logger.warn("HorseComponent", `Cell data not found for ${horseData.cellID}`);
+            this.nodeHorseIcon.setScale(HORSE_SCALE_DEFAULT, HORSE_SCALE_DEFAULT, 1);
+            return;
+        }
+
+        // Set scale based on cell type
+        if (cellData.cellType === GAME_CONSTANTS.CELL_TYPE_HOMEPATH) {
+            // Home path cell: use HORSE_SCALE_HOME_PATH
+            this.nodeHorseIcon.setScale(HORSE_SCALE_HOME_PATH, HORSE_SCALE_HOME_PATH, 1);
+            Logger.debug("HorseComponent", `Set horse scale to ${HORSE_SCALE_HOME_PATH} for HOMEPATH cell ${horseData.cellID}`);
+        } else if (cellData.cellType === GAME_CONSTANTS.CELL_TYPE_NORMAL || cellData.cellType === GAME_CONSTANTS.CELL_TYPE_SPAWN) {
+            // Walkway cell (NORMAL) or spawn cell: use HORSE_SCALE_WALKWAY
+            this.nodeHorseIcon.setScale(HORSE_SCALE_WALKWAY, HORSE_SCALE_WALKWAY, 1);
+            Logger.debug("HorseComponent", `Set horse scale to ${HORSE_SCALE_WALKWAY} for ${cellData.cellType} cell ${horseData.cellID}`);
+        } else {
+            // Other cell types: use default scale
+            this.nodeHorseIcon.setScale(HORSE_SCALE_DEFAULT, HORSE_SCALE_DEFAULT, 1);
+            Logger.debug("HorseComponent", `Set horse scale to ${HORSE_SCALE_DEFAULT} for ${cellData.cellType} cell ${horseData.cellID}`);
+        }
     }
 
     /**
@@ -383,7 +434,8 @@ export class HorseComponent extends Component {
         this.ensureHandlersInitialized();
         this.animationHandler.clearHighlight(this.node, this.nodeHorseIcon, this.horseID);
         try {
-            this.updateAnimations();
+            // Update visual state to restore correct scale based on cell type
+            this.updateVisualState();
         } catch (error) {
             Logger.warn("HorseComponent", `Error updating animations: ${error}`);
         }
@@ -829,9 +881,16 @@ export class HorseComponent extends Component {
                 // Update horse data after flying completes
                 this.kickHandler.updateHorseDataToBase(horseData);
                 this.setFlyingToBase(false);
+
+                // Hide the walkway horse node since it's now back in the base placeholder
+                this.node.active = false;
+                if (this.nodeHorseIcon) {
+                    this.nodeHorseIcon.active = false;
+                }
+
                 this.updateBasePlaceholder();
 
-                Logger.debug("HorseComponent", `Horse ${this.horseID} kicked to base`);
+                Logger.debug("HorseComponent", `Horse ${this.horseID} kicked to base and hidden`);
                 if (onComplete) {
                     onComplete();
                 }
@@ -840,6 +899,13 @@ export class HorseComponent extends Component {
             // Base not found, just update data
             this.kickHandler.updateHorseDataToBase(horseData);
             this.setFlyingToBase(false);
+
+            // Hide the walkway horse node since it's now back in the base placeholder
+            this.node.active = false;
+            if (this.nodeHorseIcon) {
+                this.nodeHorseIcon.active = false;
+            }
+
             this.updateBasePlaceholder();
             if (onComplete) {
                 onComplete();
@@ -861,6 +927,9 @@ export class HorseComponent extends Component {
         horseData.position = targetCell.position;
         horseData.isSpawned = true;
         horseData.steps += 1;
+
+        // Update visual state to reflect new cell (including scale)
+        this.updateVisualState();
 
         Logger.debug("HorseComponent", `Updated horse ${this.horseID} to cell ${targetCell.cellID}, steps: ${horseData.steps}`);
     }
