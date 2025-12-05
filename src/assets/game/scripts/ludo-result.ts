@@ -34,7 +34,7 @@ export class LudoResult extends Component {
     private readonly DICE_END_FRAME = 11;
 
     private readonly DICE_VALUE = 6;
-    RESULT_DURATION = 1.4;
+    RESULT_DURATION = 0.7;
 
     onLoad() {
         this.setResultTextVisibility(false);
