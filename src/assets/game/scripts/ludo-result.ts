@@ -1,7 +1,7 @@
-import { _decorator, sp, Component, UIOpacity, Vec3, SpriteFrame, Label, Node, Tween, SpriteAtlas } from "cc";
+import { _decorator, Component, UIOpacity, Vec3, SpriteFrame, Label, Node, Tween, SpriteAtlas } from "cc";
 import { AnimationUtils } from "../../../extensions/shared-components/assets/shared/utils";
 import { LudoDice } from "./ludo-dice";
-import { calcTotalPoints, pauseSpineAnimation } from "./ludo-helper";
+import { calcTotalPoints } from "./ludo-helper";
 
 import gc from "@sg/game-client-base";
 
@@ -17,8 +17,6 @@ export class LudoResult extends Component {
     @property({ type: [LudoDice] })
     dicesComponent: LudoDice[] = [];
 
-    @property(sp.Skeleton)
-    diceSkeleton: sp.Skeleton = null;
 
     @property({ type: SpriteAtlas })
     diceAtlas: SpriteAtlas | null = null;
@@ -58,18 +56,9 @@ export class LudoResult extends Component {
         this.dicesComponent.forEach((dice) => dice.stopAnimation());
     }
 
-    private getDiceAnimationName(roundId: number): string {
-        const position = roundId % this.DICE_POSITION_NUMBER || this.DICE_POSITION_NUMBER;
-        const nextPosition = (position % this.DICE_POSITION_NUMBER) + 1;
-
-        return `s${position}-e${nextPosition}`;
-    }
-
     showResultNoAnim(result: gc.GameServiceMessage.TResult, roundId: number) {
         this.stopAllDiceAnimation();
-        if (this.diceSkeleton) {
-            pauseSpineAnimation(this.diceSkeleton.getComponent(sp.Skeleton), 1, this.getDiceAnimationName(roundId));
-        }
+
         this.dicesComponent.forEach((dice, index) => {
             const endPos = result[`dice${index + 1}`];
             const frame = this.diceSpriteFrames.find((spriteFrame) => spriteFrame.name === `end-${endPos}-${this.DICE_END_FRAME}`);
