@@ -121,14 +121,14 @@ export class LudoResult extends Component {
         this.resetResultDiceFrames();
         this.stopAllDiceAnimation();
         this.setResultDiceFrames(prevResult, result);
-        if (this.diceSkeleton) {
-            AnimationUtils.playSpine(
-                this.diceSkeleton.getComponent(sp.Skeleton),
-                this.getDiceAnimationName(roundId),
-                false,
-                this.RESULT_DURATION
-            );
-        }
+        // if (this.diceSkeleton) {
+        //     AnimationUtils.playSpine(
+        //         this.diceSkeleton.getComponent(sp.Skeleton),
+        //         this.getDiceAnimationName(roundId),
+        //         false,
+        //         this.RESULT_DURATION
+        //     );
+        // }
 
         this.dicesComponent.forEach((dice, index) => {
             dice.runAnimation(this.resultDiceFrames[`dice${index + 1}`], this.RESULT_DURATION);
