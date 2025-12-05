@@ -896,13 +896,13 @@ export class GameRunnerComponent extends Component {
      * @param resultNode The result node to position
      * @param duration Duration of the animation in seconds (default: 0.5)
      */
-    public positionDiceResultNearBase(baseComponent: BaseComponent, resultNode: Node, duration = 0.5): void {
-        if (!baseComponent || !resultNode || !baseComponent.node) {
-            Logger.warn("GameRunnerComponent", "Cannot position dice result: missing baseComponent or resultNode");
+    public positionDiceResultNearBase(diceContainerNode: Node, resultNode: Node, duration = 0.5): void {
+        if (!diceContainerNode || !resultNode) {
+            Logger.warn("GameRunnerComponent", "Cannot position dice result: missing diceContainerNode or resultNode");
             return;
         }
 
-        const baseNode = baseComponent.node;
+        const baseNode = diceContainerNode;
         const baseTransform = baseNode.getComponent(UITransform);
 
         if (!baseTransform) {
@@ -928,7 +928,7 @@ export class GameRunnerComponent extends Component {
                 targetPos = parentTransform.convertToNodeSpaceAR(baseWorldPos);
                 Logger.debug(
                     "GameRunnerComponent",
-                    `Animating dice result node from (${currentPos.x}, ${currentPos.y}) to (${targetPos.x}, ${targetPos.y}) relative to base ${baseComponent.baseID}`
+                    `Animating dice result node from (${currentPos.x}, ${currentPos.y}) to (${targetPos.x}, ${targetPos.y}) relative to dice container node`
                 );
             } else {
                 // Fallback: use world position directly
@@ -990,20 +990,23 @@ export class GameRunnerComponent extends Component {
             return;
         }
 
+        const diceContainerNode = this.findDiceContainerNode(playerIndex);
+        if (!diceContainerNode) {
+            Logger.warn("GameRunnerComponent", `Dice container node not found for player: ${playerIndex}`);
+            return;
+        }
+
+        this.positionDiceResultNearBase(diceContainerNode, resultNode, duration);
+    }
+
+    public findDiceContainerNode(playerIndex: number): Node | null {
         const baseID = this.playerToBaseMap[playerIndex];
-        if (!baseID) {
-            Logger.warn("GameRunnerComponent", `No baseID mapping found for player: ${playerIndex}`);
-            return;
-        }
-
         const baseComponent = this.findBaseComponent(baseID);
-        if (!baseComponent || !baseComponent.node) {
-            Logger.warn("GameRunnerComponent", `BaseComponent not found for baseID: ${baseID}`);
-            return;
+        if (!baseComponent) {
+            Logger.warn("GameRunnerComponent", `No baseID mapping found for player: ${playerIndex}`);
+            return null;
         }
-
-        Logger.debug("GameRunnerComponent", `Moving dice result to base of player ${playerIndex} (${baseID})`);
-        this.positionDiceResultNearBase(baseComponent, resultNode, duration);
+        return baseComponent.diceContainerNode;
     }
 
     /**

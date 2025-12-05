@@ -68,6 +68,9 @@ export class BaseComponent extends Component {
     @property({ type: Node, tooltip: "Container node for horse placeholders (if null, uses nodeInnerContainer)" })
     horsePlaceholdersContainer: Node = null;
 
+    @property({ type: Node})
+    diceContainerNode: Node = null;
+
     /** Sprite component for the outer container (for color) */
     private outerSprite: Sprite = null;
 
