@@ -316,6 +316,8 @@ export const languages = {
         "you_reach_max_win": "Has alcanzado la ganancia máxima."
     },
     "VNLudo": {
+        "game_icon_name ": "Ludo Vietnamita",
+        "game_name": "Ludo vietnamita",
         "glossary_big": "Grande",
         "glossary_even": "Par",
         "glossary_kick": "Patear",
@@ -325,9 +327,9 @@ export const languages = {
         "glossary_no_release": "Atascado",
         "glossary_no_stable": "Falla",
         "glossary_odd": "Impar",
-        "glossary_small": "Pequeño",
-        "glossary_stable": "Finalizar",
         "glossary_release": "Lanzar",
+        "glossary_small": "Pequeño",
+        "glossary_stable": "Finalizar"
     }
 };
 

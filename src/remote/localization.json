@@ -1,22 +1,13 @@
 {
-    "lobbyNames": {
-        "en": "Ludo Game",
-        "id": "Permainan Warna",
-        "th": "เกมสี",
-        "vi": "Cờ Cá Ngựa",
-        "zh_cn": "色彩游戏",
-        "zh_tw": "色彩遊戲",
-        "ja": "カラーゲーム",
-        "es": "Juego\nde Colores"
-    },
+    "lobbyNames": {},
     "gameNames": {
-        "en": "Ludo Game",
-        "id": "Permainan Warna",
-        "th": "เกมสี",
-        "vi": "Cờ Cá Ngựa",
-        "zh_cn": "色彩游戏",
-        "zh_tw": "色彩遊戲",
-        "ja": "カラーゲーム",
-        "es": "Juego de Colores"
+        "en": "Vietnamese Ludo",
+        "id": "Ludo Vietnam",
+        "th": "Ludo เวียดนาม",
+        "vi": "Ludo Việt Nam",
+        "zh_cn": "越南飞行棋",
+        "zh_tw": "越南飛行棋",
+        "ja": "ベトナムのルード",
+        "es": "Ludo vietnamita"
     }
 }

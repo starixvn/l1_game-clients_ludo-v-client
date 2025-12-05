@@ -321,6 +321,8 @@ export const languages = {
         "you_reach_max_win": "คุณถึงยอดชนะสูงสุด"
     },
     "VNLudo": {
+        "game_icon_name ": "Ludo เวียดนาม",
+        "game_name": "Ludo เวียดนาม",
         "glossary_big": "ใหญ่",
         "glossary_even": "คู่",
         "glossary_kick": "เตะ",
@@ -330,9 +332,9 @@ export const languages = {
         "glossary_no_release": "ติด",
         "glossary_no_stable": "พลาด",
         "glossary_odd": "คี่",
-        "glossary_small": "เล็ก",
-        "glossary_stable": "เสร็จสิ้น",
         "glossary_release": "ปล่อย",
+        "glossary_small": "เล็ก",
+        "glossary_stable": "เสร็จสิ้น"
     }
 };
 

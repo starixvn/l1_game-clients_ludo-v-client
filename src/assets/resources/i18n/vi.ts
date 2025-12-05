@@ -316,18 +316,20 @@ export const languages = {
         "you_reach_max_win": "Bạn Đã Đạt Mức Tiền Thắng Tối Đa"
     },
     "VNLudo": {
+        "game_icon_name ": "Ludo Việt Nam",
+        "game_name": "Ludo Việt Nam",
         "glossary_big": "Lớn",
         "glossary_even": "Chẵn",
-        "glossary_kick": "Đá",
-        "glossary_move": "Di chuyển",
-        "glossary_no_kick": "Công bằng",
-        "glossary_no_move": "Giữ",
-        "glossary_no_release": "Mắc kẹt",
-        "glossary_no_stable": "Trượt",
+        "glossary_kick": "Tung Cước",
+        "glossary_move": "Phi Mã",
+        "glossary_no_kick": "Nín Cước",
+        "glossary_no_move": "Bất Động",
+        "glossary_no_release": "Án Binh",
+        "glossary_no_stable": "Hụt Chuồng",
         "glossary_odd": "Lẻ",
+        "glossary_release": "Ra Quân",
         "glossary_small": "Xỉu",
-        "glossary_stable": "Kết thúc",
-        "glossary_release": "Phát hành",
+        "glossary_stable": "Về Chuồng"
     }
 };
 

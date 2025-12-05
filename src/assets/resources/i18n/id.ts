@@ -316,6 +316,8 @@ export const languages = {
         "you_reach_max_win": "Anda mencapai Maksimal Menang"
     },
     "VNLudo": {
+        "game_icon_name ": "Ludo Vietnam",
+        "game_name": "Ludo Vietnam",
         "glossary_big": "Besar",
         "glossary_even": "Genap",
         "glossary_kick": "Tendang",
@@ -325,9 +327,9 @@ export const languages = {
         "glossary_no_release": "Macet",
         "glossary_no_stable": "Lewat",
         "glossary_odd": "Ganjil",
-        "glossary_small": "Kecil",
-        "glossary_stable": "Selesai",
         "glossary_release": "Rilis",
+        "glossary_small": "Kecil",
+        "glossary_stable": "Selesai"
     }
 };
 

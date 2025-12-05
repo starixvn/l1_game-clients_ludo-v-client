@@ -316,18 +316,20 @@ export const languages = {
         "you_reach_max_win": "You reached the max win"
     },
     "VNLudo": {
+        "game_icon_name ": "Vietnamese Ludo",
+        "game_name": "Vietnamese Ludo",
         "glossary_big": "Big",
         "glossary_even": "Even",
         "glossary_kick": "Kick",
         "glossary_move": "Move",
-        "glossary_no_kick": "Fair",
-        "glossary_no_move": "Stay",
-        "glossary_no_release": "Stuck",
-        "glossary_no_stable": "Miss",
+        "glossary_no_kick": "No Kick",
+        "glossary_no_move": "No Move",
+        "glossary_no_release": "No Release",
+        "glossary_no_stable": "No Stable",
         "glossary_odd": "Odd",
-        "glossary_small": "Small",
-        "glossary_stable": "Finish",
         "glossary_release": "Release",
+        "glossary_small": "Small",
+        "glossary_stable": "Go Stable"
     }
 };
 

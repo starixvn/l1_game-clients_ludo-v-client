@@ -316,6 +316,8 @@ export const languages = {
         "you_reach_max_win": "最大勝利額に達しました"
     },
     "VNLudo": {
+        "game_icon_name ": "ベトナムのルード",
+        "game_name": "ベトナムのルード",
         "glossary_big": "大",
         "glossary_even": "偶数",
         "glossary_kick": "キック",
@@ -325,9 +327,9 @@ export const languages = {
         "glossary_no_release": "停止",
         "glossary_no_stable": "ミス",
         "glossary_odd": "奇数",
-        "glossary_small": "小",
-        "glossary_stable": "完了",
         "glossary_release": "リリース",
+        "glossary_small": "小",
+        "glossary_stable": "完了"
     }
 };
 

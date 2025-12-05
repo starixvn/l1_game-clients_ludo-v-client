@@ -170,7 +170,7 @@
       "a": 255
     },
     "_spriteFrame": {
-      "__uuid__": "63c9aaa7-cb90-4d25-af09-b07e2265e5bf@0fc9b",
+      "__uuid__": "2d67d332-0b65-4c26-aacf-03f54c9217cc@0fc9b",
       "__expectedType__": "cc.SpriteFrame"
     },
     "_type": 1,
@@ -186,7 +186,7 @@
     "_isTrimmedMode": true,
     "_useGrayscale": false,
     "_atlas": {
-      "__uuid__": "63c9aaa7-cb90-4d25-af09-b07e2265e5bf",
+      "__uuid__": "2d67d332-0b65-4c26-aacf-03f54c9217cc",
       "__expectedType__": "cc.SpriteAtlas"
     },
     "_id": ""
@@ -309,7 +309,7 @@
       "a": 255
     },
     "_spriteFrame": {
-      "__uuid__": "63c9aaa7-cb90-4d25-af09-b07e2265e5bf@96c16",
+      "__uuid__": "2d67d332-0b65-4c26-aacf-03f54c9217cc@96c16",
       "__expectedType__": "cc.SpriteFrame"
     },
     "_type": 0,
@@ -325,7 +325,7 @@
     "_isTrimmedMode": true,
     "_useGrayscale": false,
     "_atlas": {
-      "__uuid__": "63c9aaa7-cb90-4d25-af09-b07e2265e5bf",
+      "__uuid__": "2d67d332-0b65-4c26-aacf-03f54c9217cc",
       "__expectedType__": "cc.SpriteAtlas"
     },
     "_id": ""
@@ -443,7 +443,7 @@
     },
     "_lpos": {
       "__type__": "cc.Vec3",
-      "x": -199.82275390625,
+      "x": -176.659912109375,
       "y": 0,
       "z": 0
     },
@@ -928,7 +928,7 @@
     },
     "_lpos": {
       "__type__": "cc.Vec3",
-      "x": -80.32666015625,
+      "x": -57.163818359375,
       "y": 0,
       "z": 0
     },
@@ -1413,7 +1413,7 @@
     },
     "_lpos": {
       "__type__": "cc.Vec3",
-      "x": 22.0517578125,
+      "x": 45.214599609375,
       "y": 0,
       "z": 0
     },
@@ -1951,7 +1951,7 @@
     },
     "_lpos": {
       "__type__": "cc.Vec3",
-      "x": -28.162841796875,
+      "x": -5,
       "y": 0,
       "z": 0
     },
@@ -2288,7 +2288,7 @@
     },
     "_contentSize": {
       "__type__": "cc.Size",
-      "width": 111.119140625,
+      "width": 64.79345703125,
       "height": 100
     },
     "_anchorPoint": {
@@ -2367,7 +2367,7 @@
     },
     "_contentSize": {
       "__type__": "cc.Size",
-      "width": 399.6455078125,
+      "width": 353.31982421875,
       "height": 100
     },
     "_anchorPoint": {

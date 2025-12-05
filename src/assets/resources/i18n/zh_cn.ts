@@ -316,6 +316,8 @@ export const languages = {
         "you_reach_max_win": "您达到了最大胜利"
     },
     "VNLudo": {
+        "game_icon_name ": "越南飞行棋",
+        "game_name": "越南飞行棋",
         "glossary_big": "大",
         "glossary_even": "偶数",
         "glossary_kick": "踢",
@@ -325,9 +327,9 @@ export const languages = {
         "glossary_no_release": "卡住",
         "glossary_no_stable": "未中",
         "glossary_odd": "单",
-        "glossary_small": "小",
-        "glossary_stable": "完成",
         "glossary_release": "释放",
+        "glossary_small": "小",
+        "glossary_stable": "完成"
     }
 };
 
