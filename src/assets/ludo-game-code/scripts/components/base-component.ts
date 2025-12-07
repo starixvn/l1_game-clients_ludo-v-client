@@ -261,9 +261,11 @@ export class BaseComponent extends Component {
 
         Logger.debug("BaseComponent", `Creating ${this.baseData.horseIDs.length} horse placeholders for base ${this.baseID}`);
 
-        // Clear existing placeholders
+        // Clear existing placeholders map
         this.horsePlaceholdersMap.clear();
-        container.removeAllChildren();
+
+        // Don't remove all children - this would destroy the positioned horse_{index} nodes!
+        // Instead, we'll clear children inside each horse node individually
 
         // Create a placeholder for each horse
         this.baseData.horseIDs.forEach((horseID, index) => {
@@ -275,16 +277,25 @@ export class BaseComponent extends Component {
 
             // Find the horse_{index} node in the container (horse_1, horse_2, horse_3, horse_4)
             const horseNodeName = `horse_${index + 1}`;
-            let horseContainerNode = container.getChildByName(horseNodeName);
+            const horseContainerNode = container.getChildByName(horseNodeName);
 
             if (!horseContainerNode) {
-                // If node doesn't exist, create it
-                Logger.debug("BaseComponent", `Node ${horseNodeName} not found in container, creating it dynamically`);
-                horseContainerNode = new Node(horseNodeName);
-                container.addChild(horseContainerNode);
-            } else {
-                Logger.debug("BaseComponent", `Found existing node ${horseNodeName} for ${horseID}`);
+                // If node doesn't exist, warn and skip this horse
+                Logger.warn(
+                    "BaseComponent",
+                    `Node ${horseNodeName} not found in container. Please ensure it exists in the scene with proper position set.`
+                );
+                return;
             }
+
+            // Log the position of the found node
+            Logger.debug(
+                "BaseComponent",
+                `Found existing node ${horseNodeName} for ${horseID} at position (${horseContainerNode.position.x}, ${horseContainerNode.position.y})`
+            );
+
+            // Clear only the children of this horse node (old placeholders)
+            horseContainerNode.removeAllChildren();
 
             // Instantiate from prefab (required)
             if (!this.horsePlaceholderPrefab) {

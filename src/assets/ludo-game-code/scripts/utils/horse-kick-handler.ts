@@ -11,6 +11,19 @@ import { BaseComponent } from "../components/base-component";
 import { HorseComponent } from "../components/horse-component";
 import { Logger } from "./logger";
 
+/**
+ * Configuration for triggering kick animation
+ */
+export interface KickAnimationConfig {
+    kickedPlayerInfo: { player: number; position: number; horseIndex: number };
+    gameBoard: { [key: string]: number[] };
+    playerToBaseMap: { [key: number]: string };
+    horseComponentsMap: Map<string, HorseComponent>;
+    scheduleCallback: (callback: () => void, delay: number) => void;
+    findCellByIndex: (index: number) => Cell | null;
+    kickDelay?: number;
+}
+
 export class HorseKickHandler {
     /**
      * Calculate kicked player by comparing board states
@@ -164,25 +177,19 @@ export class HorseKickHandler {
 
     /**
      * Trigger kick animation for kicked player
-     * @param scene Scene node to search for components
-     * @param kickedPlayerInfo Information about the kicked player
-     * @param gameBoard Current game board state
-     * @param playerToBaseMap Mapping of player IDs to base IDs
-     * @param horseComponentsMap Map of horse IDs to HorseComponents
-     * @param scheduleCallback Callback function to schedule delayed actions
-     * @param findCellByIndex Function to find cell by index
-     * @param kickDelay Optional delay in seconds before triggering kick animation (default: 0.2)
+     * @param config Configuration object containing all required parameters
      */
-    triggerKickAnimation(
-        scene: Node,
-        kickedPlayerInfo: { player: number; position: number; horseIndex: number },
-        gameBoard: { [key: string]: number[] },
-        playerToBaseMap: { [key: number]: string },
-        horseComponentsMap: Map<string, HorseComponent>,
-        scheduleCallback: (callback: () => void, delay: number) => void,
-        findCellByIndex: (index: number) => Cell | null,
-        kickDelay = 0.2
-    ): void {
+    triggerKickAnimation(config: KickAnimationConfig): void {
+        const {
+            kickedPlayerInfo,
+            gameBoard,
+            playerToBaseMap,
+            horseComponentsMap,
+            scheduleCallback,
+            findCellByIndex,
+            kickDelay = 0.2,
+        } = config;
+
         const kickedPlayerID = kickedPlayerInfo.player;
         const kickedPosition = kickedPlayerInfo.position;
         const kickedBaseID = playerToBaseMap[kickedPlayerID];

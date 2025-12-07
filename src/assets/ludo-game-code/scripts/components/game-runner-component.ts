@@ -616,19 +616,18 @@ export class GameRunnerComponent extends Component {
                             `Triggering kick animation after movement completion for player ${gameState.kickedPlayer.player}`
                         );
                         // Use kick handler to trigger the animation with a small delay
-                        this.kickHandler.triggerKickAnimation(
-                            this.node.scene,
-                            {
+                        this.kickHandler.triggerKickAnimation({
+                            kickedPlayerInfo: {
                                 player: gameState.kickedPlayer.player,
                                 position: gameState.kickedPlayer.position,
                                 horseIndex: 0, // Will be determined inside the handler
                             },
-                            gameState.board,
-                            this.playerToBaseMap,
-                            this.horseComponentsMap,
-                            (callback: () => void, delay: number) => this.scheduleOnce(callback, delay),
-                            (index: number) => this.findCellByIndex(index)
-                        );
+                            gameBoard: gameState.board,
+                            playerToBaseMap: this.playerToBaseMap,
+                            horseComponentsMap: this.horseComponentsMap,
+                            scheduleCallback: (callback: () => void, delay: number) => this.scheduleOnce(callback, delay),
+                            findCellByIndex: (index: number) => this.findCellByIndex(index),
+                        });
                     }
                 })
                 .catch((error) => {
@@ -648,19 +647,19 @@ export class GameRunnerComponent extends Component {
                     "GameRunnerComponent",
                     `Triggering kick animation (no other movements) for player ${gameState.kickedPlayer.player}`
                 );
-                this.kickHandler.triggerKickAnimation(
-                    this.node.scene,
-                    {
+                this.kickHandler.triggerKickAnimation({
+                    scene: this.node.scene,
+                    kickedPlayerInfo: {
                         player: gameState.kickedPlayer.player,
                         position: gameState.kickedPlayer.position,
                         horseIndex: 0, // Will be determined inside the handler
                     },
-                    gameState.board,
-                    this.playerToBaseMap,
-                    this.horseComponentsMap,
-                    (callback: () => void, delay: number) => this.scheduleOnce(callback, delay),
-                    (index: number) => this.findCellByIndex(index)
-                );
+                    gameBoard: gameState.board,
+                    playerToBaseMap: this.playerToBaseMap,
+                    horseComponentsMap: this.horseComponentsMap,
+                    scheduleCallback: (callback: () => void, delay: number) => this.scheduleOnce(callback, delay),
+                    findCellByIndex: (index: number) => this.findCellByIndex(index),
+                });
             }
 
             return Promise.resolve();
