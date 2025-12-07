@@ -882,6 +882,12 @@ export class HorseComponent extends Component {
                 this.kickHandler.updateHorseDataToBase(horseData);
                 this.setFlyingToBase(false);
 
+                // Reset scale before hiding (ensures proper scale when shown again)
+                this.node.setScale(1, 1, 1);
+                if (this.nodeHorseIcon) {
+                    this.nodeHorseIcon.setScale(1, 1, 1);
+                }
+
                 // Hide the walkway horse node since it's now back in the base placeholder
                 this.node.active = false;
                 if (this.nodeHorseIcon) {
@@ -899,6 +905,12 @@ export class HorseComponent extends Component {
             // Base not found, just update data
             this.kickHandler.updateHorseDataToBase(horseData);
             this.setFlyingToBase(false);
+
+            // Reset scale before hiding (ensures proper scale when shown again)
+            this.node.setScale(1, 1, 1);
+            if (this.nodeHorseIcon) {
+                this.nodeHorseIcon.setScale(1, 1, 1);
+            }
 
             // Hide the walkway horse node since it's now back in the base placeholder
             this.node.active = false;

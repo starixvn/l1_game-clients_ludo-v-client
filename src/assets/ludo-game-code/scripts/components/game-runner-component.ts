@@ -15,6 +15,7 @@ import { gameBoardData, Cell, Horse } from "../game-board-data";
 import { GameServiceMessage } from "../../../game/scripts/features/game-messages";
 import { BaseComponent } from "./base-component";
 import { BaseID } from "../global-constants";
+import { HorseKickHandler } from "../utils/horse-kick-handler";
 
 const { ccclass, property, menu } = _decorator;
 
@@ -37,6 +38,9 @@ export class GameRunnerComponent extends Component {
 
     /** Map of baseID to BaseComponent for quick lookup */
     private readonly baseComponentsMap: Map<string, BaseComponent> = new Map();
+
+    /** Horse kick handler utility */
+    private readonly kickHandler: HorseKickHandler = new HorseKickHandler();
 
     /** Reset state constant - all horses at position 0 (in base) */
     public static readonly RESET_STATE: { [key: string]: number[] } = {
@@ -325,11 +329,32 @@ export class GameRunnerComponent extends Component {
             return Promise.resolve();
         }
 
+        // Store previous state BEFORE updating
+        const previousState = this.currentGameState ? { ...this.currentGameState } : null;
+
         // Update current game state tracking
         this.currentGameState = { ...finishBoardState.board };
 
         // Convert external format to internal GameState format
         const gameState = this.convertFinishBoardStateToGameState(finishBoardState);
+
+        // Calculate kicked player if action is present
+        if (finishBoardState.action && previousState) {
+            const kickedPlayerInfo = this.kickHandler.calculateKickedPlayer(previousState, finishBoardState.board, finishBoardState.action);
+
+            if (kickedPlayerInfo) {
+                // Add kicked player info to game state
+                gameState.kickedPlayer = {
+                    player: kickedPlayerInfo.player,
+                    position: kickedPlayerInfo.position,
+                };
+
+                Logger.debug(
+                    "GameRunnerComponent",
+                    `Player ${kickedPlayerInfo.player}'s horse ${kickedPlayerInfo.horseIndex} kicked from position ${kickedPlayerInfo.position}`
+                );
+            }
+        }
 
         // Apply state immediately and return the promise
         return this.applyGameStateAndWait(gameState);
@@ -576,23 +601,6 @@ export class GameRunnerComponent extends Component {
 
         Logger.debug("GameRunnerComponent", `State applied: ${horsesUpdated} horses updated, ${horsesNotFound} not found`);
 
-        // Handle kicked player if present
-        if (gameState.kickedPlayer) {
-            const kickedPlayerID = gameState.kickedPlayer.player;
-            const kickedBaseID = this.playerToBaseMap[kickedPlayerID];
-
-            if (kickedBaseID) {
-                const kickedBase = gameDataService.getBase(kickedBaseID);
-                if (kickedBase) {
-                    // Find which horse was at the kicked position
-                    const kickedPosition = gameState.kickedPlayer.position;
-                    // Reset all horses of kicked player that might have been at that position
-                    // This is a simplified approach - you may need to track which specific horse was kicked
-                    Logger.debug("GameRunnerComponent", `Player ${kickedPlayerID} had a horse kicked from position ${kickedPosition}`);
-                }
-            }
-        }
-
         // Wait for all horse movements to complete
         if (movementPromises.length > 0) {
             return Promise.all(movementPromises)
@@ -600,6 +608,28 @@ export class GameRunnerComponent extends Component {
                     Logger.debug("GameRunnerComponent", "All horse movements completed");
                     // Update current game state tracking after movements complete
                     this.currentGameState = { ...gameState.board };
+
+                    // Handle kicked player AFTER movements complete (so attacking horse arrives first)
+                    if (gameState.kickedPlayer) {
+                        Logger.debug(
+                            "GameRunnerComponent",
+                            `Triggering kick animation after movement completion for player ${gameState.kickedPlayer.player}`
+                        );
+                        // Use kick handler to trigger the animation with a small delay
+                        this.kickHandler.triggerKickAnimation(
+                            this.node.scene,
+                            {
+                                player: gameState.kickedPlayer.player,
+                                position: gameState.kickedPlayer.position,
+                                horseIndex: 0, // Will be determined inside the handler
+                            },
+                            gameState.board,
+                            this.playerToBaseMap,
+                            this.horseComponentsMap,
+                            (callback: () => void, delay: number) => this.scheduleOnce(callback, delay),
+                            (index: number) => this.findCellByIndex(index)
+                        );
+                    }
                 })
                 .catch((error) => {
                     Logger.error("GameRunnerComponent", `Error waiting for horse movements: ${error}`);
@@ -611,6 +641,28 @@ export class GameRunnerComponent extends Component {
             // No horses to move, but still update state
             Logger.debug("GameRunnerComponent", "No horses to move");
             this.currentGameState = { ...gameState.board };
+
+            // Handle kicked player even if no other movements (edge case)
+            if (gameState.kickedPlayer) {
+                Logger.debug(
+                    "GameRunnerComponent",
+                    `Triggering kick animation (no other movements) for player ${gameState.kickedPlayer.player}`
+                );
+                this.kickHandler.triggerKickAnimation(
+                    this.node.scene,
+                    {
+                        player: gameState.kickedPlayer.player,
+                        position: gameState.kickedPlayer.position,
+                        horseIndex: 0, // Will be determined inside the handler
+                    },
+                    gameState.board,
+                    this.playerToBaseMap,
+                    this.horseComponentsMap,
+                    (callback: () => void, delay: number) => this.scheduleOnce(callback, delay),
+                    (index: number) => this.findCellByIndex(index)
+                );
+            }
+
             return Promise.resolve();
         }
     }

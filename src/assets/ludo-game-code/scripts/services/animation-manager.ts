@@ -108,6 +108,8 @@ export class AnimationManager {
             .to(0.5, { scale: new Vec3(1.5, 1.5, 1) }, { easing: "sineOut" })
             .to(0.5, { scale: new Vec3(0, 0, 1) }, { easing: "sineIn" })
             .call(() => {
+                // Reset scale after animation completes so horse can be visible in base placeholder
+                node.setScale(1, 1, 1);
                 this.activeTweens.delete(node);
                 if (onComplete) {
                     onComplete();
