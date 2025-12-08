@@ -596,56 +596,82 @@ export class CellComponent extends Component {
             return;
         }
 
+        const transform = this.getOrAddTransform(this.nodeHomePath);
+        const bgTransform = this.getBgTransform();
         const position = this.cellData.position;
-        const northSouthWidth = 78;
-        const eastWestHeight = 78;
-        const northSouthHeight = CELL_DIMENSION;
-        const eastWestWidth = CELL_DIMENSION;
-        const yNorthSouth = position === GAME_CONSTANTS.POSITION_NORTH ? -10 : 10;
-        const xEastWest = position === GAME_CONSTANTS.POSITION_WEST ? 13 : -2; // 4
-        const xNorthSouth = 4;
-        const yEastWest = 1;
 
-        // Get or add UITransform component for nodeHomePath
-        let transform = this.nodeHomePath.getComponent(UITransform);
+        const isVertical = position === GAME_CONSTANTS.POSITION_NORTH || position === GAME_CONSTANTS.POSITION_SOUTH;
+
+        if (isVertical) {
+            this.updateVerticalHomePathDimensions(transform, bgTransform, position);
+        } else {
+            this.updateHorizontalHomePathDimensions(transform, bgTransform, position);
+        }
+    }
+
+    /**
+     * Get or add UITransform component to a node
+     */
+    private getOrAddTransform(node: Node): UITransform {
+        let transform = node.getComponent(UITransform);
         if (!transform) {
-            transform = this.nodeHomePath.addComponent(UITransform);
+            transform = node.addComponent(UITransform);
         }
+        return transform;
+    }
 
-        // Find home-path-bg child node
-        const homePathBgNode = this.nodeHomePath.getChildByName("home-path-bg");
-        let bgTransform: UITransform | null = null;
-
-        if (homePathBgNode) {
-            // Get or add UITransform component for home-path-bg
-            bgTransform = homePathBgNode.getComponent(UITransform);
-            if (!bgTransform) {
-                bgTransform = homePathBgNode.addComponent(UITransform);
-            }
+    /**
+     * Get UITransform for home-path-bg child node
+     */
+    private getBgTransform(): UITransform | null {
+        const homePathBgNode = this.nodeHomePath?.getChildByName("home-path-bg");
+        if (!homePathBgNode) {
+            return null;
         }
+        return this.getOrAddTransform(homePathBgNode);
+    }
 
-        if (position === GAME_CONSTANTS.POSITION_NORTH || position === GAME_CONSTANTS.POSITION_SOUTH) {
-            // For NORTH/SOUTH (vertical walkways), set width
-            transform.setContentSize(northSouthWidth, northSouthHeight);
-            const addMoreY =
-                (position === GAME_CONSTANTS.POSITION_NORTH ? WALKWAY_ROW_COUNT - this.cellData.row - 1 : this.cellData.row) * 2;
-            this.nodeHomePath.setPosition(xNorthSouth, yNorthSouth + (position === GAME_CONSTANTS.POSITION_NORTH ? -addMoreY : addMoreY));
+    /**
+     * Update dimensions for vertical home paths (NORTH/SOUTH)
+     */
+    private updateVerticalHomePathDimensions(transform: UITransform, bgTransform: UITransform | null, position: string) {
+        const northSouthWidth = 78;
+        const northSouthHeight = CELL_DIMENSION;
+        const xNorthSouth = 6;
+        const yNorthSouth = position === GAME_CONSTANTS.POSITION_NORTH ? -10 : 10;
 
-            // Update home-path-bg content size
-            if (bgTransform) {
-                bgTransform.setContentSize(66, 43);
-            }
-        } else if (position === GAME_CONSTANTS.POSITION_EAST || position === GAME_CONSTANTS.POSITION_WEST) {
-            // For EAST/WEST (horizontal walkways), set height
-            transform.setContentSize(eastWestWidth, eastWestHeight);
-            const addMoreX =
-                position === GAME_CONSTANTS.POSITION_WEST ? (WALKWAY_ROW_COUNT - this.cellData.column - 1) * 2 : this.cellData.column * 2;
-            this.nodeHomePath.setPosition(xEastWest + (position === GAME_CONSTANTS.POSITION_WEST ? addMoreX : -addMoreX), yEastWest);
+        transform.setContentSize(northSouthWidth, northSouthHeight);
 
-            // Update home-path-bg content size
-            if (bgTransform) {
-                bgTransform.setContentSize(43, 66);
-            }
+        const isNorth = position === GAME_CONSTANTS.POSITION_NORTH;
+        const addMoreY = (isNorth ? WALKWAY_ROW_COUNT - this.cellData.row - 1 : this.cellData.row) * 2;
+        const yOffset = isNorth ? -addMoreY : addMoreY;
+
+        this.nodeHomePath.setPosition(xNorthSouth, yNorthSouth + yOffset);
+
+        if (bgTransform) {
+            bgTransform.setContentSize(66, 43);
+        }
+    }
+
+    /**
+     * Update dimensions for horizontal home paths (EAST/WEST)
+     */
+    private updateHorizontalHomePathDimensions(transform: UITransform, bgTransform: UITransform | null, position: string) {
+        const eastWestHeight = 78;
+        const eastWestWidth = CELL_DIMENSION;
+        const yEastWest = 1;
+        const xEastWest = position === GAME_CONSTANTS.POSITION_WEST ? 13 : -2;
+
+        transform.setContentSize(eastWestWidth, eastWestHeight);
+
+        const isWest = position === GAME_CONSTANTS.POSITION_WEST;
+        const addMoreX = isWest ? (WALKWAY_ROW_COUNT - this.cellData.column - 1) * 2 : this.cellData.column * 2;
+        const xOffset = isWest ? addMoreX : -addMoreX;
+
+        this.nodeHomePath.setPosition(xEastWest + xOffset, yEastWest);
+
+        if (bgTransform) {
+            bgTransform.setContentSize(43, 66);
         }
     }
 

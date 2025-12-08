@@ -113,7 +113,6 @@ export class HomePathIndexComponent extends Component {
         if (spriteFrame) {
             this.sprite.spriteFrame = spriteFrame;
             this.node.active = true;
-            //this.updateRotation(cellData.position);
             Logger.debug(
                 "HomePathIndexComponent",
                 `Updated sprite frame: homePathIndex ${homePathIndex} -> spriteFrame[${spriteFrameIndex}]`
@@ -122,35 +121,6 @@ export class HomePathIndexComponent extends Component {
             Logger.warn("HomePathIndexComponent", `SpriteFrame at index ${spriteFrameIndex} is null or undefined`);
             this.node.active = false;
         }
-    }
-
-    /**
-     * Update node rotation based on cell position
-     * @param position Cell position (NORTH, SOUTH, EAST, WEST)
-     */
-    private updateRotation(position: string) {
-        let rotationAngle = 0;
-
-        switch (position) {
-            case GAME_CONSTANTS.POSITION_EAST:
-                rotationAngle = 90;
-                break;
-            case GAME_CONSTANTS.POSITION_WEST:
-                rotationAngle = -90;
-                break;
-            case GAME_CONSTANTS.POSITION_NORTH:
-                rotationAngle = 180;
-                break;
-            case GAME_CONSTANTS.POSITION_SOUTH:
-                rotationAngle = 0;
-                break;
-            default:
-                rotationAngle = 0;
-                break;
-        }
-
-        this.node.setRotationFromEuler(0, 0, rotationAngle);
-        Logger.debug("HomePathIndexComponent", `Set rotation to ${rotationAngle} degrees for position ${position}`);
     }
 
     /**
