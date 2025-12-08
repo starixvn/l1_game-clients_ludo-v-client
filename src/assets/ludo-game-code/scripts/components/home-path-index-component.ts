@@ -113,7 +113,7 @@ export class HomePathIndexComponent extends Component {
         if (spriteFrame) {
             this.sprite.spriteFrame = spriteFrame;
             this.node.active = true;
-            this.updateRotation(cellData.position);
+            //this.updateRotation(cellData.position);
             Logger.debug(
                 "HomePathIndexComponent",
                 `Updated sprite frame: homePathIndex ${homePathIndex} -> spriteFrame[${spriteFrameIndex}]`

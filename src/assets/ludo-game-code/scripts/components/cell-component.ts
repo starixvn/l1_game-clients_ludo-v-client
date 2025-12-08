@@ -9,7 +9,7 @@
 
 import { _decorator, Component, Node, Sprite, UITransform, Button, Graphics } from "cc";
 import { Cell, GAME_CONSTANTS } from "../game-board-data";
-import { CELL_DIMENSION, WALKWAY_LENGTH } from "../global-constants";
+import { CELL_DIMENSION, WALKWAY_LENGTH, WALKWAY_ROW_COUNT } from "../global-constants";
 import { gameDataService } from "../services/game-data-service";
 import { Logger } from "../utils/logger";
 import { AnimationManager } from "../services/animation-manager";
@@ -280,7 +280,7 @@ export class CellComponent extends Component {
                 this.nodeEnterHome.active = false;
             }
             this.updateNormalNodePosition();
-            this.updateCellSpriteColor(this.nodeNormal);
+            // Color update removed - only spawn cells should have color set
         }
     }
 
@@ -342,9 +342,8 @@ export class CellComponent extends Component {
             this.nodeRelease.active = true;
         }
         this.updateReleaseNodePosition();
-        this.updateCellSpriteColor(this.nodeRelease);
 
-        // Also update color for star child node if it exists
+        // Update color for star child node only
         if (this.nodeRelease) {
             const starNode = this.nodeRelease.getChildByName("star");
             if (starNode) {
@@ -390,8 +389,8 @@ export class CellComponent extends Component {
     }
 
     private checkRange1(cellID: string): { xAdjustment: number; yAdjustment: number } | null {
-        const xAdjustment = 2;
-        const yAdjustment = 14;
+        const xAdjustment = 16;
+        const yAdjustment = 9;
         // Range 1: WEST_2_0 to WEST_2_6
         if (cellID.startsWith("WEST_2_")) {
             const match = cellID.match(/WEST_2_(\d+)/);
@@ -416,8 +415,8 @@ export class CellComponent extends Component {
     }
 
     private checkRange2(cellID: string): { xAdjustment: number; yAdjustment: number } | null {
-        const xAdjustment = -2;
-        const yAdjustment = 13;
+        const xAdjustment = -3;
+        const yAdjustment = 10;
         // Range 2: SOUTH_1_2 to SOUTH_6_2
         if (cellID.startsWith("SOUTH_") && cellID.endsWith("_2")) {
             const match = cellID.match(/SOUTH_(\d+)_2/);
@@ -442,8 +441,8 @@ export class CellComponent extends Component {
     }
 
     private checkRange3(cellID: string): { xAdjustment: number; yAdjustment: number } | null {
-        const xAdjustment = 4;
-        const yAdjustment = 1;
+        const xAdjustment = 15;
+        const yAdjustment = -8;
         // Range 3: NORTH_0_0 to NORTH_5_0
         if (cellID.startsWith("NORTH_") && cellID.endsWith("_0")) {
             const match = cellID.match(/NORTH_(\d+)_0/);
@@ -468,8 +467,8 @@ export class CellComponent extends Component {
     }
 
     private checkRange4(cellID: string): { xAdjustment: number; yAdjustment: number } | null {
-        const xAdjustment = -3;
-        const yAdjustment = 2;
+        const xAdjustment = -6;
+        const yAdjustment = -9;
         // Range 4: NORTH_0_2 to NORTH_5_2
         if (cellID.startsWith("NORTH_") && cellID.endsWith("_2")) {
             const match = cellID.match(/NORTH_(\d+)_2/);
@@ -598,29 +597,55 @@ export class CellComponent extends Component {
         }
 
         const position = this.cellData.position;
-        const northSouthWidth = 81;
-        const eastWestHeight = 81;
-        const northSouthHeight = CELL_DIMENSION + 1;
-        const eastWestWidth = CELL_DIMENSION + 1;
-        const yNorthSouth = position === GAME_CONSTANTS.POSITION_NORTH ? -5 : 21;
-        const xEastWest = position === GAME_CONSTANTS.POSITION_WEST ? 13 : -13; // 4
-        const xNorthSouth = 0;
-        const yEastWest = 8;
+        const northSouthWidth = 78;
+        const eastWestHeight = 78;
+        const northSouthHeight = CELL_DIMENSION;
+        const eastWestWidth = CELL_DIMENSION;
+        const yNorthSouth = position === GAME_CONSTANTS.POSITION_NORTH ? -10 : 10;
+        const xEastWest = position === GAME_CONSTANTS.POSITION_WEST ? 13 : -2; // 4
+        const xNorthSouth = 4;
+        const yEastWest = 1;
 
-        // Get or add UITransform component
+        // Get or add UITransform component for nodeHomePath
         let transform = this.nodeHomePath.getComponent(UITransform);
         if (!transform) {
             transform = this.nodeHomePath.addComponent(UITransform);
         }
 
+        // Find home-path-bg child node
+        const homePathBgNode = this.nodeHomePath.getChildByName("home-path-bg");
+        let bgTransform: UITransform | null = null;
+
+        if (homePathBgNode) {
+            // Get or add UITransform component for home-path-bg
+            bgTransform = homePathBgNode.getComponent(UITransform);
+            if (!bgTransform) {
+                bgTransform = homePathBgNode.addComponent(UITransform);
+            }
+        }
+
         if (position === GAME_CONSTANTS.POSITION_NORTH || position === GAME_CONSTANTS.POSITION_SOUTH) {
             // For NORTH/SOUTH (vertical walkways), set width
             transform.setContentSize(northSouthWidth, northSouthHeight);
-            this.nodeHomePath.setPosition(xNorthSouth, yNorthSouth);
+            const addMoreY =
+                (position === GAME_CONSTANTS.POSITION_NORTH ? WALKWAY_ROW_COUNT - this.cellData.row - 1 : this.cellData.row) * 2;
+            this.nodeHomePath.setPosition(xNorthSouth, yNorthSouth + (position === GAME_CONSTANTS.POSITION_NORTH ? -addMoreY : addMoreY));
+
+            // Update home-path-bg content size
+            if (bgTransform) {
+                bgTransform.setContentSize(66, 43);
+            }
         } else if (position === GAME_CONSTANTS.POSITION_EAST || position === GAME_CONSTANTS.POSITION_WEST) {
             // For EAST/WEST (horizontal walkways), set height
             transform.setContentSize(eastWestWidth, eastWestHeight);
-            this.nodeHomePath.setPosition(xEastWest, yEastWest);
+            const addMoreX =
+                position === GAME_CONSTANTS.POSITION_WEST ? (WALKWAY_ROW_COUNT - this.cellData.column - 1) * 2 : this.cellData.column * 2;
+            this.nodeHomePath.setPosition(xEastWest + (position === GAME_CONSTANTS.POSITION_WEST ? addMoreX : -addMoreX), yEastWest);
+
+            // Update home-path-bg content size
+            if (bgTransform) {
+                bgTransform.setContentSize(43, 66);
+            }
         }
     }
 

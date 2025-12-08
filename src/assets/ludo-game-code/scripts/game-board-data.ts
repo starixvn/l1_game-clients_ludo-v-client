@@ -33,10 +33,10 @@ export const GAME_CONSTANTS = {
 
     // Enter-home node position adjustments (x, y) for specific cell IDs
     ENTER_HOME_NODE_POSITIONS: {
-        WEST_1_0: { x: 5, y: 7 },
-        EAST_1_6: { x: -7, y: 7 },
-        SOUTH_6_1: { x: 0, y: 13 },
-        NORTH_0_1: { x: 0, y: 1 },
+        WEST_1_0: { x: 12, y: 1 },
+        EAST_1_6: { x: -3, y: 1 },
+        SOUTH_6_1: { x: 5, y: 15 },
+        NORTH_0_1: { x: 5, y: -15 },
     } as const,
 } as const;
 
